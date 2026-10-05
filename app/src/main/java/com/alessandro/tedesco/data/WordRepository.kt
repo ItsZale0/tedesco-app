@@ -1,23 +1,38 @@
 package com.alessandro.tedesco.data
 
 import android.content.Context
-import androidx.room.withTransaction
-import com.alessandro.tedesco.data.local.AppDatabase
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.alessandro.tedesco.data.local.FeedLogEntity
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.remote.FeedDto
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.WordDto
-import com.alessandro.tedesco.di.IoDispatcher
 import com.alessandro.tedesco.settings.SettingsStore
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.math.max
+import kotlin.comparisons.compareBy
+
+private const val VOCAB_DATASTORE = "vocab_data"
+
+private val Context.vocabDataStore by preferencesDataStore(name = VOCAB_DATASTORE)
+
+private object Keys {
+    val VOCAB_JSON = stringPreferencesKey("vocab_json")
+}
 
 sealed class SyncResult {
     data object NotModified : SyncResult()
@@ -25,24 +40,73 @@ sealed class SyncResult {
     data class Failed(val message: String) : SyncResult()
 }
 
-@Singleton
-class WordRepository @Inject constructor(
-    private val db: AppDatabase,
+@Serializable
+private data class VocabData(
+    val words: List<WordEntity> = emptyList(),
+    val reviews: Map<String, ReviewEntity> = emptyMap(),
+    val feedLog: List<FeedLogEntity> = emptyList()
+)
+
+class WordRepository(
+    private val context: Context,
     private val service: FeedService,
     private val settings: SettingsStore,
     private val json: Json,
-    @IoDispatcher private val io: CoroutineDispatcher
+    private val io: CoroutineDispatcher
 ) {
-    private val wordDao = db.wordDao()
-    private val reviewDao = db.reviewDao()
-    private val feedLogDao = db.feedLogDao()
 
-    fun observeWords() = wordDao.observeAll()
-    fun observeWordsByLesson(lesson: Int) = wordDao.observeByLesson(lesson)
-    fun observeLessons() = wordDao.observeLessons()
-    fun observeLastSync() = feedLogDao.observeLast()
-    fun observeDueCount(): kotlinx.coroutines.flow.Flow<Int> =
-        reviewDao.observeDueCount(System.currentTimeMillis())
+    private val _words = MutableStateFlow<List<WordEntity>>(emptyList())
+    private val _reviews = MutableStateFlow<Map<String, ReviewEntity>>(emptyMap())
+    private val _feedLog = MutableStateFlow<List<FeedLogEntity>>(emptyList())
+
+    val wordsFlow: Flow<List<WordEntity>> = _words
+    val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
+    val feedLogFlow: Flow<List<FeedLogEntity>> = _feedLog
+
+    init {
+        loadFromDataStore()
+    }
+
+    private fun loadFromDataStore() {
+        CoroutineScope(io).launch {
+            val data = context.vocabDataStore.data.first()
+            val jsonStr = data[Keys.VOCAB_JSON] ?: "{}"
+            val vocabData = json.decodeFromString(VocabData.serializer(), jsonStr)
+            _words.value = vocabData.words
+            _reviews.value = vocabData.reviews
+            _feedLog.value = vocabData.feedLog
+        }
+    }
+
+    private suspend fun saveToDataStore() = withContext(io) {
+        val vocabData = VocabData(
+            words = _words.value,
+            reviews = _reviews.value,
+            feedLog = _feedLog.value
+        )
+        val jsonStr = json.encodeToString(VocabData.serializer(), vocabData)
+        context.vocabDataStore.edit {
+            it[Keys.VOCAB_JSON] = jsonStr
+        }
+    }
+
+    fun observeWords() = wordsFlow
+        .map { it.filter { !it.archived }.sortedWith(compareBy({ it.lesson }, { it.german })) }
+
+    fun observeWordsByLesson(lesson: Int) = wordsFlow
+        .map { it.filter { !it.archived && it.lesson == lesson }.sortedBy { it.german } }
+
+    fun observeLessons() = wordsFlow
+        .map { it.filter { !it.archived }.map { it.lesson }.distinct().sorted() }
+
+    fun observeLastSync() = feedLogFlow
+        .map { it.maxByOrNull { it.syncedAt } }
+
+    fun observeDueCount(): Flow<Int> = reviewsFlow
+        .map { reviews ->
+            val now = System.currentTimeMillis()
+            reviews.values.count { it.dueAt <= now }
+        }
 
     suspend fun sync(): SyncResult = withContext(io) {
         val url = settings.feedUrl()
@@ -54,25 +118,22 @@ class WordRepository @Inject constructor(
             val etag = settings.etag()
             val response = service.getRaw(url)
 
-            if (response.code() == 304) {
+            if (response.code == 304) {
                 return@withContext SyncResult.NotModified
             }
             if (!response.isSuccessful) {
-                return@withContext SyncResult.Failed("HTTP ${response.code()}")
+                return@withContext SyncResult.Failed("HTTP ${response.code}")
             }
 
-            val newEtag = response.headers()["ETag"]
-            val body = response.body()?.string()
+            val newEtag = response.headers["ETag"]
+            val body = response.body?.string()
             if (body.isNullOrBlank()) {
                 return@withContext SyncResult.Failed("Risposta vuota dal server")
             }
 
-            // UTF-8 esplicito: il file contiene ä ö ü e ß
             val feed = json.decodeFromString(FeedDto.serializer(), body)
 
-            if (etag != null && newEtag != null && etag == newEtag &&
-                feed.words.isEmpty()
-            ) {
+            if (etag != null && newEtag != null && etag == newEtag && feed.words.isEmpty()) {
                 return@withContext SyncResult.NotModified
             }
 
@@ -81,45 +142,43 @@ class WordRepository @Inject constructor(
             newEtag?.let { settings.setEtag(it) }
             settings.setLastSync(System.currentTimeMillis())
 
-            feedLogDao.insert(
-                FeedLogEntity(
-                    syncedAt = System.currentTimeMillis(),
-                    newWords = added,
-                    updatedWords = changed,
-                    status = "ok",
-                    message = "L${feed.lesson} · ${feed.words.size} parole"
-                )
+            val logEntry = FeedLogEntity(
+                syncedAt = System.currentTimeMillis(),
+                newWords = added,
+                updatedWords = changed,
+                status = "ok",
+                message = "L${feed.lesson} · ${feed.words.size} parole"
             )
+            _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
+            saveToDataStore()
 
             SyncResult.Updated(added, changed, feed.words.size)
         } catch (e: Exception) {
-            feedLogDao.insert(
-                FeedLogEntity(
-                    syncedAt = System.currentTimeMillis(),
-                    newWords = 0,
-                    updatedWords = 0,
-                    status = "errore",
-                    message = e.message?.take(80)
-                )
+            val logEntry = FeedLogEntity(
+                syncedAt = System.currentTimeMillis(),
+                newWords = 0,
+                updatedWords = 0,
+                status = "errore",
+                message = e.message?.take(80)
             )
+            _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
+            saveToDataStore()
             SyncResult.Failed(e.message ?: "Errore sconosciuto")
         }
     }
 
-    /** Merge transazionale: se l'app viene chiusa a meta', il database
-     *  resta integro. Gli id gia' presenti non creano duplicati.
-     */
-    private suspend fun merge(feed: FeedDto): Pair<Int, Int> = db.withTransaction {
+    private suspend fun merge(feed: FeedDto): Pair<Int, Int> = withContext(io) {
         var added = 0
         var changed = 0
         val now = System.currentTimeMillis()
         val toUpsert = mutableListOf<WordEntity>()
         val newWordIds = mutableSetOf<String>()
+        val currentWords = _words.value.associateBy { it.id }.toMutableMap()
+        val currentReviews = _reviews.value.toMutableMap()
 
-        // FASE 1: inserisci prima TUTTE le parole (senza review)
         for (dto in feed.words) {
             val entity = dto.toEntity(now)
-            val esistente = wordDao.getById(dto.id)
+            val esistente = currentWords[dto.id]
 
             when {
                 esistente == null -> {
@@ -136,43 +195,46 @@ class WordRepository @Inject constructor(
         }
 
         if (toUpsert.isNotEmpty()) {
-            wordDao.upsertAll(toUpsert)
+            toUpsert.forEach { currentWords[it.id] = it }
+            _words.value = currentWords.values.toList()
         }
 
-        // FASE 2: ora che le parole esistono, inserisci le review
         for (dto in feed.words) {
             if (dto.id in newWordIds) {
-                reviewDao.upsert(
-                    ReviewEntity(
-                        wordId = dto.id,
-                        easeFactor = 2.5f,
-                        intervalDays = 0,
-                        repetitions = 0,
-                        lapses = 0,
-                        dueAt = now,
-                        lastReviewedAt = null
-                    )
+                val review = ReviewEntity(
+                    wordId = dto.id,
+                    easeFactor = 2.5f,
+                    intervalDays = 0,
+                    repetitions = 0,
+                    lapses = 0,
+                    dueAt = now,
+                    lastReviewedAt = null
                 )
+                currentReviews[dto.id] = review
             }
         }
-
+        _reviews.value = currentReviews
+        saveToDataStore()
         added to changed
     }
 
-    // --- azioni dell'utente ---
-
-    suspend fun setArchived(id: String, archived: Boolean) {
-        wordDao.setArchived(id, archived)
+    suspend fun setArchived(id: String, archived: Boolean) = withContext(io) {
+        val currentWords = _words.value.associateBy { it.id }.toMutableMap()
+        currentWords[id]?.let { word ->
+            currentWords[id] = word.copy(archived = archived)
+            _words.value = currentWords.values.toList()
+            saveToDataStore()
+        }
     }
 
-    suspend fun dueReviews(): List<ReviewEntity> =
-        reviewDao.dueNow(System.currentTimeMillis())
+    suspend fun dueReviews(): List<ReviewEntity> = withContext(io) {
+        val now = System.currentTimeMillis()
+        _reviews.value.values.filter { it.dueAt <= now }.sortedBy { it.dueAt }
+    }
 
-    /** SM-2 semplificato. Intervalli in giorni:
-     * 1 -> 3 -> 7 -> 16 -> 35 -> 75 -> 150 -> 300
-     */
     suspend fun answer(wordId: String, knewIt: Boolean) = withContext(io) {
-        val r = reviewDao.all().firstOrNull { it.wordId == wordId } ?: return@withContext
+        val reviews = _reviews.value.toMutableMap()
+        val r = reviews[wordId] ?: return@withContext
 
         val updated = if (knewIt) {
             val next = INTERVALS.getOrElse(r.repetitions) { INTERVALS.last() }
@@ -194,11 +256,16 @@ class WordRepository @Inject constructor(
                 lastReviewedAt = System.currentTimeMillis()
             )
         }
-        reviewDao.update(updated)
+        reviews[wordId] = updated
+        _reviews.value = reviews
+        saveToDataStore()
     }
 
     suspend fun resetAll() = withContext(io) {
-        db.clearAllTables()
+        _words.value = emptyList()
+        _reviews.value = emptyMap()
+        _feedLog.value = emptyList()
+        saveToDataStore()
         settings.setEtag("")
     }
 
@@ -207,16 +274,16 @@ class WordRepository @Inject constructor(
     }
 }
 
-private fun WordDto.toEntity(now: Long) = WordEntity(
-    id = id,
-    german = german,
-    italian = italian,
-    example = example,
-    article = article,
-    pronunciation = pronunciation,
-    level = level,
-    lesson = lesson,
-    tags = tags.joinToString(","),
-    archived = archived,
+private fun WordDto.toEntity(now: Long): WordEntity = WordEntity(
+    id = this.id,
+    german = this.german,
+    italian = this.italian,
+    example = this.example,
+    article = this.article,
+    pronunciation = this.pronunciation,
+    level = this.level,
+    lesson = this.lesson,
+    tags = this.tags.joinToString(","),
+    archived = this.archived,
     createdAt = now
 )

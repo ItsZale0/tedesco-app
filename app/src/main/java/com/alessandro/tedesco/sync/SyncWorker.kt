@@ -1,7 +1,6 @@
 package com.alessandro.tedesco.sync
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -11,26 +10,22 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.WordRepository
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
+import com.alessandro.tedesco.TedescoApp
 import java.util.concurrent.TimeUnit
 
-/**
- * Sincronizzazione periodica in background.
- * Usa WorkManager e non un timer: così Android decide quando svegliare
- * l'app rispettando la batteria. Non blocca mai l'avvio dell'app.
- */
-@HiltWorker
-class SyncWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val repo: WordRepository
+class SyncWorker(
+    context: Context,
+    params: WorkerParameters
 ) : CoroutineWorker(context, params) {
+
+    private val repo: WordRepository by lazy {
+        val app = applicationContext as TedescoApp
+        app.wordRepositoryInstance
+    }
 
     override suspend fun doWork(): Result {
         val result = repo.sync()
         return when (result) {
-            // niente modifiche: non e' un errore, non ritentare subito
             is SyncResult.NotModified -> Result.success()
             is SyncResult.Updated -> Result.success()
             is SyncResult.Failed -> {
@@ -42,7 +37,6 @@ class SyncWorker @AssistedInject constructor(
     companion object {
         private const val WORK_NAME = "sync_vocabolario"
 
-        /** default: ogni 15 minuti, il minimo che WorkManager accetta. */
         fun schedule(context: Context, minutes: Int = 15) {
             val request = PeriodicWorkRequestBuilder<SyncWorker>(
                 minutes.coerceAtLeast(15).toLong(), TimeUnit.MINUTES

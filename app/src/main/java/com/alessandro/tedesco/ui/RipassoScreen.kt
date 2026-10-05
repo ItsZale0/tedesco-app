@@ -44,13 +44,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
+import com.alessandro.tedesco.data.SessionState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RipassoScreen(vm: TedescoViewModel) {
-    val s by vm.sessione.collectAsStateWithLifecycle(SessionState())
+    val sessionState by vm.sessione.collectAsStateWithLifecycle(SessionState())
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
-    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
     Scaffold(
@@ -58,7 +61,7 @@ fun RipassoScreen(vm: TedescoViewModel) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "${s.indice.coerceAtMost(s.totale)} / ${s.totale}",
+                        text = "${sessionState.indice.coerceAtMost(sessionState.totale)} / ${sessionState.totale}",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -72,7 +75,7 @@ fun RipassoScreen(vm: TedescoViewModel) {
                 .padding(20.dp)
         ) {
             LinearProgressIndicator(
-                progress = { s.progresso },
+                progress = { sessionState.progresso },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
@@ -80,7 +83,7 @@ fun RipassoScreen(vm: TedescoViewModel) {
 
             Spacer(Modifier.height(28.dp))
 
-            val carta = s.cartaCorrente
+            val carta = sessionState.cartaCorrente
 
             if (caricamento) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -97,13 +100,13 @@ fun RipassoScreen(vm: TedescoViewModel) {
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = "${s.totale} parole ripassate",
+                            text = "${sessionState.totale} parole ripassate",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        if (s.sbagliate.isNotEmpty()) {
+                        if (sessionState.sbagliate.isNotEmpty()) {
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "Da rivedere: ${s.sbagliate.joinToString(\", \")}",
+                                text = "Da rivedere: ${sessionState.sbagliate.joinToString(", ")}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error,
                                 textAlign = TextAlign.Center
@@ -169,7 +172,7 @@ fun RipassoScreen(vm: TedescoViewModel) {
                 Spacer(Modifier.height(20.dp))
 
                 // retro: appare subito, niente animazione che fa aspettare
-                AnimatedVisibility(visible = s.rispostaMostrata) {
+                AnimatedVisibility(visible = sessionState.rispostaMostrata) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -194,7 +197,7 @@ fun RipassoScreen(vm: TedescoViewModel) {
 
                 Spacer(Modifier.weight(1f))
 
-                if (!s.rispostaMostrata) {
+                if (!sessionState.rispostaMostrata) {
                     Button(
                         onClick = { vm.rivela() },
                         modifier = Modifier

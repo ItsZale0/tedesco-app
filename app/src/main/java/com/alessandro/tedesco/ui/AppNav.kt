@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.ui
 
+import android.app.Application
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -18,12 +19,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.alessandro.tedesco.TedescoApp
 
 private sealed class Dest(val route: String, val label: String, val icona: androidx.compose.ui.graphics.vector.ImageVector) {
     data object Home : Dest("home", "Ripasso", Icons.Filled.Home)
@@ -32,8 +35,19 @@ private sealed class Dest(val route: String, val label: String, val icona: andro
     data object Impostazioni : Dest("impostazioni", "Impostazioni", Icons.Filled.Settings)
 }
 
+private class TedescoViewModelFactory(private val app: TedescoApp) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        return TedescoViewModel(app) as T
+    }
+}
+
 @Composable
-fun AppNav(vm: TedescoViewModel = hiltViewModel()) {
+fun AppNav() {
+    val application = androidx.compose.ui.platform.LocalContext.current.applicationContext as TedescoApp
+    val factory = remember { TedescoViewModelFactory(application) }
+    val vm = viewModel<TedescoViewModel>(factory = factory)
+
     val nav = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
     val messaggio by vm.messaggio.collectAsStateWithLifecycle("")
@@ -48,7 +62,6 @@ fun AppNav(vm: TedescoViewModel = hiltViewModel()) {
     val backStack by nav.currentBackStackEntryAsState()
     val schermataCorrente = backStack?.destination?.route
 
-    // la sessione di ripasso e' a schermo pieno: niente barra in basso
     val mostraBarra = schermataCorrente?.startsWith("ripasso") != true
 
     Scaffold(

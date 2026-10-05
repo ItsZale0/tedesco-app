@@ -2,19 +2,22 @@ package com.alessandro.tedesco.ui
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.ViewModel
 import java.util.Locale
 
-class TtsHelper(context: Context) {
-    private val tts = TextToSpeech(context) { status ->
+class TtsHelper(context: Context) : TextToSpeech.OnInitListener {
+
+    private val tts: TextToSpeech
+
+    init {
+        tts = TextToSpeech(context, this)
+    }
+
+    override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val result = tts.setLanguage(Locale.GERMAN)
+            val result: Int = tts.setLanguage(Locale.GERMAN)
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 // Tedesco non supportato sul dispositivo
             }

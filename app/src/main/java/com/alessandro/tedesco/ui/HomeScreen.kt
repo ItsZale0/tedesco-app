@@ -1,7 +1,6 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alessandro.tedesco.data.local.FeedLogEntity
+import com.alessandro.tedesco.data.SessionState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +109,7 @@ fun HomeScreen(vm: TedescoViewModel) {
 }
 
 @Composable
-private fun SyncStatus(log: FeedLogEntity?) {
+private fun SyncStatus(log: com.alessandro.tedesco.data.local.FeedLogEntity?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = if (log == null) "Nessun aggiornamento"

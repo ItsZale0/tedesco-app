@@ -1,12 +1,15 @@
 package com.alessandro.tedesco.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.WordRepository
+import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.settings.SettingsStore
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,32 +21,19 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
 
-data class SessionState(
-    val cards: List<WordEntity> = emptyList(),
-    val indice: Int = 0,
-    val rispostaMostrata: Boolean = false,
-    val sbagliate: MutableList<String> = mutableListOf()
-) {
-    val cartaCorrente: WordEntity? get() = cards.getOrNull(indice)
-    val totale: Int get() = cards.size
-    val finita: Boolean get() = indice >= cards.size
-    val progresso: Float get() = if (totale == 0) 0f else indice.toFloat() / totale
-}
+class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
-@HiltViewModel
-class TedescoViewModel @Inject constructor(
-    private val repo: WordRepository,
-    private val settings: SettingsStore
-) : ViewModel() {
+    private val app = application as TedescoApp
+    private val repo = app.wordRepositoryInstance
+    private val settingsStore = app.settingsInstance
 
     val parole = repo.observeWords()
     val lezioni = repo.observeLessons()
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
 
-    val feedUrl: StateFlow<String> = settings.feedUrlFlow
+    val feedUrl: StateFlow<String> = settingsStore.feedUrlFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
     private val _sessione = MutableStateFlow(SessionState())
@@ -55,15 +45,13 @@ class TedescoViewModel @Inject constructor(
     private val _caricamento = MutableStateFlow(false)
     val caricamento: StateFlow<Boolean> = _caricamento.asStateFlow()
 
-    // --- sessione di ripasso ---
-
     fun caricaSessione() {
         viewModelScope.launch {
             _caricamento.value = true
-            val reviews = repo.dueReviews()
-            val tutte = parole.first()
-            val cards = reviews.mapNotNull { r ->
-                tutte.firstOrNull { it.id == r.wordId }
+            val reviews: List<ReviewEntity> = repo.dueReviews()
+            val tutte: List<WordEntity> = parole.first()
+            val cards = reviews.mapNotNull { r: ReviewEntity ->
+                tutte.firstOrNull { w: WordEntity -> w.id == r.wordId }
             }
             _sessione.value = SessionState(cards = cards)
             _caricamento.value = false
@@ -97,8 +85,6 @@ class TedescoViewModel @Inject constructor(
         _sessione.value = SessionState()
         caricaSessione()
     }
-
-    // --- sincronizzazione ---
 
     fun sincronizza(mostraMessaggio: Boolean = true) {
         viewModelScope.launch {
@@ -134,7 +120,7 @@ class TedescoViewModel @Inject constructor(
 
     fun salvaUrl(url: String) {
         viewModelScope.launch {
-            settings.setFeedUrl(url.trim())
+            settingsStore.setFeedUrl(url.trim())
             _messaggio.value = "URL salvato"
             sincronizza()
         }

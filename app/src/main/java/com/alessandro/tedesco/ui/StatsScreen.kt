@@ -28,13 +28,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.local.WordEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(vm: TedescoViewModel) {
-    val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
-    val lezioni by vm.lezioni.collectAsStateWithLifecycle(emptyList())
-    val daRipassare by vm.daRipassare.collectAsStateWithLifecycle(0)
+    val parole: List<WordEntity> by vm.parole.collectAsStateWithLifecycle(emptyList())
+    val lezioni: List<Int> by vm.lezioni.collectAsStateWithLifecycle(emptyList())
+    val daRipassare: Int by vm.daRipassare.collectAsStateWithLifecycle(0)
 
     Scaffold(
         topBar = { LargeTopAppBar(title = { Text("Statistiche") }) }
@@ -60,8 +61,8 @@ fun StatsScreen(vm: TedescoViewModel) {
             )
             Spacer(Modifier.height(12.dp))
 
-            val perLezione = lezioni.map { l ->
-                l to parole.count { it.lesson == l }
+            val perLezione = lezioni.map { l: Int ->
+                l to parole.count { w: WordEntity -> w.lesson == l }
             }
             if (perLezione.isEmpty()) {
                 Text(

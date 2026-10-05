@@ -10,13 +10,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
-@Singleton
-class SettingsStore @Inject constructor(
+class SettingsStore(
     private val context: Context
 ) {
     private object Keys {
@@ -27,7 +24,6 @@ class SettingsStore @Inject constructor(
         val NOTIFY_HOUR = intPreferencesKey("notify_hour")
     }
 
-    /** URL di default: quello del repo di contenuti dell'insegnante. */
     val DEFAULT_FEED_URL =
         "https://raw.githubusercontent.com/alessandro-tedesco/" +
             "vokabeln/main/vokabeln.json"
