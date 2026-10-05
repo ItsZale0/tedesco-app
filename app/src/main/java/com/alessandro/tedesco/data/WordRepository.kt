@@ -114,7 +114,9 @@ class WordRepository @Inject constructor(
         var changed = 0
         val now = System.currentTimeMillis()
         val toUpsert = mutableListOf<WordEntity>()
+        val newWordIds = mutableSetOf<String>()
 
+        // FASE 1: inserisci prima TUTTE le parole (senza review)
         for (dto in feed.words) {
             val entity = dto.toEntity(now)
             val esistente = wordDao.getById(dto.id)
@@ -122,42 +124,13 @@ class WordRepository @Inject constructor(
             when {
                 esistente == null -> {
                     toUpsert.add(entity)
-                    // parola nuova: entra subito in coda, con scadenza ora
-                    reviewDao.upsert(
-                        ReviewEntity(
-                            wordId = dto.id,
-                            easeFactor = 2.5f,
-                            intervalDays = 0,
-                            repetitions = 0,
-                            lapses = 0,
-                            dueAt = now,
-                            lastReviewedAt = null
-                        )
-                    )
+                    newWordIds.add(dto.id)
                     added++
                 }
-
                 esistente != entity -> {
                     toUpsert.add(entity)
-                    // non perde lo stato di ripasso
-                    if (esistente.archived && !dto.archived) {
-                        // tornata attiva: rimettila in coda
-                        reviewDao.upsert(
-                            reviewDao.all().firstOrNull { it.wordId == dto.id }
-                                ?: ReviewEntity(
-                                    wordId = dto.id,
-                                    easeFactor = 2.5f,
-                                    intervalDays = 0,
-                                    repetitions = 0,
-                                    lapses = 0,
-                                    dueAt = now,
-                                    lastReviewedAt = null
-                                )
-                        )
-                    }
                     changed++
                 }
-                // identica: non toccare niente, cosi' non si perde la ripasso
                 else -> Unit
             }
         }
@@ -165,6 +138,24 @@ class WordRepository @Inject constructor(
         if (toUpsert.isNotEmpty()) {
             wordDao.upsertAll(toUpsert)
         }
+
+        // FASE 2: ora che le parole esistono, inserisci le review
+        for (dto in feed.words) {
+            if (dto.id in newWordIds) {
+                reviewDao.upsert(
+                    ReviewEntity(
+                        wordId = dto.id,
+                        easeFactor = 2.5f,
+                        intervalDays = 0,
+                        repetitions = 0,
+                        lapses = 0,
+                        dueAt = now,
+                        lastReviewedAt = null
+                    )
+                )
+            }
+        }
+
         added to changed
     }
 
