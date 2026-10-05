@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+local.properties
+
+# macOS
+.DS_Store
+
+# Build outputs
+*.apk
+*.aab
+*.dex
+*.class
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Keystore
+*.jks
+*.keystore
