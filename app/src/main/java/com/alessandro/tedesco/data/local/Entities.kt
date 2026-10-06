@@ -36,3 +36,17 @@ data class FeedLogEntity(
     val status: String,
     val message: String?
 )
+
+/** Sezione della guida di studio, sincronizzata dal Google Doc dell'utente. */
+@Serializable
+data class SezioneEntity(
+    val titolo: String = "",
+    val testo: String = ""
+)
+
+@Serializable
+data class GuidaEntity(
+    val titolo: String = "",
+    val docUrl: String = "",
+    val sezioni: List<SezioneEntity> = emptyList()
+)

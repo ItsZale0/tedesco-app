@@ -1,12 +1,12 @@
 package com.alessandro.tedesco.ui
 
-import android.app.Application
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,9 +28,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.alessandro.tedesco.TedescoApp
 
-private sealed class Dest(val route: String, val label: String, val icona: androidx.compose.ui.graphics.vector.ImageVector) {
+private sealed class Dest(
+    val route: String,
+    val label: String,
+    val icona: androidx.compose.ui.graphics.vector.ImageVector
+) {
     data object Home : Dest("home", "Ripasso", Icons.Filled.Home)
-    data object Nuove : Dest("nuove", "Parole", Icons.Filled.List)
+    data object Nuove : Dest("nuove", "Parole", Icons.Filled.Translate)
+    data object Guida : Dest("guida", "Guida", Icons.AutoMirrored.Filled.MenuBook)
     data object Stats : Dest("stats", "Statistiche", Icons.Filled.BarChart)
     data object Impostazioni : Dest("impostazioni", "Impostazioni", Icons.Filled.Settings)
 }
@@ -48,9 +53,14 @@ fun AppNav() {
     val factory = remember { TedescoViewModelFactory(application) }
     val vm = viewModel<TedescoViewModel>(factory = factory)
 
+    // check aggiornamenti a ogni apertura dell'app (una volta per processo)
+    LaunchedEffect(Unit) {
+        vm.controllaAggiornamentiAllAvvio()
+    }
+
     val nav = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
-    val messaggio by vm.messaggio.collectAsStateWithLifecycle("")
+    val messaggio by vm.messaggio.collectAsStateWithLifecycle(null)
 
     LaunchedEffect(messaggio) {
         messaggio?.let {
@@ -69,7 +79,7 @@ fun AppNav() {
         bottomBar = {
             if (mostraBarra) {
                 NavigationBar {
-                    listOf(Dest.Home, Dest.Nuove, Dest.Stats, Dest.Impostazioni)
+                    listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Stats, Dest.Impostazioni)
                         .forEach { d ->
                             NavigationBarItem(
                                 selected = schermataCorrente == d.route,
@@ -97,6 +107,7 @@ fun AppNav() {
                 HomeScreen(vm, onIniziaRipasso = { nav.navigate("ripasso") })
             }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
+            composable(Dest.Guida.route) { GuidaScreen(vm) }
             composable(Dest.Stats.route) { StatsScreen(vm) }
             composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }

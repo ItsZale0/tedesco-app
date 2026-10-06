@@ -6,7 +6,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.alessandro.tedesco.data.local.FeedLogEntity
+import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.remote.FeedDto
 import com.alessandro.tedesco.data.remote.FeedService
@@ -44,7 +46,8 @@ sealed class SyncResult {
 private data class VocabData(
     val words: List<WordEntity> = emptyList(),
     val reviews: Map<String, ReviewEntity> = emptyMap(),
-    val feedLog: List<FeedLogEntity> = emptyList()
+    val feedLog: List<FeedLogEntity> = emptyList(),
+    val guida: GuidaEntity? = null
 )
 
 class WordRepository(
@@ -58,10 +61,12 @@ class WordRepository(
     private val _words = MutableStateFlow<List<WordEntity>>(emptyList())
     private val _reviews = MutableStateFlow<Map<String, ReviewEntity>>(emptyMap())
     private val _feedLog = MutableStateFlow<List<FeedLogEntity>>(emptyList())
+    private val _guida = MutableStateFlow<GuidaEntity?>(null)
 
     val wordsFlow: Flow<List<WordEntity>> = _words
     val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
     val feedLogFlow: Flow<List<FeedLogEntity>> = _feedLog
+    val guidaFlow: Flow<GuidaEntity?> = _guida
 
     init {
         loadFromDataStore()
@@ -75,6 +80,7 @@ class WordRepository(
             _words.value = vocabData.words
             _reviews.value = vocabData.reviews
             _feedLog.value = vocabData.feedLog
+            _guida.value = vocabData.guida
         }
     }
 
@@ -82,13 +88,16 @@ class WordRepository(
         val vocabData = VocabData(
             words = _words.value,
             reviews = _reviews.value,
-            feedLog = _feedLog.value
+            feedLog = _feedLog.value,
+            guida = _guida.value
         )
         val jsonStr = json.encodeToString(VocabData.serializer(), vocabData)
         context.vocabDataStore.edit {
             it[Keys.VOCAB_JSON] = jsonStr
         }
     }
+
+    fun observeGuida(): Flow<GuidaEntity?> = guidaFlow
 
     fun observeWords() = wordsFlow
         .map { it.filter { !it.archived }.sortedWith(compareBy({ it.lesson }, { it.german })) }
@@ -139,6 +148,15 @@ class WordRepository(
 
             val (added, changed) = merge(feed)
 
+            // la guida arriva dallo stesso feed: salviamola insieme alle parole
+            feed.guida?.let { g ->
+                _guida.value = GuidaEntity(
+                    titolo = g.titolo,
+                    docUrl = g.docUrl,
+                    sezioni = g.sezioni.map { SezioneEntity(it.titolo, it.testo) }
+                )
+            }
+
             newEtag?.let { settings.setEtag(it) }
             settings.setLastSync(System.currentTimeMillis())
 
@@ -147,7 +165,7 @@ class WordRepository(
                 newWords = added,
                 updatedWords = changed,
                 status = "ok",
-                message = "L${feed.lesson} · ${feed.words.size} parole"
+                message = "${feed.words.size} parole · guida ${feed.guida?.sezioni?.size ?: 0} sez."
             )
             _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
             saveToDataStore()

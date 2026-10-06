@@ -32,6 +32,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val lezioni = repo.observeLessons()
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
+    val guida = repo.observeGuida()
 
     val feedUrl: StateFlow<String> = settingsStore.feedUrlFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -44,6 +45,26 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     private val _caricamento = MutableStateFlow(false)
     val caricamento: StateFlow<Boolean> = _caricamento.asStateFlow()
+
+    /** Versione installata dell'app, letta dal manifest. */
+    val versioneApp: String = runCatching {
+        val pm = application.packageManager
+        pm.getPackageInfo(application.packageName, 0).versionName ?: "?"
+    }.getOrDefault("?")
+
+    private var syncAvviato = false
+
+    /**
+     * Controlla aggiornamenti all'apertura dell'app.
+     * Va chiamato una sola volta per processo: senza il guard, ogni
+     * ricomposizione della schermata rifarebbe la richiesta di rete.
+     */
+    fun controllaAggiornamentiAllAvvio() {
+        if (syncAvviato) return
+        syncAvviato = true
+        // silenzioso: nessuno snackbar se non ci sono novita'
+        sincronizza(mostraMessaggio = false)
+    }
 
     fun caricaSessione() {
         viewModelScope.launch {
