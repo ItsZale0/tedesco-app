@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -40,6 +41,46 @@ import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+
+private const val URL_VOCAB_DEFAULT =
+    "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
+private const val GUIDA_DOC_DEFAULT = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
+
+/**
+ * Riquadro grigio con le istruzioni passo-passo.
+ * Si espande toccando "Come si fa?" e resta discreto quando è chiuso.
+ */
+@Composable
+private fun TutorialGrigio(testo: String) {
+    var aperto by remember { mutableStateOf(false) }
+    Spacer(Modifier.height(6.dp))
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            TextButton(
+                onClick = { aperto = !aperto },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+            ) {
+                Text(
+                    text = if (aperto) "▾ Come si fa?" else "▸ Come si fa?",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (aperto) {
+                Text(
+                    text = testo,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.35
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,10 +203,11 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
 
                 // --- Personalizzazione feed e documento (solo per profili personalizzati) ---
                 if (customWords) {
-                    Text("Personalizzazione", style = MaterialTheme.typography.titleMedium)
+                    Text("Il tuo vocabolario", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Configura il tuo feed vocabolario e il tuo documento guida.",
+                        "Puoi usare il vocabolario di Alessandro oppure il tuo. " +
+                            "Tocca \"Usa il vocabolario di Alessandro\" per averlo subito.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -177,26 +219,60 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     OutlinedTextField(
                         value = feedUrl,
                         onValueChange = { feedUrl = it },
-                        label = { Text("Feed URL (vocabolario JSON)") },
+                        label = { Text("URL vocabolario") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        placeholder = { Text("https://raw.githubusercontent.com/...") }
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedButton(
+                        onClick = { feedUrl = URL_VOCAB_DEFAULT },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Usa il vocabolario di Alessandro") }
+                    TutorialGrigio(
+                        testo = "Come creare il TUO vocabolario su GitHub:\n\n" +
+                            "1. Vai su github.com e accedi (o crea un account gratis)\n" +
+                            "2. Crea un repository nuovo, chiamalo per esempio \"mio-vocabolario\"\n" +
+                            "3. Metti il repository su Public (pubblico)\n" +
+                            "4. Carica un file chiamato vokabeln.json con le tue parole\n" +
+                            "5. Copia l'URL del file (tasto Raw) e incollalo qui sopra\n\n" +
+                            "Formato del file:\n" +
+                            "{\"words\":[{\"id\":\"1\",\"german\":\"der Hund\",\"italian\":\"il cane\",\"level\":\"A1\",\"lesson\":1}]}"
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+
                     OutlinedTextField(
                         value = guidaDocId,
                         onValueChange = { guidaDocId = it },
-                        label = { Text("Documento Google (ID o URL)") },
+                        label = { Text("Documento Google della guida") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        placeholder = { Text("ID o URL del documento") }
                     )
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedButton(
+                        onClick = { guidaDocId = GUIDA_DOC_DEFAULT },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Usa la guida di Alessandro") }
+                    TutorialGrigio(
+                        testo = "Come usare il TUO documento Google:\n\n" +
+                            "1. Apri Google Docs e crea un documento\n" +
+                            "2. Scrivi la tua guida (usa i Titoli per le sezioni)\n" +
+                            "3. Tocca Condividi → Chiunque abbia il link → Visualizzatore\n" +
+                            "4. Copia il link dall'indirizzo del browser\n" +
+                            "5. Incollalo qui sopra\n\n" +
+                            "Puoi incollare tutto il link o solo la parte lunga centrale."
+                    )
+
+                    Spacer(Modifier.height(16.dp))
                     Button(
                         onClick = {
                             vm.aggiornaFeedUrl(feedUrl)
                             vm.aggiornaGuidaDocId(guidaDocId)
                         },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("Salva personalizzazione") }
+                    ) { Text("Salva") }
 
                     Spacer(Modifier.height(28.dp))
                 }
@@ -205,8 +281,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                 Text("Tutor AI", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Inserisci la chiave OpenRouter per usare il chatbot tutor. " +
-                        "Resta salvata solo su questo telefono, nel tuo profilo.",
+                    "Il tutor risponde alle tue domande. È gratis: serve solo una chiave OpenRouter.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -218,7 +293,17 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     onValueChange = { chiaveTutor = it },
                     label = { Text("Chiave OpenRouter") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    placeholder = { Text("sk-or-v1-...") }
+                )
+                TutorialGrigio(
+                    testo = "Come ottenere la chiave OpenRouter (gratis):\n\n" +
+                        "1. Vai su openrouter.ai e crea un account (anche con Google)\n" +
+                        "2. Apri il menu del tuo profilo → Keys\n" +
+                        "3. Tocca \"Create Key\", dagli un nome\n" +
+                        "4. Copia la chiave che inizia con sk-or-v1-\n" +
+                        "5. Incollala qui sopra e tocca Salva\n\n" +
+                        "L'app usa solo modelli gratuiti: non spenderai nulla."
                 )
                 Spacer(Modifier.height(10.dp))
                 Button(

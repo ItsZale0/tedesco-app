@@ -1,7 +1,7 @@
 {
-  "versionCode": 21,
-  "versionName": "1.10.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.10.0/Tedesco-v1.10.0.apk",
-  "changelog": "Tutor AI con modelli free, markdown renderizzato, guida e feed personalizzabili per profilo.",
+  "versionCode": 22,
+  "versionName": "1.11.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.11.0/Tedesco-v1.11.0.apk",
+  "changelog": "Tutorial passo-passo in grigio sotto ogni campo, pulsanti precompilati col vocabolario di Alessandro.",
   "minVersionCode": 1
 }
