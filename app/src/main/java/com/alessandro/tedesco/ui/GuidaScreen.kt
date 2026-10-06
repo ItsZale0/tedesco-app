@@ -32,6 +32,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -197,6 +198,9 @@ fun GuidaScreen(vm: TedescoViewModel) {
 private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
+    val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
+    val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
+    var mostraSelettore by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -206,19 +210,36 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
         )
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = "Lezione $lezioneCorrente",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Lezione $lezioneCorrente",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                TextButton(onClick = { mostraSelettore = !mostraSelettore }) {
+                    Text("Cambia")
+                }
+            }
+            if (mostraSelettore) {
+                Spacer(Modifier.height(8.dp))
+                LezioniDisponibili(
+                    lezioneCorrente = lezioneCorrente,
+                    onLezioneSelezionata = { nuovaLezione ->
+                        vm.cambiaLezione(nuovaLezione)
+                        mostraSelettore = false
+                    }
+                )
+            }
             Spacer(Modifier.height(12.dp))
             if (contenuto.isNotBlank()) {
-                Text(
-                    text = contenuto,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4
+                MarkdownText(
+                    markdown = contenuto,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             } else {
                 Text(
@@ -226,6 +247,78 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+            }
+            if (paroleLezione.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "Parole di questa lezione: ${paroleLezione.size}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LezioniDisponibili(
+    lezioneCorrente: Int,
+    onLezioneSelezionata: (Int) -> Unit
+) {
+    val lezioni = (1..10).toList()
+    Column {
+        lezioni.forEach { lezione ->
+            val selezionata = lezione == lezioneCorrente
+            FilterChip(
+                selected = selezionata,
+                onClick = { onLezioneSelezionata(lezione) },
+                label = { Text("Lezione $lezione") },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun MarkdownText(markdown: String, color: androidx.compose.ui.graphics.Color) {
+    val lines = markdown.split("\n")
+    Column {
+        lines.forEach { line ->
+            when {
+                line.startsWith("## ") -> {
+                    Text(
+                        text = line.removePrefix("## "),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = color,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
+                    )
+                }
+                line.startsWith("### ") -> {
+                    Text(
+                        text = line.removePrefix("### "),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = color,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    )
+                }
+                line.startsWith("- ") -> {
+                    Text(
+                        text = "• ${line.removePrefix("- ")}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = color,
+                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                    )
+                }
+                line.isNotBlank() -> {
+                    Text(
+                        text = line,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = color,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
         }
     }

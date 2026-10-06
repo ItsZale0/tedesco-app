@@ -98,6 +98,7 @@ data class ProgressoUtente(
     val storicoTest: List<TestLivello> = emptyList(),
     val ultimaAttivita: Long = 0,
     val obiettivoLivello: LivelloCEFR = LivelloCEFR.B1,
+    val lezioneCorrente: Int = 1,
     val testGrammatica: List<TestGrammatica> = emptyList(),
     val testComprensione: List<TestComprensione> = emptyList(),
     val testProduzione: List<TestProduzione> = emptyList(),

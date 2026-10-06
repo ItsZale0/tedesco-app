@@ -1,7 +1,7 @@
 {
-  "versionCode": 12,
-  "versionName": "1.7.2",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.2/Tedesco-v1.7.2.apk",
-  "changelog": "Menu Altro funzionante, lezione del giorno con contenuto scritto nel feed.",
+  "versionCode": 13,
+  "versionName": "1.7.3",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.3/Tedesco-v1.7.3.apk",
+  "changelog": "Markdown renderizzato, selettore lezioni, 3 lezioni con contenuto interattivo.",
   "minVersionCode": 1
 }

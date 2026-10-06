@@ -62,9 +62,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val guida = repo.observeGuida()
     val lezioneContenuto = repo.observeLezioneContenuto()
 
-    /** Lezione corrente dal feed (lezione del giorno). */
-    val lezioneCorrente: StateFlow<Int> = repo.observeLessons()
-        .map { lessons -> lessons.maxOrNull() ?: 1 }
+    /** Lezione corrente dal profilo attivo. */
+    val lezioneCorrente: StateFlow<Int> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id?.let { r.profili[it]?.stato?.progresso?.lezioneCorrente } ?: 1
+        }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
 
     /** Statistiche complete per la schermata Progressi. */
@@ -272,6 +275,17 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
             _messaggio.value = "Livello aggiornato a ${nuovoLivello.label}"
+        }
+    }
+
+    fun cambiaLezione(nuovaLezione: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(lezioneCorrente = nuovaLezione)
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+            _messaggio.value = "Lezione ${nuovaLezione} selezionata"
         }
     }
 
