@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,10 +40,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.WordEntity
 
@@ -58,6 +62,20 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
     // un solo motore TTS per tutta la schermata, non uno per riga
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
+
+    // Mappa lezione -> titolo descrittivo
+    val lezioneTitoli = mapOf(
+        1 to "Presentarsi (ich bin, ich heiße, ich wohne)",
+        2 to "Verbi regolari (-en → ich lerne, du lernst)",
+        3 to "Articoli: der / die / das + generi",
+        4 to "Verbi irregolari (essen → isst, sprechen → sprichst)",
+        5 to "Accusativo: den, die, das + verbi transitivi",
+        6 to "Separabili: aufstehen, anrufen, einkaufen",
+        7 to "Perfetto: ich habe gelernt / ich bin gegangen",
+        8 to "Dativo: dem, der, dem + verbi (helfen, geben)",
+        9 to "Preposizioni: in, auf, unter, über + caso",
+        10 to "Modali: können, müssen, wollen, sollen, dürfen, möchten"
+    )
 
     val filtrate = parole.filter { w: WordEntity ->
         val okTesto = ricerca.isBlank() ||
@@ -121,6 +139,21 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
             }
 
             Spacer(Modifier.height(8.dp))
+
+            // Mostra titolo lezione selezionata
+            lezioneFiltrata?.let { l ->
+                val titolo = lezioneTitoli[l] ?: "Lezione $l"
+                Text(
+                    text = "L${l.toString().padStart(2, '0')} — $titolo",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+            }
 
             when {
                 caricamento && parole.isEmpty() -> {
@@ -194,6 +227,21 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit) {
                     )
                 }
             }
+            // Badge lezione
+            Text(
+                text = "L${w.lesson.toString().padStart(2, '0')}",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        RoundedCornerShape(4.dp)
+                    )
+                    .padding(4.dp)
+            )
+            Spacer(Modifier.width(8.dp))
             IconButton(onClick = onAscolta) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
