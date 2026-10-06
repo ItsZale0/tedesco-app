@@ -216,7 +216,16 @@ private fun ContenutoApp(
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Guida.route) { GuidaScreen(vm) }
             composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater) }
-            composable(Dest.Altro.route) { AltroScreen(vm) }
+            composable(Dest.Altro.route) {
+                AltroScreen(
+                    onVaiAGrammatica = { nav.navigate("grammatica") },
+                    onVaiATest = { nav.navigate("testb1") },
+                    onVaiAStats = { nav.navigate("stats") }
+                )
+            }
+            composable("grammatica") { GrammaticaScreen(vm) }
+            composable("testb1") { TestB1Screen(vm) }
+            composable("stats") { StatsScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }

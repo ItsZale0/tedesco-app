@@ -18,7 +18,11 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AltroScreen(vm: TedescoViewModel) {
+fun AltroScreen(
+    onVaiAGrammatica: () -> Unit,
+    onVaiATest: () -> Unit,
+    onVaiAStats: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,7 +46,7 @@ fun AltroScreen(vm: TedescoViewModel) {
 
                 // Grammatica
                 Card(
-                    onClick = { /* nav a grammatica */ },
+                    onClick = onVaiAGrammatica,
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -76,7 +80,7 @@ fun AltroScreen(vm: TedescoViewModel) {
 
                 // Test
                 Card(
-                    onClick = { /* nav a test */ },
+                    onClick = onVaiATest,
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -110,7 +114,7 @@ fun AltroScreen(vm: TedescoViewModel) {
 
                 // Statistiche
                 Card(
-                    onClick = { /* nav a stats */ },
+                    onClick = onVaiAStats,
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant

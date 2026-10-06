@@ -49,6 +49,7 @@ class WordRepository(
     private val _reviews = MutableStateFlow<Map<String, ReviewEntity>>(emptyMap())
     private val _feedLog = MutableStateFlow<List<FeedLogEntity>>(emptyList())
     private val _guida = MutableStateFlow<GuidaEntity?>(null)
+    private val _lezioneContenuto = MutableStateFlow("")
 
     val wordsFlow: Flow<List<WordEntity>> = _words
     val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
@@ -92,6 +93,7 @@ class WordRepository(
     }
 
     fun observeGuida(): Flow<GuidaEntity?> = guidaFlow
+    fun observeLezioneContenuto(): Flow<String> = _lezioneContenuto
 
     fun observeWords() = wordsFlow
         .map { it.filter { !it.archived }.sortedWith(compareBy({ it.lesson }, { it.german })) }
@@ -138,6 +140,9 @@ class WordRepository(
 
             val (added, changed) = merge(feed)
 
+            feed.lessons.firstOrNull()?.let { l ->
+                _lezioneContenuto.value = l.contenuto
+            }
             feed.guida?.let { g ->
                 _guida.value = GuidaEntity(
                     titolo = g.titolo,

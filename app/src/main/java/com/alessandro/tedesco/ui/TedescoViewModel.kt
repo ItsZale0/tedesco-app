@@ -60,6 +60,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
+    val lezioneContenuto = repo.observeLezioneContenuto()
 
     /** Lezione corrente dal feed (lezione del giorno). */
     val lezioneCorrente: StateFlow<Int> = repo.observeLessons()

@@ -205,6 +205,7 @@ data class ProfiloStato(
     val feedLog: List<FeedLogEntity> = emptyList(),
     val guida: GuidaEntity? = null,
     val progresso: ProgressoUtente = ProgressoUtente(),
+    val lezioneContenuto: String = "",
     val etag: String = "",
     val lastSync: Long = 0L
 )

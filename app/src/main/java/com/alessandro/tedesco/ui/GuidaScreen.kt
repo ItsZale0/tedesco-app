@@ -196,8 +196,7 @@ fun GuidaScreen(vm: TedescoViewModel) {
 @Composable
 private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
-    val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
-    val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
+    val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -213,32 +212,21 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            Spacer(Modifier.height(8.dp))
-            if (paroleLezione.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            if (contenuto.isNotBlank()) {
                 Text(
-                    text = "${paroleLezione.size} parole in questa lezione",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Prima parola: ${paroleLezione.first().german}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    text = contenuto,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4
                 )
             } else {
                 Text(
-                    text = "Nessuna parola ancora per questa lezione",
+                    text = "Contenuto della lezione non ancora disponibile. Verrà aggiornato al prossimo sync.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = "La lezione completa viene inviata su WhatsApp e via email ogni giorno.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
         }
     }
 }
