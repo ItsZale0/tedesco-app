@@ -39,8 +39,7 @@ fun HomeScreen(vm: TedescoViewModel, onIniziaRipasso: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tedesco") },
-                actions = {
+                title = { MaterialTheme.typography.titleLarge },                actions = {
                     IconButton(
                         onClick = { vm.sincronizza() },
                         enabled = !caricamento

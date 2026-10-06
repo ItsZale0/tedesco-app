@@ -44,12 +44,89 @@ private val SchemaScuro = darkColorScheme(
     error = Color(0xFFFFB4AB)
 )
 
-private val Tipografia = Typography()
+private val Tipografia = Typography(
+    displayLarge = TextStyle(
+        fontSize = 72.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 80.sp,
+        letterSpacing = -1.5.sp
+    ),
+    displayMedium = TextStyle(
+        fontSize = 56.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 64.sp,
+        letterSpacing = -0.5.sp
+    ),
+    displaySmall = TextStyle(
+        fontSize = 44.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 52.sp
+    ),
+    headlineLarge = TextStyle(
+        fontSize = 36.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 44.sp
+    ),
+    headlineMedium = TextStyle(
+        fontSize = 32.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 40.sp
+    ),
+    headlineSmall = TextStyle(
+        fontSize = 28.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 36.sp
+    ),
+    titleLarge = TextStyle(
+        fontSize = 24.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 32.sp
+    ),
+    titleMedium = TextStyle(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 28.sp
+    ),
+    titleSmall = TextStyle(
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 24.sp
+    ),
+    bodyLarge = TextStyle(
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 26.sp
+    ),
+    bodyMedium = TextStyle(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 24.sp
+    ),
+    bodySmall = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 20.sp
+    ),
+    labelLarge = TextStyle(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 24.sp
+    ),
+    labelMedium = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 20.sp
+    ),
+    labelSmall = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 16.sp
+    )
+)
 
 @Composable
 fun TedescoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    /** colori dinamici: attivi su Android 12+, disattivati sotto */
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
