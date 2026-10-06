@@ -14,7 +14,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,7 +39,7 @@ fun StatsScreen(vm: TedescoViewModel) {
     val daRipassare: Int by vm.daRipassare.collectAsStateWithLifecycle(0)
 
     Scaffold(
-        topBar = { LargeTopAppBar(title = { Text("Statistiche") }) }
+        topBar = { TopAppBar(title = { Text("Statistiche") }) }
     ) { inner ->
         Column(
             modifier = Modifier

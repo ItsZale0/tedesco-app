@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lettera "D" di Deutsch, bianca, su fondo blu: leggibile a ogni dimensione. -->
+<!-- Bandiera tedesca su sfondo arrotondato: riconoscibile a ogni dimensione. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- sfondo arrotondato -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M36,32 L36,76 L72,76 L72,68 L46,68 L46,32 Z" />
+        android:fillColor="#1B5E9B"
+        android:pathData="M20,0 L88,0 A20,20 0 0 1 108,20 L108,88 A20,20 0 0 1 88,108 L20,108 A20,20 0 0 1 0,88 L0,20 A20,20 0 0 1 20,0 Z" />
+
+    <!-- striscia nera -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M28,30 L80,30 L80,50 L28,50 Z" />
+
+    <!-- striscia rossa -->
+    <path
+        android:fillColor="#DD0000"
+        android:pathData="M28,50 L80,50 L80,70 L28,70 Z" />
+
+    <!-- striscia oro -->
+    <path
+        android:fillColor="#FFCE00"
+        android:pathData="M28,70 L80,70 L80,90 L28,90 Z" />
 </vector>
