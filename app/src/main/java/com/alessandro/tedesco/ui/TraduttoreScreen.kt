@@ -17,6 +17,9 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import java.io.IOException
 import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,11 +150,15 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
 }
 
 private fun traduci(testo: String): String {
-    val url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=de&tl=it&dt=t&q=" +
-            URLEncoder.encode(testo, "UTF-8")
+    val url = "https://api.mymemory.translated.net/get?q=" +
+            URLEncoder.encode(testo, "UTF-8") + "&langpair=de|it"
     val risultato = java.net.URL(url).readText()
-    // Parsing semplice: [[["traduzione","originale",...],...],...]
-    val regex = Regex("\"([^\"]+)\"")
-    val matches = regex.findAll(risultato).map { it.groupValues[1] }.toList()
-    return matches.take(4).joinToString("")
+    val json = kotlinx.serialization.json.Json.parseToJsonElement(risultato).jsonObject
+    val translated = json["responseData"]?.jsonObject?.get("translatedText")?.jsonPrimitive?.content
+        ?: throw IOException("Traduzione non disponibile")
+    // MyMemory a volte risponde con "MYMEMORY WARNING: QUERY LENGTH LIMIT..."
+    if (translated.startsWith("MYMEMORY WARNING") || translated.startsWith("QUERY LENGTH LIMIT")) {
+        throw IOException("Limite di traduzione raggiunto, riprova più tardi")
+    }
+    return translated
 }
