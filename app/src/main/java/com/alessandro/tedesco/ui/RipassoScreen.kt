@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.VolumeUp
@@ -49,7 +50,7 @@ import com.alessandro.tedesco.data.SessionState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RipassoScreen(vm: TedescoViewModel) {
+fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
     val sessionState by vm.sessione.collectAsStateWithLifecycle(SessionState())
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
 
@@ -59,6 +60,11 @@ fun RipassoScreen(vm: TedescoViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onIndietro) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
                 title = {
                     Text(
                         text = "${sessionState.indice.coerceAtMost(sessionState.totale)} / ${sessionState.totale}",
@@ -114,7 +120,10 @@ fun RipassoScreen(vm: TedescoViewModel) {
                         }
                         Spacer(Modifier.height(32.dp))
                         Button(
-                            onClick = { vm.nuovaSessione() },
+                            onClick = {
+                                vm.nuovaSessione()
+                                onIndietro()
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)

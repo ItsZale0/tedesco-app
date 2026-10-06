@@ -227,9 +227,17 @@ class WordRepository(
         }
     }
 
-    suspend fun dueReviews(): List<ReviewEntity> = withContext(io) {
+    /**
+     * Parole in scadenza, al massimo [limite] per sessione.
+     * Un A0 con 100 parole nuove avrebbe 100 carte in scadenza il primo giorno:
+     * una sessione cosi' non si finisce mai. Meglio poche carte al giorno.
+     */
+    suspend fun dueReviews(limite: Int = 20): List<ReviewEntity> = withContext(io) {
         val now = System.currentTimeMillis()
-        _reviews.value.values.filter { it.dueAt <= now }.sortedBy { it.dueAt }
+        _reviews.value.values
+            .filter { it.dueAt <= now }
+            .sortedBy { it.dueAt }
+            .take(limite)
     }
 
     suspend fun answer(wordId: String, knewIt: Boolean) = withContext(io) {

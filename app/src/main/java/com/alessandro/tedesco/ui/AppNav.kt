@@ -93,11 +93,13 @@ fun AppNav() {
             startDestination = Dest.Home.route,
             modifier = Modifier.padding(inner)
         ) {
-            composable(Dest.Home.route) { HomeScreen(vm) }
+            composable(Dest.Home.route) {
+                HomeScreen(vm, onIniziaRipasso = { nav.navigate("ripasso") })
+            }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Stats.route) { StatsScreen(vm) }
             composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm) }
-            composable("ripasso") { RipassoScreen(vm) }
+            composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }
 }

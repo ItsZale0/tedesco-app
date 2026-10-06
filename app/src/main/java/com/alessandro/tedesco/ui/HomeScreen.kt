@@ -28,15 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alessandro.tedesco.data.SessionState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(vm: TedescoViewModel) {
+fun HomeScreen(vm: TedescoViewModel, onIniziaRipasso: () -> Unit) {
     val daRipassare by vm.daRipassare.collectAsStateWithLifecycle(0)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
-    val sessione by vm.sessione.collectAsStateWithLifecycle(SessionState())
 
     Scaffold(
         topBar = {
@@ -81,8 +79,11 @@ fun HomeScreen(vm: TedescoViewModel) {
             Spacer(Modifier.height(40.dp))
 
             Button(
-                onClick = { vm.caricaSessione() },
-                enabled = !caricamento && daRipassare > 0,
+                onClick = {
+                    vm.caricaSessione()
+                    onIniziaRipasso()
+                },
+                enabled = !caricamento,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
