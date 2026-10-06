@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Bandiera tedesca su sfondo arrotondato: riconoscibile a ogni dimensione. -->
+<!-- Icona app: cerchio blu con "D" bianca pulita e moderna -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- sfondo arrotondato -->
+    <!-- Sfondo cerchio blu -->
     <path
         android:fillColor="#1B5E9B"
-        android:pathData="M20,0 L88,0 A20,20 0 0 1 108,20 L108,88 A20,20 0 0 1 88,108 L20,108 A20,20 0 0 1 0,88 L0,20 A20,20 0 0 1 20,0 Z" />
+        android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0" />
 
-    <!-- striscia nera -->
+    <!-- "D" bianca: stemma verticale + curva pulita -->
     <path
-        android:fillColor="#000000"
-        android:pathData="M28,30 L80,30 L80,50 L28,50 Z" />
-
-    <!-- striscia rossa -->
-    <path
-        android:fillColor="#DD0000"
-        android:pathData="M28,50 L80,50 L80,70 L28,70 Z" />
-
-    <!-- striscia oro -->
-    <path
-        android:fillColor="#FFCE00"
-        android:pathData="M28,70 L80,70 L80,90 L28,90 Z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,30 L40,78 L58,78 C70,78 78,70 78,54 C78,38 70,30 58,30 Z M48,38 L58,38 C66,38 72,44 72,54 C72,64 66,70 58,70 L48,70 Z" />
 </vector>
