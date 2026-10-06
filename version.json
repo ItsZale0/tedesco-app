@@ -1,7 +1,7 @@
 {
-  "versionCode": 5,
-  "versionName": "1.5",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.5/Tedesco-v1.5.apk",
-  "changelog": "Auto-updater interno, pulsante Google Docs, grafica migliorata",
+  "versionCode": 6,
+  "versionName": "1.5.2",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.5.2/Tedesco-v1.5.2.apk",
+  "changelog": "Auto-updater fix, icona pulita, pulsante test in Impostazioni",
   "minVersionCode": 1
 }
