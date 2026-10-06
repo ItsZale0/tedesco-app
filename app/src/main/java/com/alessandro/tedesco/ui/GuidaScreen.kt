@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,11 +35,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.SezioneEntity
+
+private const val URL_DOC = "https://docs.google.com/document/d/10nURqro0VwrYZPDeolwwXx9ubmaES28AmPnYpd9Yi2w/edit"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +100,23 @@ fun GuidaScreen(vm: TedescoViewModel) {
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            Spacer(Modifier.height(12.dp))
+                            val ctx = LocalContext.current
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
+                                    ctx.startActivity(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.size(8.dp))
+                                Text("Apri in Google Docs")
+                            }
                         }
                         items(g.sezioni) { sez ->
                             SezioneCard(sez)
@@ -165,6 +189,7 @@ private fun SezioneCard(sez: SezioneEntity) {
 
 @Composable
 private fun EmptyGuida(modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
     Column(
         modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -182,5 +207,20 @@ private fun EmptyGuida(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+        Spacer(Modifier.height(20.dp))
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
+                ctx.startActivity(intent)
+            }
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.OpenInNew,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.size(8.dp))
+            Text("Apri in Google Docs")
+        }
     }
 }
