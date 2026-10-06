@@ -1,7 +1,7 @@
 {
-  "versionCode": 15,
-  "versionName": "1.7.5",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.5/Tedesco-v1.7.5.apk",
-  "changelog": "Controllo permesso installazione, APK già scaricato riutilizzabile.",
+  "versionCode": 16,
+  "versionName": "1.7.6",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.6/Tedesco-v1.7.6.apk",
+  "changelog": "Esercizi calibrati sulle lezioni, traduttore al tocco negli esercizi.",
   "minVersionCode": 1
 }

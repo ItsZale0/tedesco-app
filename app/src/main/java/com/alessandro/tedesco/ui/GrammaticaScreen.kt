@@ -3,14 +3,21 @@ package com.alessandro.tedesco.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 import com.alessandro.tedesco.data.GrammaticaB1
 import com.alessandro.tedesco.data.CategoriaGrammatica
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -22,12 +29,17 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 fun GrammaticaScreen(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label ?: "A0"
-    var esercizi by remember(livello) { mutableStateOf(GrammaticaB1.eserciziPerLivello(livello, 5)) }
+    val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
+    var esercizi by remember(lezioneCorrente) { mutableStateOf(GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)) }
     var indice by remember { mutableStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableStateOf(0) }
     var completato by remember { mutableStateOf(false) }
+    var testoTraduzione by remember { mutableStateOf<String?>(null) }
+    var traduzione by remember { mutableStateOf("") }
+    var caricamentoTraduzione by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -57,19 +69,58 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                         label = { Text(esercizio.categoria.name.replace("_", " ")) }
                     )
 
-                    // Domanda
+                    // Domanda con traduttore
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(
-                            text = esercizio.domanda,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(Spaziature.md)
-                        )
+                        Column(modifier = Modifier.padding(Spaziature.md)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = esercizio.domanda,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        testoTraduzione = esercizio.domanda
+                                        caricamentoTraduzione = true
+                                        scope.launch {
+                                            try {
+                                                traduzione = withContext(Dispatchers.IO) {
+                                                    traduci(esercizio.domanda)
+                                                }
+                                            } catch (e: Exception) {
+                                                traduzione = "Errore: ${e.message}"
+                                            } finally {
+                                                caricamentoTraduzione = false
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Translate,
+                                        contentDescription = "Traduci",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            if (testoTraduzione == esercizio.domanda && traduzione.isNotBlank()) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = traduzione,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
 
-                    // Opzioni
+                    // Opzioni con traduttore
                     esercizio.opzioni.forEachIndexed { index, opzione ->
                         val selezionato = rispostaSelezionata == index
                         val colore = when {
@@ -90,10 +141,38 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = colore)
                         ) {
-                            Text(
-                                text = opzione,
-                                modifier = Modifier.padding(Spaziature.md)
-                            )
+                            Row(
+                                modifier = Modifier.padding(Spaziature.md),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = opzione,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        testoTraduzione = opzione
+                                        caricamentoTraduzione = true
+                                        scope.launch {
+                                            try {
+                                                traduzione = withContext(Dispatchers.IO) {
+                                                    traduci(opzione)
+                                                }
+                                            } catch (e: Exception) {
+                                                traduzione = "Errore: ${e.message}"
+                                            } finally {
+                                                caricamentoTraduzione = false
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Translate,
+                                        contentDescription = "Traduci",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -161,7 +240,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
 
                     Button(
                         onClick = {
-                            esercizi = GrammaticaB1.eserciziPerLivello(livello, 5)
+                            esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
                             indice = 0
                             rispostaSelezionata = null
                             risultato = null
@@ -176,4 +255,13 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
             }
         }
     }
+}
+
+private fun traduci(testo: String): String {
+    val url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=de&tl=it&dt=t&q=" +
+            URLEncoder.encode(testo, "UTF-8")
+    val risultato = java.net.URL(url).readText()
+    val regex = Regex("\"([^\"]+)\"")
+    val matches = regex.findAll(risultato).map { it.groupValues[1] }.toList()
+    return matches.take(4).joinToString("")
 }

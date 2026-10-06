@@ -3,6 +3,7 @@ package com.alessandro.tedesco.data
 data class EsercizioGrammatica(
     val id: String,
     val categoria: CategoriaGrammatica,
+    val lezione: Int,
     val domanda: String,
     val opzioni: List<String>,
     val rispostaCorretta: Int,
@@ -40,6 +41,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "v1",
             categoria = CategoriaGrammatica.VERBI_TEMPI,
+            lezione = 1,
             domanda = "Ich ___ gestern ins Kino gegangen.",
             opzioni = listOf("bin", "habe", "war", "hatte"),
             rispostaCorretta = 0,
@@ -49,6 +51,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "v2",
             categoria = CategoriaGrammatica.VERBI_TEMPI,
+            lezione = 1,
             domanda = "Er ___ den ganzen Tag geschlafen.",
             opzioni = listOf("hat", "ist", "wird", "war"),
             rispostaCorretta = 0,
@@ -58,6 +61,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "v3",
             categoria = CategoriaGrammatica.VERBI_TEMPI,
+            lezione = 1,
             domanda = "Wir ___ letzte Woche nach Berlin gefahren.",
             opzioni = listOf("sind", "haben", "waren", "hatten"),
             rispostaCorretta = 0,
@@ -69,6 +73,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "m1",
             categoria = CategoriaGrammatica.VERBI_MODALI,
+            lezione = 2,
             domanda = "Du ___ mir bitte helfen.",
             opzioni = listOf("kannst", "könntest", "könntet", "kann"),
             rispostaCorretta = 0,
@@ -78,6 +83,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "m2",
             categoria = CategoriaGrammatica.VERBI_MODALI,
+            lezione = 2,
             domanda = "Ich ___ morgen früh aufstehen.",
             opzioni = listOf("muss", "müsste", "musste", "müsse"),
             rispostaCorretta = 0,
@@ -89,6 +95,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "p1",
             categoria = CategoriaGrammatica.PASSIV,
+            lezione = 5,
             domanda = "Das Buch ___ von vielen Menschen gelesen.",
             opzioni = listOf("ist", "wurde", "wird", "hat"),
             rispostaCorretta = 0,
@@ -98,6 +105,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "p2",
             categoria = CategoriaGrammatica.PASSIV,
+            lezione = 5,
             domanda = "Die Hausaufgaben ___ morgen erledigt.",
             opzioni = listOf("werden", "wurden", "sind", "haben"),
             rispostaCorretta = 0,
@@ -109,6 +117,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "k1",
             categoria = CategoriaGrammatica.KONJUNKTIV_II,
+            lezione = 5,
             domanda = "Wenn ich mehr Zeit hätte, ___ ich mehr Deutsch lernen.",
             opzioni = listOf("würde", "werde", "würdest", "werden"),
             rispostaCorretta = 0,
@@ -118,6 +127,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "k2",
             categoria = CategoriaGrammatica.KONJUNKTIV_II,
+            lezione = 5,
             domanda = "Ich ___ gern nach Deutschland reisen.",
             opzioni = listOf("würde", "werde", "würdest", "werden"),
             rispostaCorretta = 0,
@@ -129,6 +139,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "r1",
             categoria = CategoriaGrammatica.RELATIVSATZ,
+            lezione = 6,
             domanda = "Der Mann, ___ ich gestern getroffen habe, ist mein Lehrer.",
             opzioni = listOf("den", "dem", "dessen", "der"),
             rispostaCorretta = 0,
@@ -138,6 +149,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "r2",
             categoria = CategoriaGrammatica.RELATIVSATZ,
+            lezione = 6,
             domanda = "Die Frau, ___ Auto gestohlen wurde, ruft die Polizei.",
             opzioni = listOf("deren", "der", "die", "dem"),
             rispostaCorretta = 0,
@@ -149,6 +161,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "kn1",
             categoria = CategoriaGrammatica.KONNEKTOREN,
+            lezione = 6,
             domanda = "Ich lerne Deutsch, ___ ich in Deutschland arbeiten will.",
             opzioni = listOf("weil", "dass", "obwohl", "wenn"),
             rispostaCorretta = 0,
@@ -158,6 +171,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "kn2",
             categoria = CategoriaGrammatica.KONNEKTOREN,
+            lezione = 6,
             domanda = "___ es regnet, gehen wir spazieren.",
             opzioni = listOf("Obwohl", "Weil", "Wenn", "Damit"),
             rispostaCorretta = 0,
@@ -169,6 +183,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "pr1",
             categoria = CategoriaGrammatica.PRAEPOSITIONEN,
+            lezione = 3,
             domanda = "Ich warte ___ den Bus.",
             opzioni = listOf("auf", "für", "mit", "zu"),
             rispostaCorretta = 0,
@@ -178,6 +193,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "pr2",
             categoria = CategoriaGrammatica.PRAEPOSITIONEN,
+            lezione = 3,
             domanda = "Er freut sich ___ das Wochenende.",
             opzioni = listOf("auf", "über", "für", "mit"),
             rispostaCorretta = 0,
@@ -189,6 +205,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "a1",
             categoria = CategoriaGrammatica.ADJEKTIVDEKLINATION,
+            lezione = 7,
             domanda = "Ich sehe einen ___ Hund. (groß)",
             opzioni = listOf("großen", "große", "großem", "großer"),
             rispostaCorretta = 0,
@@ -198,6 +215,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "a2",
             categoria = CategoriaGrammatica.ADJEKTIVDEKLINATION,
+            lezione = 7,
             domanda = "Ich gebe ___ Frau ein Buch. (neu)",
             opzioni = listOf("der neuen", "die neue", "den neuen", "dem neuen"),
             rispostaCorretta = 0,
@@ -209,6 +227,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "ar1",
             categoria = CategoriaGrammatica.ARTICOLI,
+            lezione = 1,
             domanda = "___ Buch liegt auf dem Tisch.",
             opzioni = listOf("Der", "Die", "Das", "Den"),
             rispostaCorretta = 2,
@@ -218,6 +237,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "ar2",
             categoria = CategoriaGrammatica.ARTICOLI,
+            lezione = 1,
             domanda = "Ich sehe ___ Frau.",
             opzioni = listOf("der", "die", "das", "den"),
             rispostaCorretta = 1,
@@ -229,6 +249,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "i1",
             categoria = CategoriaGrammatica.INFINITIV_ZU,
+            lezione = 4,
             domanda = "Ich beginne ___ Deutsch lernen.",
             opzioni = listOf("zu", "Ø", "mit", "für"),
             rispostaCorretta = 0,
@@ -238,6 +259,7 @@ object GrammaticaB1 {
         EsercizioGrammatica(
             id = "i2",
             categoria = CategoriaGrammatica.INFINITIV_ZU,
+            lezione = 4,
             domanda = "Ich helfe dir ___ das Problem lösen.",
             opzioni = listOf("Ø", "zu", "mit", "für"),
             rispostaCorretta = 0,
@@ -252,6 +274,10 @@ object GrammaticaB1 {
 
     fun eserciziCasuali(n: Int = 5): List<EsercizioGrammatica> {
         return esercizi.shuffled().take(n)
+    }
+
+    fun eserciziPerLezione(lezione: Int, n: Int = 5): List<EsercizioGrammatica> {
+        return esercizi.filter { it.lezione == lezione }.shuffled().take(n)
     }
 
     fun eserciziPerLivello(livello: String, n: Int = 5): List<EsercizioGrammatica> {
