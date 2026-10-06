@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -59,10 +60,8 @@ private sealed class Dest(
     data object Home : Dest("home", "Oggi", Icons.Filled.Home, "Dashboard e attività del giorno")
     data object Nuove : Dest("nuove", "Parole", Icons.Filled.Translate, "Vocabolario e nuove parole")
     data object Guida : Dest("guida", "Guida", Icons.AutoMirrored.Filled.MenuBook, "Guida e lezione del giorno")
-    data object Grammatica : Dest("grammatica", "Grammatica", Icons.Filled.School, "Esercizi di grammatica B1")
-    data object TestB1 : Dest("testb1", "Test B1", Icons.Filled.Quiz, "Simulazione esame Goethe B1")
-    data object Stats : Dest("stats", "Statistiche", Icons.Filled.BarChart, "Progressi e statistiche")
     data object Impostazioni : Dest("impostazioni", "Profilo", Icons.Filled.Settings, "Profilo e impostazioni")
+    data object Altro : Dest("altro", "Altro", Icons.Filled.Star, "Grammatica, test e statistiche")
 }
 
 private class TedescoViewModelFactory(private val app: TedescoApp) : ViewModelProvider.Factory {
@@ -179,9 +178,9 @@ private fun ContenutoApp(
         bottomBar = {
             if (mostraBarra) {
                 NavigationBar {
-                    listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Grammatica, Dest.TestB1, Dest.Stats, Dest.Impostazioni)
+                    listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Impostazioni, Dest.Altro)
                         .forEach { d ->
-                            val label = if (d == Dest.Stats) labelStats else d.label
+                            val label = d.label
                             NavigationBarItem(
                                 selected = schermataCorrente == d.route,
                                 onClick = {
@@ -216,10 +215,8 @@ private fun ContenutoApp(
             }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Guida.route) { GuidaScreen(vm) }
-            composable(Dest.Grammatica.route) { GrammaticaScreen(vm) }
-            composable(Dest.TestB1.route) { TestB1Screen(vm) }
-            composable(Dest.Stats.route) { StatsScreen(vm) }
             composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater) }
+            composable(Dest.Altro.route) { AltroScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }

@@ -29,7 +29,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Grammatica B1", style = MaterialTheme.typography.titleLarge) }
+                title = { Text("Grammatica", style = MaterialTheme.typography.titleLarge) }
             )
         }
     ) { padding ->

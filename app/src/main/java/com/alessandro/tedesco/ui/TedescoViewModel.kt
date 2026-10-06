@@ -261,6 +261,19 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         _messaggio.value = null
     }
 
+    // ---- Livello ----
+
+    fun cambiaLivello(nuovoLivello: com.alessandro.tedesco.data.local.LivelloCEFR) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(livelloCorrente = nuovoLivello)
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+            _messaggio.value = "Livello aggiornato a ${nuovoLivello.label}"
+        }
+    }
+
     // ---- Test di grammatica ----
 
     fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int) {

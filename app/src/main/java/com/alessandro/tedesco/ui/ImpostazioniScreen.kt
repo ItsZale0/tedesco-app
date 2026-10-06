@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -114,6 +115,25 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     onClick = { esciSelezione = true },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Torna alla scelta del profilo") }
+
+                Spacer(Modifier.height(28.dp))
+
+                // --- Livello ---
+                Text("Livello", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Scegli il tuo livello attuale. I contenuti si adatteranno.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                LivelloSelector(
+                    livelloAttuale = profilo?.stato?.progresso?.livelloCorrente
+                        ?: com.alessandro.tedesco.data.local.LivelloCEFR.A0,
+                    onLivelloCambiato = { nuovoLivello ->
+                        vm.cambiaLivello(nuovoLivello)
+                    }
+                )
 
                 Spacer(Modifier.height(28.dp))
 
@@ -306,6 +326,39 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                 aggiungiParola = false
             }
         )
+    }
+}
+
+@Composable
+private fun LivelloSelector(
+    livelloAttuale: LivelloCEFR,
+    onLivelloCambiato: (LivelloCEFR) -> Unit
+) {
+    val livelli = listOf(
+        LivelloCEFR.A0 to "A0 - Principiante assoluto",
+        LivelloCEFR.A1 to "A1 - Principiante",
+        LivelloCEFR.A2 to "A2 - Elementare",
+        LivelloCEFR.B1 to "B1 - Intermedio",
+        LivelloCEFR.B2 to "B2 - Intermedio superiore"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            livelli.forEach { (livello, descrizione) ->
+                val selezionato = livello == livelloAttuale
+                FilterChip(
+                    selected = selezionato,
+                    onClick = { onLivelloCambiato(livello) },
+                    label = { Text(descrizione) },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                )
+            }
+        }
     }
 }
 

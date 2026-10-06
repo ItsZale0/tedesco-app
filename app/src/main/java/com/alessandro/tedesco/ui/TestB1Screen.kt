@@ -31,7 +31,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Test B1 - ${sezione.name}", style = MaterialTheme.typography.titleLarge) }
+                title = { Text("Test - ${sezione.name}", style = MaterialTheme.typography.titleLarge) }
             )
         }
     ) { padding ->

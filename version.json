@@ -1,7 +1,7 @@
 {
-  "versionCode": 10,
-  "versionName": "1.7.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.0/Tedesco-v1.7.0.apk",
-  "changelog": "Sistema B1 scientifico: 4 competenze, esercizi grammatica, test Goethe B1, lezione del giorno in Guida.",
+  "versionCode": 11,
+  "versionName": "1.7.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.1/Tedesco-v1.7.1.apk",
+  "changelog": "Selettore di livello in Profilo, bottom nav chiara con menu Altro, etichette adattate al livello.",
   "minVersionCode": 1
 }
