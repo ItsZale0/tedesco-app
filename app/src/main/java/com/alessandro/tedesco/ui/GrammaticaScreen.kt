@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.GrammaticaB1
 import com.alessandro.tedesco.data.CategoriaGrammatica
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -19,7 +20,9 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GrammaticaScreen(vm: TedescoViewModel) {
-    var esercizi by remember { mutableStateOf(GrammaticaB1.eserciziCasuali(5)) }
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+    val livello = profilo?.stato?.progresso?.livelloCorrente?.label ?: "A0"
+    var esercizi by remember(livello) { mutableStateOf(GrammaticaB1.eserciziPerLivello(livello, 5)) }
     var indice by remember { mutableStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -158,7 +161,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
 
                     Button(
                         onClick = {
-                            esercizi = GrammaticaB1.eserciziCasuali(5)
+                            esercizi = GrammaticaB1.eserciziPerLivello(livello, 5)
                             indice = 0
                             rispostaSelezionata = null
                             risultato = null

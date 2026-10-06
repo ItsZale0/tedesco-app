@@ -20,7 +20,17 @@ enum class CategoriaGrammatica {
     PRAEPOSITIONEN,
     ADJEKTIVDEKLINATION,
     ARTICOLI,
-    INFINITIV_ZU
+    INFINITIV_ZU;
+
+    companion object {
+        fun perLivello(livello: String): List<CategoriaGrammatica> = when (livello) {
+            "A0" -> listOf(ARTICOLI, VERBI_TEMPI)
+            "A1" -> listOf(ARTICOLI, VERBI_TEMPI, VERBI_MODALI, PRAEPOSITIONEN)
+            "A2" -> listOf(ARTICOLI, VERBI_TEMPI, VERBI_MODALI, PRAEPOSITIONEN, ADJEKTIVDEKLINATION, KONNEKTOREN)
+            "B1" -> entries
+            else -> entries
+        }
+    }
 }
 
 object GrammaticaB1 {
@@ -242,5 +252,10 @@ object GrammaticaB1 {
 
     fun eserciziCasuali(n: Int = 5): List<EsercizioGrammatica> {
         return esercizi.shuffled().take(n)
+    }
+
+    fun eserciziPerLivello(livello: String, n: Int = 5): List<EsercizioGrammatica> {
+        val categorie = CategoriaGrammatica.perLivello(livello)
+        return esercizi.filter { it.categoria in categorie }.shuffled().take(n)
     }
 }

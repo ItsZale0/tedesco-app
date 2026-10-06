@@ -220,12 +220,14 @@ private fun ContenutoApp(
                 AltroScreen(
                     onVaiAGrammatica = { nav.navigate("grammatica") },
                     onVaiATest = { nav.navigate("testb1") },
-                    onVaiAStats = { nav.navigate("stats") }
+                    onVaiAStats = { nav.navigate("stats") },
+                    onVaiATraduttore = { nav.navigate("traduttore") }
                 )
             }
             composable("grammatica") { GrammaticaScreen(vm) }
             composable("testb1") { TestB1Screen(vm) }
             composable("stats") { StatsScreen(vm) }
+            composable("traduttore") { TraduttoreScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }

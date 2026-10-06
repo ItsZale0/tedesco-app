@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +22,8 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 fun AltroScreen(
     onVaiAGrammatica: () -> Unit,
     onVaiATest: () -> Unit,
-    onVaiAStats: () -> Unit
+    onVaiAStats: () -> Unit,
+    onVaiATraduttore: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -105,6 +107,40 @@ fun AltroScreen(
                             )
                             Text(
                                 "Verifica delle tue competenze",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Traduttore
+                Card(
+                    onClick = onVaiATraduttore,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Translate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                "Traduttore",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "Traduci parole e frasi",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
