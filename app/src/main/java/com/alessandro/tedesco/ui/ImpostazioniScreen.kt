@@ -160,6 +160,47 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     Spacer(Modifier.height(28.dp))
                 }
 
+                // --- Personalizzazione feed e documento (solo per profili personalizzati) ---
+                if (customWords) {
+                    Text("Personalizzazione", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Configura il tuo feed vocabolario e il tuo documento guida.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    var feedUrl by remember { mutableStateOf(profilo?.config?.feedUrl ?: "") }
+                    var guidaDocId by remember { mutableStateOf(profilo?.config?.guidaDocId ?: "") }
+
+                    OutlinedTextField(
+                        value = feedUrl,
+                        onValueChange = { feedUrl = it },
+                        label = { Text("Feed URL (vocabolario JSON)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = guidaDocId,
+                        onValueChange = { guidaDocId = it },
+                        label = { Text("Documento Google (ID o URL)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            vm.aggiornaFeedUrl(feedUrl)
+                            vm.aggiornaGuidaDocId(guidaDocId)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Salva personalizzazione") }
+
+                    Spacer(Modifier.height(28.dp))
+                }
+
                 // --- Aggiornamenti ---
                 Text("Aggiornamenti", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))

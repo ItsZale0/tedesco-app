@@ -169,4 +169,24 @@ class ProfileManager(
 
     /** Ordine dei preset, esposto per l'UI. */
     fun ordinePreset(): List<String> = ProfiliPreset.ID_PRESET
+
+    /** Aggiorna il feed URL del profilo attivo. */
+    suspend fun aggiornaFeedUrl(nuovoUrl: String) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val aggiornato = profilo.copy(config = profilo.config.copy(feedUrl = nuovoUrl))
+        _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
+        saveToDataStore()
+    }
+
+    /** Aggiorna l'ID del documento Google della guida per il profilo attivo. */
+    suspend fun aggiornaGuidaDocId(nuovoDocId: String?) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val aggiornato = profilo.copy(config = profilo.config.copy(guidaDocId = nuovoDocId))
+        _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
+        saveToDataStore()
+    }
 }

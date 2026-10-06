@@ -28,7 +28,7 @@ object ProfiliPreset {
 
     /** Costruisce i profili preset. Nessuno viene attivato. */
     fun crea(now: Long = System.currentTimeMillis()): Map<String, ProfiloUtente> {
-        fun preset(tipo: TipoProfilo, sheetId: String?): ProfiloUtente = ProfiloUtente(
+        fun preset(tipo: TipoProfilo, sheetId: String?, feedUrl: String = "", guidaDocId: String? = null): ProfiloUtente = ProfiloUtente(
             id = tipo.id,
             config = ProfiloConfig(
                 tipo = tipo,
@@ -36,8 +36,8 @@ object ProfiliPreset {
                 enableCustomWords = tipo.enableCustomWords,
                 enableGoogleSheets = tipo.enableGoogleSheets,
                 googleSheetId = sheetId,
-                feedUrl = FEED_URL,
-                guidaDocId = GUIDA_DOC_ID
+                feedUrl = feedUrl,
+                guidaDocId = guidaDocId
             ),
             stato = ProfiloStato(),
             creatoIl = now,
@@ -45,9 +45,10 @@ object ProfiliPreset {
         )
 
         return mapOf(
-            TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null),
-            TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, SHEET_CUSTOM),
-            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, SHEET_CUSTOM)
+            TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null, FEED_URL, GUIDA_DOC_ID),
+            TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, SHEET_CUSTOM, FEED_URL, GUIDA_DOC_ID),
+            // Emma: nessun feed condiviso, nessun documento predefinito. Deve personalizzare tutto.
+            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, SHEET_CUSTOM, "", null)
         )
     }
 

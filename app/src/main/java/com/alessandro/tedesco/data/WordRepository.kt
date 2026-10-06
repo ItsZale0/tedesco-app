@@ -104,6 +104,12 @@ class WordRepository(
     fun observeLessons(): Flow<List<Int>> = wordsFlow
         .map { it.filter { !it.archived }.map { it.lesson }.distinct().sorted() }
 
+    fun observeWordsByLevel(level: String): Flow<List<WordEntity>> = wordsFlow
+        .map { it.filter { !it.archived && it.level == level }.sortedBy { it.german } }
+
+    fun observeLevels(): Flow<List<String>> = wordsFlow
+        .map { it.filter { !it.archived }.map { it.level }.distinct().sorted() }
+
     fun observeLastSync() = feedLogFlow.map { it.maxByOrNull { log -> log.syncedAt } }
 
     fun observeDueCount(): Flow<Int> = reviewsFlow.map { reviews ->

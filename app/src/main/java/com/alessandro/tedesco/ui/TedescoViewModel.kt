@@ -61,6 +61,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
     val lezioneContenuto = repo.observeLezioneContenuto()
+    val livelliDisponibili = repo.observeLevels()
+    val parolePerLivello: StateFlow<List<WordEntity>> = combine(
+        repo.observeWords(),
+        profileManager.repositoryFlow
+    ) { words, repo ->
+        val livello = repo.profiloAttivoId?.let { repo.profili[it]?.stato?.progresso?.livelloCorrente?.label } ?: "A0"
+        words.filter { !it.archived && it.level == livello }.sortedBy { it.german }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** Lezione corrente dal profilo attivo. */
     val lezioneCorrente: StateFlow<Int> = profileManager.repositoryFlow
@@ -286,6 +294,20 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
             _messaggio.value = "Lezione ${nuovaLezione} selezionata"
+        }
+    }
+
+    fun aggiornaFeedUrl(nuovoUrl: String) {
+        viewModelScope.launch {
+            profileManager.aggiornaFeedUrl(nuovoUrl)
+            _messaggio.value = "Feed URL aggiornato"
+        }
+    }
+
+    fun aggiornaGuidaDocId(nuovoDocId: String?) {
+        viewModelScope.launch {
+            profileManager.aggiornaGuidaDocId(nuovoDocId?.ifBlank { null })
+            _messaggio.value = "Documento guida aggiornato"
         }
     }
 

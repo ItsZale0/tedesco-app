@@ -23,7 +23,8 @@ fun AltroScreen(
     onVaiAGrammatica: () -> Unit,
     onVaiATest: () -> Unit,
     onVaiAStats: () -> Unit,
-    onVaiATraduttore: () -> Unit
+    onVaiATraduttore: () -> Unit,
+    onVaiATutor: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -113,6 +114,42 @@ fun AltroScreen(
                         }
                     }
                 }
+
+                // Tutor Chatbot
+                Card(
+                    onClick = onVaiATutor,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.School,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "Tutor Tedesco",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                "Chatbot che ti aiuta con grammatica ed esercizi",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
 
                 // Traduttore
                 Card(
