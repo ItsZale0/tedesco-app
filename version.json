@@ -1,7 +1,7 @@
 {
-  "versionCode": 8,
-  "versionName": "1.6.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.6.1/Tedesco-v1.6.1.apk",
-  "changelog": "Fix selezione profilo: la lista non era visibile per una race condition all'avvio. Aggiunto pulsante Riprova.",
+  "versionCode": 9,
+  "versionName": "1.6.2",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.6.2/Tedesco-v1.6.2.apk",
+  "changelog": "Statistiche complete con grafici, dashboard Oggi, auto-updater robusto con verifica APK, navigazione chiara.",
   "minVersionCode": 1
 }

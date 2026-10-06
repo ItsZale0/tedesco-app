@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -58,22 +59,58 @@ private val SchemaScuro = darkColorScheme(
 )
 
 private val TipografiaBase = Typography(
-    displayLarge = TextStyle(fontSize = 72.sp, fontWeight = FontWeight.Bold, lineHeight = 80.sp, letterSpacing = -1.5.sp),
-    displayMedium = TextStyle(fontSize = 56.sp, fontWeight = FontWeight.Bold, lineHeight = 64.sp, letterSpacing = -0.5.sp),
-    displaySmall = TextStyle(fontSize = 44.sp, fontWeight = FontWeight.Bold, lineHeight = 52.sp),
-    headlineLarge = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 44.sp),
-    headlineMedium = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.SemiBold, lineHeight = 40.sp),
-    headlineSmall = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, lineHeight = 36.sp),
-    titleLarge = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp),
-    titleMedium = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium, lineHeight = 28.sp),
-    titleSmall = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp),
-    bodyLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Normal, lineHeight = 26.sp),
+    displayLarge = TextStyle(fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 68.sp, letterSpacing = -1.5.sp),
+    displayMedium = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 56.sp, letterSpacing = -0.5.sp),
+    displaySmall = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold, lineHeight = 48.sp),
+    headlineLarge = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold, lineHeight = 42.sp),
+    headlineMedium = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, lineHeight = 38.sp),
+    headlineSmall = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, lineHeight = 34.sp),
+    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 30.sp),
+    titleMedium = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Medium, lineHeight = 27.sp),
+    titleSmall = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Medium, lineHeight = 23.sp),
+    bodyLarge = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Normal, lineHeight = 25.sp),
     bodyMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp),
     bodySmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp),
-    labelLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp),
-    labelMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp),
-    labelSmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp)
+    labelLarge = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 22.sp),
+    labelMedium = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
+    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 15.sp)
 )
+
+/** Spaziature standard per padding e gap */
+object Spaziature {
+    val xs = 4.dp
+    val sm = 8.dp
+    val md = 16.dp
+    val lg = 24.dp
+    val xl = 32.dp
+    val xxl = 48.dp
+}
+
+/** Raggi standard per card, chip e bottoni */
+object Raggi {
+    val card = 16.dp
+    val chip = 12.dp
+    val bottone = 14.dp
+}
+
+/** Altezza del bottone principale, adattiva */
+@Composable
+fun AltezzaBottonePrincipale(): Dp {
+    return when (rememberWindowSizeClass()) {
+        WindowSize.COMPACT -> 56.dp
+        else -> 60.dp
+    }
+}
+
+/** Titolo coerente per tutte le TopAppBar */
+@Composable
+fun TitoloSchermata(testo: String) {
+    Text(
+        text = testo,
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.SemiBold
+    )
+}
 
 /** Breakpoints per responsive design (in dp) */
 object Breakpoints {
@@ -193,16 +230,16 @@ fun responsiveTypography(): Typography {
     return when (windowSize) {
         WindowSize.COMPACT -> TipografiaBase
         WindowSize.MEDIUM -> TipografiaBase.copy(
-            displayLarge = TipografiaBase.displayLarge.copy(fontSize = 80.sp),
-            headlineLarge = TipografiaBase.headlineLarge.copy(fontSize = 40.sp),
-            titleLarge = TipografiaBase.titleLarge.copy(fontSize = 28.sp),
-            bodyLarge = TipografiaBase.bodyLarge.copy(fontSize = 20.sp)
+            displayLarge = TipografiaBase.displayLarge.copy(fontSize = 68.sp),
+            headlineLarge = TipografiaBase.headlineLarge.copy(fontSize = 38.sp),
+            titleLarge = TipografiaBase.titleLarge.copy(fontSize = 26.sp),
+            bodyLarge = TipografiaBase.bodyLarge.copy(fontSize = 19.sp)
         )
         WindowSize.EXPANDED -> TipografiaBase.copy(
-            displayLarge = TipografiaBase.displayLarge.copy(fontSize = 88.sp),
-            headlineLarge = TipografiaBase.headlineLarge.copy(fontSize = 44.sp),
-            titleLarge = TipografiaBase.titleLarge.copy(fontSize = 32.sp),
-            bodyLarge = TipografiaBase.bodyLarge.copy(fontSize = 22.sp),
+            displayLarge = TipografiaBase.displayLarge.copy(fontSize = 76.sp),
+            headlineLarge = TipografiaBase.headlineLarge.copy(fontSize = 42.sp),
+            titleLarge = TipografiaBase.titleLarge.copy(fontSize = 30.sp),
+            bodyLarge = TipografiaBase.bodyLarge.copy(fontSize = 21.sp),
             bodyMedium = TipografiaBase.bodyMedium.copy(fontSize = 18.sp)
         )
     }

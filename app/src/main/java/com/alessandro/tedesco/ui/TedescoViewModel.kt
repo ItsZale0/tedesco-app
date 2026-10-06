@@ -4,11 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.CalcoloStatistiche
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.SessionState
+import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -53,6 +57,21 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
+
+    /** Statistiche complete per la schermata Progressi. */
+    val statistiche: StateFlow<Statistiche?> = combine(
+        repo.observeWords(),
+        repo.reviewsFlow,
+        profileManager.repositoryFlow
+    ) { parole, reviews, repo ->
+        val profilo = repo.profiloAttivoId?.let { repo.profili[it] }
+        CalcoloStatistiche.calcola(
+            parole = parole,
+            reviews = reviews,
+            progresso = profilo?.stato?.progresso ?: ProgressoUtente(),
+            now = System.currentTimeMillis()
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val enableCustomWords: StateFlow<Boolean> = profileManager.repositoryFlow
         .map { r ->

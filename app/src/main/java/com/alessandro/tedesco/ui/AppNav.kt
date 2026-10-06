@@ -33,7 +33,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,13 +51,14 @@ import com.alessandro.tedesco.data.remote.UpdaterViewModel
 private sealed class Dest(
     val route: String,
     val label: String,
-    val icona: androidx.compose.ui.graphics.vector.ImageVector
+    val icona: androidx.compose.ui.graphics.vector.ImageVector,
+    val descrizione: String? = null
 ) {
-    data object Home : Dest("home", "Ripasso", Icons.Filled.Home)
-    data object Nuove : Dest("nuove", "Parole", Icons.Filled.Translate)
-    data object Guida : Dest("guida", "Guida", Icons.AutoMirrored.Filled.MenuBook)
-    data object Stats : Dest("stats", "Statistiche", Icons.Filled.BarChart)
-    data object Impostazioni : Dest("impostazioni", "Profilo", Icons.Filled.Settings)
+    data object Home : Dest("home", "Oggi", Icons.Filled.Home, "Dashboard e attività del giorno")
+    data object Nuove : Dest("nuove", "Parole", Icons.Filled.Translate, "Vocabolario e nuove parole")
+    data object Guida : Dest("guida", "Guida", Icons.AutoMirrored.Filled.MenuBook, "Guida al corso")
+    data object Stats : Dest("stats", "Statistiche", Icons.Filled.BarChart, "Progressi e statistiche")
+    data object Impostazioni : Dest("impostazioni", "Profilo", Icons.Filled.Settings, "Profilo e impostazioni")
 }
 
 private class TedescoViewModelFactory(private val app: TedescoApp) : ViewModelProvider.Factory {
@@ -127,7 +130,7 @@ fun AppNav() {
         }
     }
 
-    AggiornamentoDialogs(updateState = updateState, updater = updater)
+    AggiornamentoDialogs(updateState = updateState, updater = updater, snackbar = snackbar)
 }
 
 @Composable
@@ -163,6 +166,10 @@ private fun ContenutoApp(
     val schermataCorrente = backStack?.destination?.route
     val mostraBarra = schermataCorrente?.startsWith("ripasso") != true
 
+    // Su schermi compatti accorcia "Statistiche" in "Progressi" per evitare troncamenti
+    val configuration = LocalConfiguration.current
+    val labelStats = if (configuration.screenWidthDp < 360) "Progressi" else "Statistiche"
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
@@ -170,6 +177,7 @@ private fun ContenutoApp(
                 NavigationBar {
                     listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Stats, Dest.Impostazioni)
                         .forEach { d ->
+                            val label = if (d == Dest.Stats) labelStats else d.label
                             NavigationBarItem(
                                 selected = schermataCorrente == d.route,
                                 onClick = {
@@ -179,8 +187,15 @@ private fun ContenutoApp(
                                         restoreState = true
                                     }
                                 },
-                                icon = { Icon(d.icona, contentDescription = d.label) },
-                                label = { Text(d.label) }
+                                icon = { Icon(d.icona, contentDescription = d.descrizione ?: d.label) },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             )
                         }
                 }
@@ -205,7 +220,11 @@ private fun ContenutoApp(
 }
 
 @Composable
-private fun AggiornamentoDialogs(updateState: UpdateState, updater: UpdaterViewModel) {
+private fun AggiornamentoDialogs(
+    updateState: UpdateState,
+    updater: UpdaterViewModel,
+    snackbar: SnackbarHostState
+) {
     when (updateState) {
         is UpdateState.Available -> AlertDialog(
             onDismissRequest = { updater.dismiss() },
@@ -265,6 +284,13 @@ private fun AggiornamentoDialogs(updateState: UpdateState, updater: UpdaterViewM
                 TextButton(onClick = { updater.dismiss() }) { Text("OK") }
             }
         )
+
+        is UpdateState.UpToDate -> {
+            LaunchedEffect(updateState) {
+                snackbar.showSnackbar("Sei già aggiornato (v${updater.versioneCorrente})")
+                updater.dismiss()
+            }
+        }
 
         else -> {}
     }
