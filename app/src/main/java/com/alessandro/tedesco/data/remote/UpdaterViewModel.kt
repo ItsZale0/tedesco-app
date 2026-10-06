@@ -33,6 +33,7 @@ sealed class UpdateState {
     data class Available(val version: VersionInfo) : UpdateState()
     data class Downloading(val progress: Int) : UpdateState()
     data class ReadyToInstall(val file: File) : UpdateState()
+    data object NeedPermission : UpdateState()
     data class Error(val message: String, val retryable: Boolean = true) : UpdateState()
 }
 
@@ -98,8 +99,24 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun apkGiaScaricato(version: VersionInfo): Boolean {
+        val dir = File(getApplication<Application>().cacheDir, "updates")
+        val apk = File(dir, "Tedesco-v${version.versionName}.apk")
+        return apk.exists() && VerificaApk.isApkValido(apk)
+    }
+
     fun downloadUpdate(version: VersionInfo) {
         downloadJob?.cancel()
+
+        // Se l'APK è già scaricato e valido, salta il download
+        if (apkGiaScaricato(version)) {
+            val dir = File(getApplication<Application>().cacheDir, "updates")
+            val apk = File(dir, "Tedesco-v${version.versionName}.apk")
+            android.util.Log.d("Updater", "APK già scaricato: ${apk.length()} byte")
+            _state.value = UpdateState.ReadyToInstall(apk)
+            return
+        }
+
         _state.value = UpdateState.Downloading(0)
         android.util.Log.d("Updater", "Download v${version.versionName} da ${version.apkUrl}")
 
@@ -165,24 +182,21 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun hasInstallPermission(): Boolean {
+        val pm = getApplication<Application>().packageManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            pm.canRequestPackageInstalls()
+        } else {
+            true
+        }
+    }
+
     fun installUpdate(file: File) {
         viewModelScope.launch {
             try {
-                // Verifica permesso installazione app sconosciute
-                val pm = getApplication<Application>().packageManager
-                val canInstall = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    pm.canRequestPackageInstalls()
-                } else {
-                    true
-                }
-
-                if (!canInstall) {
+                if (!hasInstallPermission()) {
                     android.util.Log.w("Updater", "Permesso installazione app sconosciuti NON concesso")
-                    _state.value = UpdateState.Error(
-                        "Per installare l'aggiornamento devi concedere il permesso 'Installa app sconosciuti'. " +
-                            "Tocca 'Impostazioni' per aprire le impostazioni di sistema.",
-                        retryable = true
-                    )
+                    _state.value = UpdateState.NeedPermission
                     return@launch
                 }
 

@@ -27,6 +27,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -250,11 +251,23 @@ private fun AggiornamentoDialogs(
                         Spacer(Modifier.height(8.dp))
                         Text(updateState.version.changelog, style = MaterialTheme.typography.bodySmall)
                     }
+                    if (updater.apkGiaScaricato(updateState.version)) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("✓ APK già scaricato, puoi installare subito.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             },
             confirmButton = {
-                Button(onClick = { updater.downloadUpdate(updateState.version) }) {
-                    Text("Scarica e installa")
+                if (updater.apkGiaScaricato(updateState.version)) {
+                    val dir = java.io.File(androidx.compose.ui.platform.LocalContext.current.cacheDir, "updates")
+                    val apk = java.io.File(dir, "Tedesco-v${updateState.version.versionName}.apk")
+                    Button(onClick = { updater.installUpdate(apk) }) {
+                        Text("Installa ora")
+                    }
+                } else {
+                    Button(onClick = { updater.downloadUpdate(updateState.version) }) {
+                        Text("Scarica e installa")
+                    }
                 }
             },
             dismissButton = {
@@ -284,6 +297,18 @@ private fun AggiornamentoDialogs(
             text = { Text("L'APK è stato scaricato. Tocca 'Installa' per aggiornare l'app.") },
             confirmButton = {
                 Button(onClick = { updater.installUpdate(updateState.file) }) { Text("Installa") }
+            },
+            dismissButton = {
+                TextButton(onClick = { updater.dismiss() }) { Text("Annulla") }
+            }
+        )
+
+        is UpdateState.NeedPermission -> AlertDialog(
+            onDismissRequest = { updater.dismiss() },
+            title = { Text("Permesso richiesto") },
+            text = { Text("Per installare l'aggiornamento devi concedere il permesso 'Installa app sconosciuti' per questa app.") },
+            confirmButton = {
+                Button(onClick = { updater.apriImpostazioniInstallazione() }) { Text("Impostazioni") }
             },
             dismissButton = {
                 TextButton(onClick = { updater.dismiss() }) { Text("Annulla") }
