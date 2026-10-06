@@ -4,17 +4,16 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiliRepository
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -26,10 +25,28 @@ private object ProfiliKeys {
 }
 
 /**
+ * Helper usati dai test d'integrazione per pilotare direttamente il DataStore
+ * dei profili (che è privato altrimenti).
+ */
+internal suspend fun Context.scriviProfiliJson(json: String) {
+    profiliDataStore.edit { it[ProfiliKeys.PROFILI_JSON] = json }
+}
+
+internal suspend fun Context.profiliDataStorePulito() {
+    profiliDataStore.edit { it.clear() }
+}
+
+/**
  * Gestisce i profili utente.
  *
  * Alla prima apertura NON viene attivato alcun profilo: l'app mostra la
  * schermata di selezione e si entra nel corso solo dopo aver scelto.
+ *
+ * L'inizializzazione è serializzata da un [Mutex]: lettura da DataStore e
+ * creazione dei preset avvengono in un'unica sequenza. Prima due coroutine
+ * concorrenti (una che legge, una che crea i preset) si sovrascrivevano a
+ * vicenda lasciando la lista profili vuota — la schermata appariva ma non
+ * si poteva selezionare nulla.
  */
 class ProfileManager(
     private val context: Context,
@@ -39,78 +56,60 @@ class ProfileManager(
     private val _repository = MutableStateFlow(ProfiliRepository())
     val repositoryFlow: Flow<ProfiliRepository> = _repository
 
-    /** true quando i profili sono stati letti da DataStore */
+    /** true quando i profili sono stati caricati (o creati) e sono utilizzabili */
     private val _pronto = MutableStateFlow(false)
     val prontoFlow: Flow<Boolean> = _pronto
 
-    init {
-        loadFromDataStore()
-    }
+    private val mutex = Mutex()
+    private var inizializzato = false
 
-    private fun loadFromDataStore() {
-        CoroutineScope(io).launch {
-            val data = context.profiliDataStore.data.first()
-            val jsonStr = data[ProfiliKeys.PROFILI_JSON]
-            val repo = if (jsonStr.isNullOrBlank()) {
-                ProfiliRepository()
-            } else {
-                runCatching {
-                    json.decodeFromString(ProfiliRepository.serializer(), jsonStr)
-                }.getOrElse { ProfiliRepository() }
-            }
+    /**
+     * Carica i profili da DataStore e riconcilia con i preset previsti.
+     * Idempotente e sicuro se chiamata più volte o in concorrenza.
+     */
+    suspend fun inizializza(forza: Boolean = false) {
+        mutex.withLock {
+            if (inizializzato && !forza) return
+
+            val letto = leggiDaDataStore()
+            val repo = ProfiliPreset.riconcilia(letto)
+            val riparato = repo != letto
+
             _repository.value = repo
+            if (riparato) scriviSuDataStore(repo)
+
+            inizializzato = true
             _pronto.value = true
         }
     }
 
-    private suspend fun saveToDataStore() = withContext(io) {
-        val jsonStr = json.encodeToString(ProfiliRepository.serializer(), _repository.value)
+    /** Ricarica i profili forzando la rilettura (pulsante "Riprova"). */
+    suspend fun ricarica() {
+        inizializza(forza = true)
+    }
+
+    private suspend fun leggiDaDataStore(): ProfiliRepository = withContext(io) {
+        val data = context.profiliDataStore.data.first()
+        val jsonStr = data[ProfiliKeys.PROFILI_JSON]
+        if (jsonStr.isNullOrBlank()) {
+            ProfiliRepository()
+        } else {
+            runCatching {
+                json.decodeFromString(ProfiliRepository.serializer(), jsonStr)
+            }.getOrElse { ProfiliRepository() }
+        }
+    }
+
+    private suspend fun scriviSuDataStore(repo: ProfiliRepository) = withContext(io) {
+        val jsonStr = json.encodeToString(ProfiliRepository.serializer(), repo)
         context.profiliDataStore.edit { it[ProfiliKeys.PROFILI_JSON] = jsonStr }
     }
 
-    /** Crea i preset disponibili se non esistono ancora. Nessuno viene attivato. */
-    private suspend fun ensurePresets() {
-        if (_repository.value.profili.isNotEmpty()) return
-
-        val feedUrl = "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
-        val guidaDocId = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
-        val now = System.currentTimeMillis()
-
-        fun preset(tipo: TipoProfilo, sheetId: String?): ProfiloUtente = ProfiloUtente(
-            id = tipo.id,
-            config = ProfiloConfig(
-                tipo = tipo,
-                nomeVisualizzato = tipo.nome,
-                enableCustomWords = tipo.enableCustomWords,
-                enableGoogleSheets = tipo.enableGoogleSheets,
-                googleSheetId = sheetId,
-                feedUrl = feedUrl,
-                guidaDocId = guidaDocId
-            ),
-            stato = ProfiloStato(),
-            creatoIl = now,
-            ultimoAccesso = now
-        )
-
-        val sheetCustom = "1OZ0BIbOC1wRVwWjJOLpgiBLGf6OzkRzJL7n9-5WbfD8"
-        val profili = mapOf(
-            TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null),
-            TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, sheetCustom),
-            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, sheetCustom)
-        )
-
-        _repository.value = ProfiliRepository(profili = profili, profiloAttivoId = null)
-        saveToDataStore()
-    }
-
-    /** Garantisce che i preset esistano. Da chiamare all'avvio dell'UI. */
-    suspend fun inizializza() {
-        ensurePresets()
-    }
+    private suspend fun saveToDataStore() = scriviSuDataStore(_repository.value)
 
     /** Tutti i profili disponibili, nell'ordine dei preset. */
     fun profiliDisponibili(): List<ProfiloUtente> {
-        val ordine = TipoProfilo.entries.map { it.id }
+        val ordine = ProfiliPreset.ID_PRESET
         return _repository.value.profili.values.sortedBy { p ->
             ordine.indexOf(p.config.tipo.id).let { if (it < 0) Int.MAX_VALUE else it }
         }
@@ -164,8 +163,10 @@ class ProfileManager(
 
     fun getGuidaDocId(): String? = profiloAttivo()?.config?.guidaDocId
 
-    fun getFeedUrl(): String = profiloAttivo()?.config?.feedUrl
-        ?: "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
+    fun getFeedUrl(): String = profiloAttivo()?.config?.feedUrl ?: ProfiliPreset.FEED_URL
 
     fun nomeProfiloAttivo(): String = profiloAttivo()?.config?.nomeVisualizzato ?: ""
+
+    /** Ordine dei preset, esposto per l'UI. */
+    fun ordinePreset(): List<String> = ProfiliPreset.ID_PRESET
 }

@@ -96,6 +96,11 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { profileManager.inizializza() }
     }
 
+    /** Ricarica i profili (usato dal pulsante "Riprova" nella selezione). */
+    fun ricaricaProfili() {
+        viewModelScope.launch { profileManager.ricarica() }
+    }
+
     // ---- Profili ----
 
     fun selezionaProfilo(id: String) {

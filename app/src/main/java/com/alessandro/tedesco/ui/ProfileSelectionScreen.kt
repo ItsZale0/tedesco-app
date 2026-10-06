@@ -16,8 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -41,7 +43,8 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 @Composable
 fun ProfileSelectionScreen(
     profili: List<ProfiloUtente>,
-    onSeleziona: (String) -> Unit
+    onSeleziona: (String) -> Unit,
+    onRiprova: () -> Unit
 ) {
     val maxLarghezza = dimensioneContenuto()
 
@@ -87,7 +90,8 @@ fun ProfileSelectionScreen(
             Text(
                 "Scegli il profilo con cui studiare",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(32.dp))
@@ -96,15 +100,52 @@ fun ProfileSelectionScreen(
                 modifier = Modifier.widthIn(max = maxLarghezza),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                profili.forEach { profilo ->
-                    ProfiloCard(
-                        profilo = profilo,
-                        onClick = { onSeleziona(profilo.id) }
-                    )
+                if (profili.isEmpty()) {
+                    // Rete di sicurezza: mai lasciare l'utente senza poter entrare
+                    EmptyProfili(onRiprova = onRiprova)
+                } else {
+                    profili.forEach { profilo ->
+                        ProfiloCard(
+                            profilo = profilo,
+                            onClick = { onSeleziona(profilo.id) }
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(40.dp))
+        }
+    }
+}
+
+@Composable
+private fun EmptyProfili(onRiprova: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Profili non caricati",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Non è stato possibile preparare i profili. Riprova.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onRiprova) { Text("Riprova") }
         }
     }
 }
@@ -163,8 +204,8 @@ private fun ProfiloCard(
             Spacer(Modifier.size(12.dp))
 
             Icon(
-                Icons.Filled.Check,
-                contentDescription = null,
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Entra",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )

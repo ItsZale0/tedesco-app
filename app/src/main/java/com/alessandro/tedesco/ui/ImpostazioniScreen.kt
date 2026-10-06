@@ -51,6 +51,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
 
     var cambiaProfilo by remember { mutableStateOf(false) }
+    var esciSelezione by remember { mutableStateOf(false) }
     var confermaReset by remember { mutableStateOf(false) }
     var aggiungiParola by remember { mutableStateOf(false) }
 
@@ -106,6 +107,13 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     onClick = { cambiaProfilo = true },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Cambia profilo") }
+
+                Spacer(Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = { esciSelezione = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Torna alla scelta del profilo") }
 
                 Spacer(Modifier.height(28.dp))
 
@@ -243,6 +251,29 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
         )
     }
 
+    // Dialog conferma uscita verso la selezione profilo
+    if (esciSelezione) {
+        AlertDialog(
+            onDismissRequest = { esciSelezione = false },
+            title = { Text("Tornare alla scelta del profilo?") },
+            text = {
+                Text(
+                    "I dati di ${profilo?.config?.nomeVisualizzato ?: "questo profilo"} " +
+                        "restano salvati. Potrai rientrare quando vuoi."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    esciSelezione = false
+                    vm.esciDalProfilo()
+                }) { Text("Torna") }
+            },
+            dismissButton = {
+                TextButton(onClick = { esciSelezione = false }) { Text("Annulla") }
+            }
+        )
+    }
+
     // Dialog conferma reset
     if (confermaReset) {
         AlertDialog(
@@ -270,8 +301,8 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     if (aggiungiParola) {
         AggiungiParolaDialog(
             onDismiss = { aggiungiParola = false },
-            onConferma = { de, it, frase, articolo, pronuncia, lezione ->
-                vm.aggiungiParolaCustom(de, it, frase, articolo, pronuncia, lezione, "")
+            onConferma = { de, italiano, frase, articolo, pronuncia, lezione ->
+                vm.aggiungiParolaCustom(de, italiano, frase, articolo, pronuncia, lezione, "")
                 aggiungiParola = false
             }
         )
@@ -296,7 +327,10 @@ private fun AggiungiParolaDialog(
         onDismissRequest = onDismiss,
         title = { Text("Nuova parola") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 OutlinedTextField(
                     value = tedesco,
                     onValueChange = { tedesco = it },

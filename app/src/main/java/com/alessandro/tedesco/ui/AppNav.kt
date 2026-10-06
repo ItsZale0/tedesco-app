@@ -110,19 +110,21 @@ fun AppNav() {
             !pronto -> SchermataCaricamento()
 
             // 2) Nessun profilo scelto: si sceglie prima di entrare
-            profiloAttivo == null -> ProfileSelectionScreen(
-                profili = profili,
-                onSeleziona = { vm.selezionaProfilo(it) }
-            )
+            profiloAttivo == null -> Box(Modifier.fillMaxSize()) {
+                ProfileSelectionScreen(
+                    profili = profili,
+                    onSeleziona = { vm.selezionaProfilo(it) },
+                    onRiprova = { vm.ricaricaProfili() }
+                )
+                SnackbarHost(
+                    hostState = snackbar,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
 
             // 3) Dentro il corso, col profilo scelto
             else -> ContenutoApp(vm = vm, updater = updater, snackbar = snackbar)
         }
-
-        SnackbarHost(
-            hostState = snackbar,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 
     AggiornamentoDialogs(updateState = updateState, updater = updater)
