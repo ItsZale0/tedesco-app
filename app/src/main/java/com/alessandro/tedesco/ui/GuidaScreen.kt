@@ -42,13 +42,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.SezioneEntity
 
-private const val URL_DOC = "https://docs.google.com/document/d/10nURqro0VwrYZPDeolwwXx9ubmaES28AmPnYpd9Yi2w/edit"
+private const val URL_DOC = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuidaScreen(vm: TedescoViewModel) {
     val guida by vm.guida.collectAsStateWithLifecycle(null)
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
+    val ctx = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -101,21 +102,38 @@ fun GuidaScreen(vm: TedescoViewModel) {
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(Modifier.height(12.dp))
-                            val ctx = LocalContext.current
-                            Button(
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
-                                    ctx.startActivity(intent)
-                                },
-                                modifier = Modifier.fillMaxWidth()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.OpenInNew,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.size(8.dp))
-                                Text("Apri in Google Docs")
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
+                                        ctx.startActivity(intent)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.OpenInNew,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.size(8.dp))
+                                    Text("Apri in Google Docs")
+                                }
+                                Button(
+                                    onClick = { vm.sincronizza() },
+                                    enabled = !caricamento,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.size(8.dp))
+                                    Text("Sincronizza Guida")
+                                }
                             }
                         }
                         items(g.sezioni) { sez ->
