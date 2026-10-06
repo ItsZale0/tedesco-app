@@ -1,7 +1,7 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5.2",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.5.2/Tedesco-v1.5.2.apk",
-  "changelog": "Auto-updater fix, icona pulita, pulsante test in Impostazioni",
+  "versionCode": 7,
+  "versionName": "1.6.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.6.0/Tedesco-v1.6.0.apk",
+  "changelog": "Selezione profilo prima di entrare, dati separati per profilo, layout ottimizzato per telefono e tablet",
   "minVersionCode": 1
 }

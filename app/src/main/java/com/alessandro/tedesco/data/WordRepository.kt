@@ -1,20 +1,16 @@
 package com.alessandro.tedesco.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.alessandro.tedesco.data.local.FeedLogEntity
 import com.alessandro.tedesco.data.local.GuidaEntity
+import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.data.local.WordEntity
-import com.alessandro.tedesco.data.remote.FeedDto
 import com.alessandro.tedesco.data.local.WordSource
+import com.alessandro.tedesco.data.remote.FeedDto
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.WordDto
-import com.alessandro.tedesco.settings.SettingsStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -23,19 +19,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.comparisons.compareBy
-
-private const val VOCAB_DATASTORE = "vocab_data"
-
-private val Context.vocabDataStore by preferencesDataStore(name = VOCAB_DATASTORE)
-
-private object Keys {
-    val VOCAB_JSON = stringPreferencesKey("vocab_json")
-}
 
 sealed class SyncResult {
     data object NotModified : SyncResult()
@@ -43,20 +30,19 @@ sealed class SyncResult {
     data class Failed(val message: String) : SyncResult()
 }
 
-@Serializable
-private data class VocabData(
-    val words: List<WordEntity> = emptyList(),
-    val reviews: Map<String, ReviewEntity> = emptyMap(),
-    val feedLog: List<FeedLogEntity> = emptyList(),
-    val guida: GuidaEntity? = null
-)
-
+/**
+ * Repository delle parole del corso.
+ *
+ * I dati (parole, ripassi, guida) sono letti e salvati nello stato del
+ * profilo attivo: ogni profilo ha il proprio vocabolario e i propri progressi.
+ * Quando l'utente cambia profilo, il repository ricarica automaticamente.
+ */
 class WordRepository(
-    private val context: Context,
+    context: Context,
     private val service: FeedService,
-    private val settings: SettingsStore,
     private val json: Json,
-    private val io: CoroutineDispatcher
+    private val io: CoroutineDispatcher,
+    private val profileManager: ProfileManager
 ) {
 
     private val _words = MutableStateFlow<List<WordEntity>>(emptyList())
@@ -70,32 +56,39 @@ class WordRepository(
     val guidaFlow: Flow<GuidaEntity?> = _guida
 
     init {
-        loadFromDataStore()
-    }
-
-    private fun loadFromDataStore() {
+        // Ad ogni cambio di profilo (o al primo caricamento) ricarica i dati
         CoroutineScope(io).launch {
-            val data = context.vocabDataStore.data.first()
-            val jsonStr = data[Keys.VOCAB_JSON] ?: "{}"
-            val vocabData = json.decodeFromString(VocabData.serializer(), jsonStr)
-            _words.value = vocabData.words
-            _reviews.value = vocabData.reviews
-            _feedLog.value = vocabData.feedLog
-            _guida.value = vocabData.guida
+            var ultimoProfilo: String? = "__init__"
+            profileManager.repositoryFlow.collect { repo ->
+                val id = repo.profiloAttivoId
+                if (id != ultimoProfilo) {
+                    ultimoProfilo = id
+                    caricaDaProfilo()
+                }
+            }
         }
     }
 
-    private suspend fun saveToDataStore() = withContext(io) {
-        val vocabData = VocabData(
-            words = _words.value,
-            reviews = _reviews.value,
-            feedLog = _feedLog.value,
-            guida = _guida.value
+    private fun caricaDaProfilo() {
+        val stato = profileManager.statoAttivo()
+        _words.value = stato.parole
+        _reviews.value = stato.reviews
+        _feedLog.value = stato.feedLog
+        _guida.value = stato.guida
+    }
+
+    private suspend fun salvaSuProfilo() {
+        profileManager.aggiornaStatoAttivo(
+            ProfiloStato(
+                parole = _words.value,
+                reviews = _reviews.value,
+                feedLog = _feedLog.value,
+                guida = _guida.value,
+                progresso = profileManager.statoAttivo().progresso,
+                etag = profileManager.statoAttivo().etag,
+                lastSync = System.currentTimeMillis()
+            )
         )
-        val jsonStr = json.encodeToString(VocabData.serializer(), vocabData)
-        context.vocabDataStore.edit {
-            it[Keys.VOCAB_JSON] = jsonStr
-        }
     }
 
     fun observeGuida(): Flow<GuidaEntity?> = guidaFlow
@@ -109,28 +102,24 @@ class WordRepository(
     fun observeLessons() = wordsFlow
         .map { it.filter { !it.archived }.map { it.lesson }.distinct().sorted() }
 
-    fun observeLastSync() = feedLogFlow
-        .map { it.maxByOrNull { it.syncedAt } }
+    fun observeLastSync() = feedLogFlow.map { it.maxByOrNull { log -> log.syncedAt } }
 
-    fun observeDueCount(): Flow<Int> = reviewsFlow
-        .map { reviews ->
-            val now = System.currentTimeMillis()
-            reviews.values.count { it.dueAt <= now }
-        }
+    fun observeDueCount(): Flow<Int> = reviewsFlow.map { reviews ->
+        val now = System.currentTimeMillis()
+        reviews.values.count { it.dueAt <= now }
+    }
 
     suspend fun sync(): SyncResult = withContext(io) {
-        val url = settings.feedUrl()
+        val url = profileManager.getFeedUrl()
         if (url.isBlank()) {
             return@withContext SyncResult.Failed("URL del feed non configurato")
         }
 
         try {
-            val etag = settings.etag()
+            val etag = profileManager.statoAttivo().etag
             val response = service.getRaw(url)
 
-            if (response.code == 304) {
-                return@withContext SyncResult.NotModified
-            }
+            if (response.code == 304) return@withContext SyncResult.NotModified
             if (!response.isSuccessful) {
                 return@withContext SyncResult.Failed("HTTP ${response.code}")
             }
@@ -143,13 +132,12 @@ class WordRepository(
 
             val feed = json.decodeFromString(FeedDto.serializer(), body)
 
-            if (etag != null && newEtag != null && etag == newEtag && feed.words.isEmpty()) {
+            if (etag.isNotBlank() && newEtag != null && etag == newEtag && feed.words.isEmpty()) {
                 return@withContext SyncResult.NotModified
             }
 
             val (added, changed) = merge(feed)
 
-            // la guida arriva dallo stesso feed: salviamola insieme alle parole
             feed.guida?.let { g ->
                 _guida.value = GuidaEntity(
                     titolo = g.titolo,
@@ -157,9 +145,6 @@ class WordRepository(
                     sezioni = g.sezioni.map { SezioneEntity(it.titolo, it.testo) }
                 )
             }
-
-            newEtag?.let { settings.setEtag(it) }
-            settings.setLastSync(System.currentTimeMillis())
 
             val logEntry = FeedLogEntity(
                 syncedAt = System.currentTimeMillis(),
@@ -169,7 +154,8 @@ class WordRepository(
                 message = "${feed.words.size} parole · guida ${feed.guida?.sezioni?.size ?: 0} sez."
             )
             _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
-            saveToDataStore()
+
+            salvaSuProfiloConEtag(newEtag)
 
             SyncResult.Updated(added, changed, feed.words.size)
         } catch (e: Exception) {
@@ -181,9 +167,23 @@ class WordRepository(
                 message = e.message?.take(80)
             )
             _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
-            saveToDataStore()
+            salvaSuProfilo()
             SyncResult.Failed(e.message ?: "Errore sconosciuto")
         }
+    }
+
+    private suspend fun salvaSuProfiloConEtag(nuovoEtag: String?) {
+        val corrente = profileManager.statoAttivo()
+        profileManager.aggiornaStatoAttivo(
+            corrente.copy(
+                parole = _words.value,
+                reviews = _reviews.value,
+                feedLog = _feedLog.value,
+                guida = _guida.value,
+                etag = nuovoEtag ?: corrente.etag,
+                lastSync = System.currentTimeMillis()
+            )
+        )
     }
 
     private suspend fun merge(feed: FeedDto): Pair<Int, Int> = withContext(io) {
@@ -218,9 +218,10 @@ class WordRepository(
             _words.value = currentWords.values.toList()
         }
 
+        // Prima le parole, poi i ripassi (evita problemi di coerenza)
         for (dto in feed.words) {
             if (dto.id in newWordIds) {
-                val review = ReviewEntity(
+                currentReviews[dto.id] = ReviewEntity(
                     wordId = dto.id,
                     easeFactor = 2.5f,
                     intervalDays = 0,
@@ -229,11 +230,9 @@ class WordRepository(
                     dueAt = now,
                     lastReviewedAt = null
                 )
-                currentReviews[dto.id] = review
             }
         }
         _reviews.value = currentReviews
-        saveToDataStore()
         added to changed
     }
 
@@ -242,14 +241,14 @@ class WordRepository(
         currentWords[id]?.let { word ->
             currentWords[id] = word.copy(archived = archived)
             _words.value = currentWords.values.toList()
-            saveToDataStore()
+            salvaSuProfilo()
         }
     }
 
     /**
      * Parole in scadenza, al massimo [limite] per sessione.
      * Un A0 con 100 parole nuove avrebbe 100 carte in scadenza il primo giorno:
-     * una sessione cosi' non si finisce mai. Meglio poche carte al giorno.
+     * una sessione così non si finisce mai. Meglio poche carte al giorno.
      */
     suspend fun dueReviews(limite: Int = 20): List<ReviewEntity> = withContext(io) {
         val now = System.currentTimeMillis()
@@ -269,7 +268,6 @@ class WordRepository(
                 repetitions = r.repetitions + 1,
                 intervalDays = next,
                 easeFactor = (r.easeFactor + 0.05f).coerceAtMost(3.0f),
-                lapses = r.lapses,
                 dueAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(next.toLong()),
                 lastReviewedAt = System.currentTimeMillis()
             )
@@ -285,18 +283,28 @@ class WordRepository(
         }
         reviews[wordId] = updated
         _reviews.value = reviews
-        saveToDataStore()
+        salvaSuProfilo()
     }
 
+    /** Svuota i dati del profilo attivo (parole, ripassi, log, guida). */
     suspend fun resetAll() = withContext(io) {
         _words.value = emptyList()
         _reviews.value = emptyMap()
         _feedLog.value = emptyList()
-        saveToDataStore()
-        settings.setEtag("")
+        _guida.value = null
+        val corrente = profileManager.statoAttivo()
+        profileManager.aggiornaStatoAttivo(
+            corrente.copy(
+                parole = emptyList(),
+                reviews = emptyMap(),
+                feedLog = emptyList(),
+                guida = null,
+                etag = ""
+            )
+        )
     }
 
-    /** Aggiunge una parola personalizzata dall'utente */
+    /** Aggiunge una parola personalizzata (solo se il profilo lo consente). */
     suspend fun addCustomWord(
         german: String,
         italian: String,
@@ -305,19 +313,21 @@ class WordRepository(
         pronunciation: String? = null,
         lesson: Int = 0,
         tags: String = ""
-    ) = withContext(io) {
+    ): WordEntity = withContext(io) {
+        if (!profileManager.isCustomWordsEnabled()) {
+            throw UnsupportedOperationException("Parole personalizzate non abilitate per questo profilo")
+        }
         val now = System.currentTimeMillis()
-        val id = "custom_${now}_${german.hashCode()}"
         val word = WordEntity(
-            id = id,
+            id = "custom_${now}_${german.hashCode()}",
             german = german.trim(),
             italian = italian.trim(),
             example = example.trim(),
-            article = article,
-            pronunciation = pronunciation,
+            article = article?.trim()?.ifBlank { null },
+            pronunciation = pronunciation?.trim()?.ifBlank { null },
             level = "A1",
             lesson = lesson,
-            tags = tags,
+            tags = tags.trim(),
             archived = false,
             createdAt = now,
             source = WordSource.CUSTOM
@@ -327,7 +337,8 @@ class WordRepository(
         currentWords.add(0, word)
         _words.value = currentWords
 
-        val review = ReviewEntity(
+        val currentReviews = _reviews.value.toMutableMap()
+        currentReviews[word.id] = ReviewEntity(
             wordId = word.id,
             easeFactor = 2.5f,
             intervalDays = 0,
@@ -336,12 +347,17 @@ class WordRepository(
             dueAt = now,
             lastReviewedAt = null
         )
-        val currentReviews = _reviews.value.toMutableMap()
-        currentReviews[word.id] = review
         _reviews.value = currentReviews
 
-        saveToDataStore()
+        salvaSuProfilo()
         word
+    }
+
+    /** Elimina una parola personalizzata. */
+    suspend fun deleteCustomWord(id: String) = withContext(io) {
+        _words.value = _words.value.filterNot { it.id == id }
+        _reviews.value = _reviews.value - id
+        salvaSuProfilo()
     }
 
     companion object {
@@ -360,5 +376,6 @@ private fun WordDto.toEntity(now: Long): WordEntity = WordEntity(
     lesson = this.lesson,
     tags = this.tags.joinToString(","),
     archived = this.archived,
-    createdAt = now
+    createdAt = now,
+    source = WordSource.SYNCED
 )

@@ -24,6 +24,11 @@ class SyncWorker(
     }
 
     override suspend fun doWork(): Result {
+        val app = applicationContext as TedescoApp
+        // Senza profilo attivo non si sincronizza nulla
+        if (app.profileManagerInstance.profiloAttivoId() == null) {
+            return Result.success()
+        }
         val result = repo.sync()
         return when (result) {
             is SyncResult.NotModified -> Result.success()

@@ -4,18 +4,20 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.WordRepository
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
-import com.alessandro.tedesco.settings.SettingsStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -26,7 +28,25 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     private val app = application as TedescoApp
     private val repo = app.wordRepositoryInstance
-    private val settingsStore = app.settingsInstance
+    private val profileManager: ProfileManager = app.profileManagerInstance
+
+    /** true quando i profili sono stati caricati da DataStore */
+    val pronto: StateFlow<Boolean> = profileManager.prontoFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Profilo attivo; null = si mostra la schermata di selezione */
+    val profiloAttivo: StateFlow<ProfiloUtente?> = profileManager.repositoryFlow
+        .map { r -> r.profiloAttivoId?.let { id -> r.profili[id] } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val profiliDisponibili: StateFlow<List<ProfiloUtente>> = profileManager.repositoryFlow
+        .map { r ->
+            val ordine = TipoProfilo.entries.map { it.id }
+            r.profili.values.sortedBy { p ->
+                ordine.indexOf(p.config.tipo.id).let { if (it < 0) Int.MAX_VALUE else it }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val parole = repo.observeWords()
     val lezioni = repo.observeLessons()
@@ -34,8 +54,26 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
 
-    val feedUrl: StateFlow<String> = settingsStore.feedUrlFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    val enableCustomWords: StateFlow<Boolean> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id != null && r.profili[id]?.config?.enableCustomWords == true
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val enableGoogleSheets: StateFlow<Boolean> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id != null && r.profili[id]?.config?.enableGoogleSheets == true
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val feedUrl: StateFlow<String> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id?.let { r.profili[it]?.config?.feedUrl } ?: ""
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
     private val _sessione = MutableStateFlow(SessionState())
     val sessione: StateFlow<SessionState> = _sessione.asStateFlow()
@@ -48,11 +86,35 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     /** Versione installata dell'app, letta dal manifest. */
     val versioneApp: String = runCatching {
-        val pm = application.packageManager
-        pm.getPackageInfo(application.packageName, 0).versionName ?: "?"
+        application.packageManager
+            .getPackageInfo(application.packageName, 0).versionName ?: "?"
     }.getOrDefault("?")
 
     private var syncAvviato = false
+
+    init {
+        viewModelScope.launch { profileManager.inizializza() }
+    }
+
+    // ---- Profili ----
+
+    fun selezionaProfilo(id: String) {
+        viewModelScope.launch {
+            profileManager.selezionaProfilo(id)
+            _messaggio.value = "Profilo attivato"
+            sincronizza(mostraMessaggio = false)
+        }
+    }
+
+    fun esciDalProfilo() {
+        viewModelScope.launch {
+            profileManager.esciDalProfilo()
+            _sessione.value = SessionState()
+            syncAvviato = false
+        }
+    }
+
+    // ---- Sincronizzazione ----
 
     /**
      * Controlla aggiornamenti all'apertura dell'app.
@@ -62,23 +124,40 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     fun controllaAggiornamentiAllAvvio() {
         if (syncAvviato) return
         syncAvviato = true
-        // silenzioso: nessuno snackbar se non ci sono novita'
         sincronizza(mostraMessaggio = false)
     }
+
+    fun sincronizza(mostraMessaggio: Boolean = true) {
+        if (profileManager.profiloAttivoId() == null) return
+        viewModelScope.launch {
+            _caricamento.value = true
+            when (val r = repo.sync()) {
+                is SyncResult.Updated ->
+                    if (mostraMessaggio) {
+                        _messaggio.value = "Aggiornate: ${r.newWords} nuove, ${r.updatedWords} modificate"
+                    }
+
+                is SyncResult.NotModified ->
+                    if (mostraMessaggio) _messaggio.value = "Già aggiornato"
+
+                is SyncResult.Failed ->
+                    if (mostraMessaggio) _messaggio.value = "Errore: ${r.message}"
+            }
+            _caricamento.value = false
+        }
+    }
+
+    // ---- Sessione di ripasso ----
 
     fun caricaSessione() {
         viewModelScope.launch {
             _caricamento.value = true
             val reviews: List<ReviewEntity> = repo.dueReviews()
             val tutte: List<WordEntity> = parole.first()
-            val cards = reviews.mapNotNull { r: ReviewEntity ->
-                tutte.firstOrNull { w: WordEntity -> w.id == r.wordId }
-            }
+            val cards = reviews.mapNotNull { r -> tutte.firstOrNull { w -> w.id == r.wordId } }
             _sessione.value = SessionState(cards = cards)
             _caricamento.value = false
-            if (cards.isEmpty()) {
-                _messaggio.value = "Niente da ripassare. Torna domani."
-            }
+            if (cards.isEmpty()) _messaggio.value = "Niente da ripassare. Torna domani."
         }
     }
 
@@ -91,9 +170,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         val carta = s.cartaCorrente ?: return
         viewModelScope.launch {
             repo.answer(carta.id, sa)
-            val nuoveErrori = if (sa) s.sbagliate else {
-                s.sbagliate.apply { add(carta.german) }
-            }
+            val nuoveErrori = if (sa) s.sbagliate else s.sbagliate.apply { add(carta.german) }
             _sessione.value = s.copy(
                 indice = s.indice + 1,
                 rispostaMostrata = false,
@@ -107,42 +184,43 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         caricaSessione()
     }
 
-    fun sincronizza(mostraMessaggio: Boolean = true) {
-        viewModelScope.launch {
-            _caricamento.value = true
-            when (val r = repo.sync()) {
-                is SyncResult.Updated ->
-                    if (mostraMessaggio) {
-                        _messaggio.value = "Aggiornate: ${r.newWords} nuove, " +
-                            "${r.updatedWords} modificate"
-                    }
-
-                is SyncResult.NotModified ->
-                    if (mostraMessaggio) _messaggio.value = "Già aggiornato"
-
-                is SyncResult.Failed ->
-                    if (mostraMessaggio) _messaggio.value = "Errore: ${r.message}"
-            }
-            _caricamento.value = false
-        }
-    }
+    // ---- Parole ----
 
     fun archivia(id: String) {
         viewModelScope.launch { repo.setArchived(id, true) }
     }
 
-    fun reset() {
+    fun aggiungiParolaCustom(
+        german: String,
+        italian: String,
+        example: String,
+        article: String?,
+        pronunciation: String?,
+        lesson: Int,
+        tags: String
+    ) {
         viewModelScope.launch {
-            repo.resetAll()
-            _messaggio.value = "Dati cancellati"
-            sincronizza()
+            runCatching {
+                repo.addCustomWord(german, italian, example, article, pronunciation, lesson, tags)
+            }.onSuccess {
+                _messaggio.value = "Parola aggiunta"
+            }.onFailure {
+                _messaggio.value = "Errore: ${it.message}"
+            }
         }
     }
 
-    fun salvaUrl(url: String) {
+    fun eliminaParolaCustom(id: String) {
         viewModelScope.launch {
-            settingsStore.setFeedUrl(url.trim())
-            _messaggio.value = "URL salvato"
+            repo.deleteCustomWord(id)
+            _messaggio.value = "Parola eliminata"
+        }
+    }
+
+    fun reset() {
+        viewModelScope.launch {
+            repo.resetAll()
+            _messaggio.value = "Dati del profilo cancellati"
             sincronizza()
         }
     }
@@ -154,8 +232,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     companion object {
         fun formattaData(ts: Long): String {
             if (ts == 0L) return "mai"
-            val s = SimpleDateFormat("d/M HH:mm", Locale.ITALIAN)
-            return s.format(Date(ts))
+            return SimpleDateFormat("d/M HH:mm", Locale.ITALIAN).format(Date(ts))
         }
     }
 }

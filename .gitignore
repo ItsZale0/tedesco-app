@@ -27,3 +27,4 @@ captures/
 # Keystore
 *.jks
 *.keystore
+.kotlin/

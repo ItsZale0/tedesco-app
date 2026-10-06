@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.SezioneEntity
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 private const val URL_DOC = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
@@ -88,9 +91,13 @@ fun GuidaScreen(vm: TedescoViewModel) {
 
                 else -> {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .widthIn(max = dimensioneContenuto())
+                            .align(Alignment.TopCenter),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp
+                            start = spaziaturaSchermo(), end = spaziaturaSchermo(),
+                            top = 8.dp, bottom = 32.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -219,8 +226,7 @@ private fun EmptyGuida(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Vai in Impostazioni, incolla l'URL del feed e tocca " +
-                "\"Salva e aggiorna\". La guida arriva dal tuo Google Doc.",
+            text = "Vai in Profilo, tocca \"Sincronizza adesso\". La guida arriva dal tuo Google Doc.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

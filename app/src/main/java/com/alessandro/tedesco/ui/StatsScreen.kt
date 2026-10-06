@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -30,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,47 +42,47 @@ fun StatsScreen(vm: TedescoViewModel) {
     val daRipassare: Int by vm.daRipassare.collectAsStateWithLifecycle(0)
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Statistiche") }) }
+        topBar = { TopAppBar(title = { Text("Statistiche", style = MaterialTheme.typography.titleLarge) }) }
     ) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(horizontal = spaziaturaSchermo()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard("Parole", "${parole.size}", Modifier.weight(1f))
-                StatCard("Lezioni", "${lezioni.size}", Modifier.weight(1f))
-                StatCard("Oggi", "$daRipassare", Modifier.weight(1f))
+            Column(modifier = Modifier.widthIn(max = dimensioneContenuto())) {
+                Spacer(Modifier.height(8.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    StatCard("Parole", "${parole.size}", Modifier.weight(1f))
+                    StatCard("Lezioni", "${lezioni.size}", Modifier.weight(1f))
+                    StatCard("Oggi", "$daRipassare", Modifier.weight(1f))
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Text("Parole per lezione", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(12.dp))
+
+                val perLezione = lezioni.map { l: Int -> l to parole.count { w: WordEntity -> w.lesson == l } }
+                if (perLezione.isEmpty()) {
+                    Text(
+                        "Nessun dato ancora",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    BarChartGrafico(
+                        dati = perLezione,
+                        color = MaterialTheme.colorScheme.primary,
+                        colorSecondario = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                "Parole per lezione",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(12.dp))
-
-            val perLezione = lezioni.map { l: Int ->
-                l to parole.count { w: WordEntity -> w.lesson == l }
-            }
-            if (perLezione.isEmpty()) {
-                Text(
-                    "Nessun dato ancora",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                BarChartGrafico(
-                    dati = perLezione,
-                    color = MaterialTheme.colorScheme.primary,
-                    colorSecondario = MaterialTheme.colorScheme.tertiary
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

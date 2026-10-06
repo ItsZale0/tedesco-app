@@ -3,10 +3,10 @@ package com.alessandro.tedesco
 import android.app.Application
 import android.content.Context
 import androidx.work.Configuration
+import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.di.AppModule
-import com.alessandro.tedesco.settings.SettingsStore
 import com.alessandro.tedesco.sync.SyncWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -20,14 +20,18 @@ class TedescoApp : Application(), Configuration.Provider {
     private val json: Json = AppModule.provideJson()
     private val okHttp: OkHttpClient = AppModule.provideOkHttp()
     private val feedService: FeedService = AppModule.provideFeedService(okHttp)
-    private val settings: SettingsStore by lazy { AppModule.provideSettings(this) }
-    private val wordRepository: WordRepository by lazy {
-        AppModule.provideWordRepository(this, feedService, settings, json, ioDispatcher)
+
+    // Gestione profili utente
+    private val profileManager: ProfileManager by lazy {
+        AppModule.provideProfileManager(this, json, ioDispatcher)
     }
 
-    // Expose repository for SyncWorker
+    private val wordRepository: WordRepository by lazy {
+        AppModule.provideWordRepository(this, feedService, json, ioDispatcher, profileManager)
+    }
+
     val wordRepositoryInstance: WordRepository get() = wordRepository
-    val settingsInstance: SettingsStore get() = settings
+    val profileManagerInstance: ProfileManager get() = profileManager
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().build()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -47,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import com.alessandro.tedesco.data.SessionState
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,16 +81,22 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(20.dp)
+                .padding(horizontal = spaziaturaSchermo()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LinearProgressIndicator(
-                progress = { sessionState.progresso },
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-            )
+                    .fillMaxSize()
+                    .widthIn(max = dimensioneContenuto())
+            ) {
+                LinearProgressIndicator(
+                    progress = { sessionState.progresso },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                )
 
-            Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(28.dp))
 
             val carta = sessionState.cartaCorrente
 
@@ -251,6 +260,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         }
                     }
                 }
+            }
             }
         }
     }

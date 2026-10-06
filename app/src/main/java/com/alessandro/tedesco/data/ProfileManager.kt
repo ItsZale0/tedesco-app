@@ -1,0 +1,171 @@
+package com.alessandro.tedesco.data
+
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.alessandro.tedesco.data.local.ProfiloConfig
+import com.alessandro.tedesco.data.local.ProfiliRepository
+import com.alessandro.tedesco.data.local.ProfiloStato
+import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.local.TipoProfilo
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+
+private const val PROFILI_DATASTORE = "profili_data"
+private val Context.profiliDataStore by preferencesDataStore(name = PROFILI_DATASTORE)
+
+private object ProfiliKeys {
+    val PROFILI_JSON = stringPreferencesKey("profili_json")
+}
+
+/**
+ * Gestisce i profili utente.
+ *
+ * Alla prima apertura NON viene attivato alcun profilo: l'app mostra la
+ * schermata di selezione e si entra nel corso solo dopo aver scelto.
+ */
+class ProfileManager(
+    private val context: Context,
+    private val json: Json,
+    private val io: CoroutineDispatcher
+) {
+    private val _repository = MutableStateFlow(ProfiliRepository())
+    val repositoryFlow: Flow<ProfiliRepository> = _repository
+
+    /** true quando i profili sono stati letti da DataStore */
+    private val _pronto = MutableStateFlow(false)
+    val prontoFlow: Flow<Boolean> = _pronto
+
+    init {
+        loadFromDataStore()
+    }
+
+    private fun loadFromDataStore() {
+        CoroutineScope(io).launch {
+            val data = context.profiliDataStore.data.first()
+            val jsonStr = data[ProfiliKeys.PROFILI_JSON]
+            val repo = if (jsonStr.isNullOrBlank()) {
+                ProfiliRepository()
+            } else {
+                runCatching {
+                    json.decodeFromString(ProfiliRepository.serializer(), jsonStr)
+                }.getOrElse { ProfiliRepository() }
+            }
+            _repository.value = repo
+            _pronto.value = true
+        }
+    }
+
+    private suspend fun saveToDataStore() = withContext(io) {
+        val jsonStr = json.encodeToString(ProfiliRepository.serializer(), _repository.value)
+        context.profiliDataStore.edit { it[ProfiliKeys.PROFILI_JSON] = jsonStr }
+    }
+
+    /** Crea i preset disponibili se non esistono ancora. Nessuno viene attivato. */
+    private suspend fun ensurePresets() {
+        if (_repository.value.profili.isNotEmpty()) return
+
+        val feedUrl = "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
+        val guidaDocId = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
+        val now = System.currentTimeMillis()
+
+        fun preset(tipo: TipoProfilo, sheetId: String?): ProfiloUtente = ProfiloUtente(
+            id = tipo.id,
+            config = ProfiloConfig(
+                tipo = tipo,
+                nomeVisualizzato = tipo.nome,
+                enableCustomWords = tipo.enableCustomWords,
+                enableGoogleSheets = tipo.enableGoogleSheets,
+                googleSheetId = sheetId,
+                feedUrl = feedUrl,
+                guidaDocId = guidaDocId
+            ),
+            stato = ProfiloStato(),
+            creatoIl = now,
+            ultimoAccesso = now
+        )
+
+        val sheetCustom = "1OZ0BIbOC1wRVwWjJOLpgiBLGf6OzkRzJL7n9-5WbfD8"
+        val profili = mapOf(
+            TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null),
+            TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, sheetCustom),
+            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, sheetCustom)
+        )
+
+        _repository.value = ProfiliRepository(profili = profili, profiloAttivoId = null)
+        saveToDataStore()
+    }
+
+    /** Garantisce che i preset esistano. Da chiamare all'avvio dell'UI. */
+    suspend fun inizializza() {
+        ensurePresets()
+    }
+
+    /** Tutti i profili disponibili, nell'ordine dei preset. */
+    fun profiliDisponibili(): List<ProfiloUtente> {
+        val ordine = TipoProfilo.entries.map { it.id }
+        return _repository.value.profili.values.sortedBy { p ->
+            ordine.indexOf(p.config.tipo.id).let { if (it < 0) Int.MAX_VALUE else it }
+        }
+    }
+
+    fun profiloAttivoId(): String? = _repository.value.profiloAttivoId
+
+    fun profiloAttivo(): ProfiloUtente? {
+        val id = _repository.value.profiloAttivoId ?: return null
+        return _repository.value.profili[id]
+    }
+
+    /** Seleziona il profilo attivo. */
+    suspend fun selezionaProfilo(profiloId: String) {
+        val repo = _repository.value
+        val esistente = repo.profili[profiloId]
+            ?: throw IllegalArgumentException("Profilo non trovato: $profiloId")
+        val aggiornato = esistente.copy(ultimoAccesso = System.currentTimeMillis())
+        _repository.value = repo.copy(
+            profili = repo.profili + (profiloId to aggiornato),
+            profiloAttivoId = profiloId
+        )
+        saveToDataStore()
+    }
+
+    /** Torna alla schermata di selezione profilo. */
+    suspend fun esciDalProfilo() {
+        _repository.value = _repository.value.copy(profiloAttivoId = null)
+        saveToDataStore()
+    }
+
+    /** Aggiorna lo stato del profilo attivo (parole, reviews, guida, progresso). */
+    suspend fun aggiornaStatoAttivo(stato: ProfiloStato) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val aggiornato = profilo.copy(stato = stato, ultimoAccesso = System.currentTimeMillis())
+        _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
+        saveToDataStore()
+    }
+
+    fun statoAttivo(): ProfiloStato = profiloAttivo()?.stato ?: ProfiloStato()
+
+    // ---- Scorciatoie sul profilo attivo ----
+
+    fun isCustomWordsEnabled(): Boolean = profiloAttivo()?.config?.enableCustomWords == true
+
+    fun isGoogleSheetsEnabled(): Boolean = profiloAttivo()?.config?.enableGoogleSheets == true
+
+    fun getGoogleSheetId(): String? = profiloAttivo()?.config?.googleSheetId
+
+    fun getGuidaDocId(): String? = profiloAttivo()?.config?.guidaDocId
+
+    fun getFeedUrl(): String = profiloAttivo()?.config?.feedUrl
+        ?: "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
+
+    fun nomeProfiloAttivo(): String = profiloAttivo()?.config?.nomeVisualizzato ?: ""
+}

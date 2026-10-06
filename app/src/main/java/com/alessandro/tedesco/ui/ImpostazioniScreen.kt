@@ -1,182 +1,257 @@
 package com.alessandro.tedesco.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.data.remote.UpdateState
+import com.alessandro.tedesco.data.remote.UpdaterViewModel
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
-    val urlCorrente by vm.feedUrl.collectAsStateWithLifecycle("")
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+    val profili by vm.profiliDisponibili.collectAsStateWithLifecycle(emptyList())
+    val customWords by vm.enableCustomWords.collectAsStateWithLifecycle(false)
+    val googleSheets by vm.enableGoogleSheets.collectAsStateWithLifecycle(false)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
-
-    var url by remember(urlCorrente) { mutableStateOf(urlCorrente) }
-    var confermaReset by remember { mutableStateOf(false) }
-
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
 
+    var cambiaProfilo by remember { mutableStateOf(false) }
+    var confermaReset by remember { mutableStateOf(false) }
+    var aggiungiParola by remember { mutableStateOf(false) }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Impostazioni") }) }
+        topBar = { TopAppBar(title = { Text("Profilo") }) }
     ) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(horizontal = spaziaturaSchermo()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Sorgente del vocabolario",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Le parole le pubblico io. L'app controlla questo indirizzo ogni 15 minuti.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(12.dp))
+            Column(modifier = Modifier.widthIn(max = dimensioneContenuto())) {
 
-            OutlinedTextField(
-                value = url,
-                onValueChange = { url = it },
-                label = { Text("Indirizzo del JSON") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
-            Button(
-                onClick = { vm.salvaUrl(url) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Salva e aggiorna") }
-
-            Spacer(Modifier.height(28.dp))
-
-            // --- Auto-updater sezione ---
-            Text(
-                "Aggiornamenti app",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "L'app controlla automaticamente all'apertura. Puoi forzare il controllo qui.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = { updater.checkForUpdate() },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Controlla aggiornamenti ora") }
-
-            Spacer(Modifier.height(8.dp))
-
-            when (val s = updateState) {
-                is UpdateState.Checking -> {
-                    Text("Controllo in corso...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                }
-                is UpdateState.Available -> {
-                    Text("Disponibile v${s.version.versionName}: ${s.version.changelog}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                }
-                is UpdateState.Error -> {
-                    Text("Errore: ${s.message}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                }
-                else -> {
-                    Text("Nessun aggiornamento disponibile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            Spacer(Modifier.height(28.dp))
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(
-                        "Ultimo aggiornamento vocabolario",
-                        style = MaterialTheme.typography.titleSmall
+                // --- Profilo attivo ---
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        TedescoViewModel.formattaData(ultimoSync?.syncedAt ?: 0L),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    ultimoSync?.message?.takeIf { it.isNotBlank() }?.let {
+                ) {
+                    Column(Modifier.padding(18.dp)) {
+                        Text(
+                            "Profilo attivo",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            profilo?.config?.nomeVisualizzato ?: "—",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                        profilo?.config?.tipo?.descrizione?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(14.dp))
 
-            Text(
-                "Come funziona il ripasso",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Quando rispondi giusto l'intervallo si allunga: 1, 3, 7, 16, 35, 75, " +
-                    "150, 300 giorni. Quando sbagli torna a domani.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                OutlinedButton(
+                    onClick = { cambiaProfilo = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Cambia profilo") }
 
-            Spacer(Modifier.height(40.dp))
+                Spacer(Modifier.height(28.dp))
 
-            Button(
-                onClick = { confermaReset = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                // --- Parole personalizzate (solo se il profilo le prevede) ---
+                if (customWords) {
+                    Text("Parole personalizzate", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        if (googleSheets) {
+                            "Puoi aggiungere parole tue. Restano separate dal vocabolario del corso e vengono ripassate come le altre."
+                        } else {
+                            "Puoi aggiungere parole tue, ripassate insieme a quelle del corso."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { aggiungiParola = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Aggiungi una parola") }
+
+                    Spacer(Modifier.height(28.dp))
+                }
+
+                // --- Aggiornamenti ---
+                Text("Aggiornamenti", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "L'app controlla all'apertura. Puoi forzare il controllo qui.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            ) { Text("Cancella tutti i dati") }
+                Spacer(Modifier.height(12.dp))
 
-            Spacer(Modifier.height(24.dp))
+                OutlinedButton(
+                    onClick = { updater.checkForUpdate() },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Controlla aggiornamenti ora") }
+
+                Spacer(Modifier.height(10.dp))
+
+                val statoUpd = when (val s = updateState) {
+                    is UpdateState.Checking -> "Controllo in corso…" to false
+                    is UpdateState.Available -> "Disponibile v${s.version.versionName}" to false
+                    is UpdateState.Error -> "Errore: ${s.message}" to true
+                    else -> "Nessun aggiornamento disponibile" to false
+                }
+                Text(
+                    statoUpd.first,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (statoUpd.second) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(28.dp))
+
+                // --- Vocabolario ---
+                Text("Vocabolario", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Ultimo aggiornamento: ${TedescoViewModel.formattaData(ultimoSync?.syncedAt ?: 0L)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                ultimoSync?.message?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = { vm.sincronizza() },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Sincronizza adesso") }
+
+                Spacer(Modifier.height(28.dp))
+
+                // --- Come funziona il ripasso ---
+                Text("Come funziona il ripasso", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Quando rispondi giusto l'intervallo si allunga: 1, 3, 7, 16, 35, 75, 150, 300 giorni. " +
+                        "Quando sbagli torna a domani.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(36.dp))
+
+                Button(
+                    onClick = { confermaReset = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) { Text("Cancella i dati di questo profilo") }
+
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 
+    // Dialog cambio profilo
+    if (cambiaProfilo) {
+        AlertDialog(
+            onDismissRequest = { cambiaProfilo = false },
+            title = { Text("Cambia profilo") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Scegli con quale profilo continuare. Ogni profilo ha le sue parole e i suoi progressi.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    profili.forEach { p ->
+                        FilterChip(
+                            selected = p.id == profilo?.id,
+                            onClick = {
+                                cambiaProfilo = false
+                                if (p.id != profilo?.id) vm.selezionaProfilo(p.id)
+                            },
+                            label = { Text(p.config.nomeVisualizzato) }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { cambiaProfilo = false }) { Text("Chiudi") }
+            }
+        )
+    }
+
+    // Dialog conferma reset
     if (confermaReset) {
         AlertDialog(
             onDismissRequest = { confermaReset = false },
-            title = { Text("Cancellare tutto?") },
+            title = { Text("Cancellare i dati?") },
             text = {
                 Text(
-                    "Vengono rimosse tutte le parole e le ripetizioni. " +
-                        "Poi l'app riscarica il vocabolario dal server."
+                    "Vengono rimosse parole e ripetizioni solo di questo profilo. " +
+                        "Gli altri profili non vengono toccati."
                 )
             },
             confirmButton = {
@@ -190,4 +265,98 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
             }
         )
     }
+
+    // Dialog aggiungi parola
+    if (aggiungiParola) {
+        AggiungiParolaDialog(
+            onDismiss = { aggiungiParola = false },
+            onConferma = { de, it, frase, articolo, pronuncia, lezione ->
+                vm.aggiungiParolaCustom(de, it, frase, articolo, pronuncia, lezione, "")
+                aggiungiParola = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun AggiungiParolaDialog(
+    onDismiss: () -> Unit,
+    onConferma: (String, String, String, String?, String?, Int) -> Unit
+) {
+    var tedesco by remember { mutableStateOf("") }
+    var italiano by remember { mutableStateOf("") }
+    var frase by remember { mutableStateOf("") }
+    var articolo by remember { mutableStateOf("") }
+    var pronuncia by remember { mutableStateOf("") }
+    var lezione by remember { mutableStateOf("") }
+
+    val valido = tedesco.isNotBlank() && italiano.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nuova parola") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = tedesco,
+                    onValueChange = { tedesco = it },
+                    label = { Text("Tedesco *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = italiano,
+                    onValueChange = { italiano = it },
+                    label = { Text("Italiano *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = articolo,
+                    onValueChange = { articolo = it },
+                    label = { Text("Articolo (der/die/das)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = pronuncia,
+                    onValueChange = { pronuncia = it },
+                    label = { Text("Pronuncia") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = frase,
+                    onValueChange = { frase = it },
+                    label = { Text("Frase d'esempio") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = lezione,
+                    onValueChange = { lezione = it.filter { c -> c.isDigit() } },
+                    label = { Text("Lezione (numero)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConferma(
+                        tedesco,
+                        italiano,
+                        frase,
+                        articolo.ifBlank { null },
+                        pronuncia.ifBlank { null },
+                        lezione.toIntOrNull() ?: 0
+                    )
+                },
+                enabled = valido
+            ) { Text("Aggiungi") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annulla") }
+        }
+    )
 }

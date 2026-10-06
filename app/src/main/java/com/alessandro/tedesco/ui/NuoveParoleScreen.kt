@@ -1,7 +1,6 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,11 +28,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +65,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    // Mappa lezione -> titolo descrittivo
+    // Titoli descrittivi delle lezioni (A0 → B1)
     val lezioneTitoli = mapOf(
         1 to "Presentarsi (ich bin, ich heiße, ich wohne)",
         2 to "Verbi regolari (-en → ich lerne, du lernst)",
@@ -85,10 +87,13 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
         okTesto && okLezione
     }
 
+    val margine = spaziaturaSchermo()
+    val maxLarghezza = dimensioneContenuto()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Parole") },
+                title = { Text("Parole", style = MaterialTheme.typography.titleLarge) },
                 actions = {
                     IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
@@ -103,85 +108,86 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
         Column(
             modifier = Modifier
                 .padding(inner)
-                .fillMaxSize()
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
-                value = ricerca,
-                onValueChange = { ricerca = it },
-                label = { Text("Cerca in tedesco o italiano") },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            LazyRow(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .widthIn(max = maxLarghezza)
             ) {
-                item {
-                    FilterChip(
-                        selected = lezioneFiltrata == null,
-                        onClick = { lezioneFiltrata = null },
-                        label = { Text("Tutte") }
-                    )
-                }
-                items(lezioni) { l: Int ->
-                    FilterChip(
-                        selected = lezioneFiltrata == l,
-                        onClick = {
-                            lezioneFiltrata = if (lezioneFiltrata == l) null else l
-                        },
-                        label = { Text("L${l.toString().padStart(2, '0')}") }
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Mostra titolo lezione selezionata
-            lezioneFiltrata?.let { l ->
-                val titolo = lezioneTitoli[l] ?: "Lezione $l"
-                Text(
-                    text = "L${l.toString().padStart(2, '0')} — $titolo",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary,
+                OutlinedTextField(
+                    value = ricerca,
+                    onValueChange = { ricerca = it },
+                    label = { Text("Cerca in tedesco o italiano") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = margine, vertical = 8.dp)
                 )
-                Spacer(Modifier.height(8.dp))
-            }
 
-            when {
-                caricamento && parole.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
+                LazyRow(
+                    modifier = Modifier.padding(horizontal = margine),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = lezioneFiltrata == null,
+                            onClick = { lezioneFiltrata = null },
+                            label = { Text("Tutte") }
+                        )
+                    }
+                    items(lezioni) { l: Int ->
+                        FilterChip(
+                            selected = lezioneFiltrata == l,
+                            onClick = { lezioneFiltrata = if (lezioneFiltrata == l) null else l },
+                            label = { Text("L${l.toString().padStart(2, '0')}") }
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                lezioneFiltrata?.let { l ->
+                    val titolo = lezioneTitoli[l] ?: "Lezione $l"
+                    Text(
+                        text = "L${l.toString().padStart(2, '0')} — $titolo",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = margine, vertical = 8.dp)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                when {
+                    caricamento && parole.isEmpty() -> Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator() }
-                }
 
-                filtrate.isEmpty() -> {
-                    EmptyParole()
-                }
+                    filtrate.isEmpty() -> EmptyParole()
 
-                else -> {
-                    Text(
-                        text = "${filtrate.size} parole",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            start = 16.dp, end = 16.dp, bottom = 24.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(filtrate, key = { it.id }) { w: WordEntity ->
-                            WordRow(w, onAscolta = { ttsHelper.speak(w.german) })
+                    else -> {
+                        Text(
+                            text = "${filtrate.size} parole",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = margine, vertical = 4.dp)
+                        )
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                start = margine, end = margine, bottom = 24.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(filtrate, key = { it.id }) { w: WordEntity ->
+                                WordRow(w, onAscolta = { ttsHelper.speak(w.german) })
+                            }
                         }
                     }
                 }
@@ -227,21 +233,21 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit) {
                     )
                 }
             }
-            // Badge lezione
+
             Text(
                 text = "L${w.lesson.toString().padStart(2, '0')}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
                     .background(
                         MaterialTheme.colorScheme.primaryContainer,
                         RoundedCornerShape(4.dp)
                     )
-                    .padding(4.dp)
+                    .padding(horizontal = 6.dp, vertical = 3.dp)
             )
-            Spacer(Modifier.width(8.dp))
+
+            Spacer(Modifier.width(6.dp))
+
             IconButton(onClick = onAscolta) {
                 Icon(
                     Icons.AutoMirrored.Filled.VolumeUp,
@@ -262,10 +268,7 @@ private fun EmptyParole() {
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "Nessuna parola",
-            style = MaterialTheme.typography.titleMedium
-        )
+        Text("Nessuna parola", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Text(
             "Tocca l'icona di aggiornamento in alto per scaricare il vocabolario.",
