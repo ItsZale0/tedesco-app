@@ -7,6 +7,7 @@ import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.di.AppModule
+import com.alessandro.tedesco.sync.ReminderWorker
 import com.alessandro.tedesco.sync.SyncWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +40,7 @@ class TedescoApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         SyncWorker.schedule(this)
+        ReminderWorker.schedule(this)
     }
 
     companion object {

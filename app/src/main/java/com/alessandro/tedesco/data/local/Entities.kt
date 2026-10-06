@@ -102,7 +102,8 @@ data class ProgressoUtente(
     val testGrammatica: List<TestGrammatica> = emptyList(),
     val testComprensione: List<TestComprensione> = emptyList(),
     val testProduzione: List<TestProduzione> = emptyList(),
-    val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList()
+    val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList(),
+    val erroriGrammatica: List<String> = emptyList()
 )
 
 /** Risultato di un test di grammatica */

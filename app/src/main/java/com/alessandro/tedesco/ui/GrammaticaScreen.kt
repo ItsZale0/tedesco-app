@@ -43,6 +43,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     var traduzione by remember { mutableStateOf("") }
     var caricamentoTraduzione by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val erroriRef = remember { mutableListOf<String>() }
 
     Scaffold(
         topBar = {
@@ -138,7 +139,11 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                 if (risultato == null) {
                                     rispostaSelezionata = index
                                     risultato = index == esercizio.rispostaCorretta
-                                    if (risultato == true) punteggio++
+                                    if (risultato == true) {
+                                        punteggio++
+                                    } else {
+                                        erroriRef.add(esercizio.domanda)
+                                    }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -179,7 +184,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                         }
                     }
 
-                    // Spiegazione
+                    // Spiegazione con traduzione
                     if (risultato != null) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -200,6 +205,39 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                     text = esercizio.esempio,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
+                                Spacer(Modifier.height(8.dp))
+                                var mostraTraduzione by remember { mutableStateOf(false) }
+                                var traduzioneEsempio by remember { mutableStateOf("") }
+                                if (!mostraTraduzione) {
+                                    TextButton(
+                                        onClick = {
+                                            mostraTraduzione = true
+                                            caricamentoTraduzione = true
+                                            scope.launch {
+                                                try {
+                                                    traduzioneEsempio = withContext(Dispatchers.IO) {
+                                                        traduci(esercizio.esempio)
+                                                    }
+                                                } catch (e: Exception) {
+                                                    traduzioneEsempio = "Errore: ${e.message}"
+                                                } finally {
+                                                    caricamentoTraduzione = false
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Icon(Icons.Filled.Translate, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("Mostra traduzione")
+                                    }
+                                } else {
+                                    Text(
+                                        text = traduzioneEsempio,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
 
@@ -220,6 +258,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                     }
                 } else {
                     // Risultato finale
+                    val punteggioPct = if (esercizi.isNotEmpty()) (punteggio * 100 / esercizi.size) else 0
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -235,8 +274,28 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             Text(
-                                text = "${(punteggio * 100 / esercizi.size)}%",
+                                text = "$punteggioPct%",
                                 style = MaterialTheme.typography.displaySmall
+                            )
+                            if (erroriRef.isNotEmpty()) {
+                                Spacer(Modifier.height(12.dp))
+                                Text(
+                                    text = "Errori da ripassare: ${erroriRef.size}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+
+                    // Salva risultato e errori
+                    LaunchedEffect(completato) {
+                        if (completato) {
+                            vm.salvaTestGrammatica(
+                                punteggio = punteggioPct.toFloat(),
+                                errori = erroriRef.size,
+                                totale = esercizi.size,
+                                domandeErrate = erroriRef.toList()
                             )
                         }
                     }
@@ -249,6 +308,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                             risultato = null
                             punteggio = 0
                             completato = false
+                            erroriRef.clear()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {

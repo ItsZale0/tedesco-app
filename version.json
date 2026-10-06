@@ -1,7 +1,7 @@
 {
-  "versionCode": 17,
-  "versionName": "1.7.7",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.7.7/Tedesco-v1.7.7.apk",
-  "changelog": "Traduttore MyMemory funzionante, animazioni Material 3, markdown corretto.",
+  "versionCode": 18,
+  "versionName": "1.8.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.8.0/Tedesco-v1.8.0.apk",
+  "changelog": "Notifiche giornaliere, ripasso errori, traduzione frasi negli esercizi, interfaccia riordinata.",
   "minVersionCode": 1
 }

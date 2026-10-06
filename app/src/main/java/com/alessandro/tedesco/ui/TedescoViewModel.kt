@@ -291,7 +291,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     // ---- Test di grammatica ----
 
-    fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int) {
+    fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int, domandeErrate: List<String> = emptyList()) {
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
             val nuovoTest = com.alessandro.tedesco.data.local.TestGrammatica(
@@ -300,12 +300,29 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 errori = errori,
                 totale = totale
             )
+            val nuoviErrori = (profilo.stato.progresso.erroriGrammatica + domandeErrate).distinct()
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testGrammatica = profilo.stato.progresso.testGrammatica + nuovoTest
+                    testGrammatica = profilo.stato.progresso.testGrammatica + nuovoTest,
+                    erroriGrammatica = nuoviErrori
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
+    // ---- Ripasso errori ----
+
+    fun eserciziErrori(): List<com.alessandro.tedesco.data.EsercizioGrammatica> {
+        val profilo = profileManager.profiloAttivo() ?: return emptyList()
+        val errori = profilo.stato.progresso.erroriGrammatica
+        return com.alessandro.tedesco.data.GrammaticaB1.esercizi.filter { it.domanda in errori }
+    }
+
+    fun ripassaErrori() {
+        val errori = eserciziErrori()
+        if (errori.isNotEmpty()) {
+            _messaggio.value = "Ripasso di ${errori.size} errori"
         }
     }
 
