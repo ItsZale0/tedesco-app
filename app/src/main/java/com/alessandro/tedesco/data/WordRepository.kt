@@ -11,6 +11,7 @@ import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.remote.FeedDto
+import com.alessandro.tedesco.data.local.WordSource
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.WordDto
 import com.alessandro.tedesco.settings.SettingsStore
@@ -293,6 +294,54 @@ class WordRepository(
         _feedLog.value = emptyList()
         saveToDataStore()
         settings.setEtag("")
+    }
+
+    /** Aggiunge una parola personalizzata dall'utente */
+    suspend fun addCustomWord(
+        german: String,
+        italian: String,
+        example: String = "",
+        article: String? = null,
+        pronunciation: String? = null,
+        lesson: Int = 0,
+        tags: String = ""
+    ) = withContext(io) {
+        val now = System.currentTimeMillis()
+        val id = "custom_${now}_${german.hashCode()}"
+        val word = WordEntity(
+            id = id,
+            german = german.trim(),
+            italian = italian.trim(),
+            example = example.trim(),
+            article = article,
+            pronunciation = pronunciation,
+            level = "A1",
+            lesson = lesson,
+            tags = tags,
+            archived = false,
+            createdAt = now,
+            source = WordSource.CUSTOM
+        )
+        val currentWords = _words.value.toMutableList()
+        currentWords.removeAll { it.german.equals(word.german, ignoreCase = true) }
+        currentWords.add(0, word)
+        _words.value = currentWords
+
+        val review = ReviewEntity(
+            wordId = word.id,
+            easeFactor = 2.5f,
+            intervalDays = 0,
+            repetitions = 0,
+            lapses = 0,
+            dueAt = now,
+            lastReviewedAt = null
+        )
+        val currentReviews = _reviews.value.toMutableMap()
+        currentReviews[word.id] = review
+        _reviews.value = currentReviews
+
+        saveToDataStore()
+        word
     }
 
     companion object {

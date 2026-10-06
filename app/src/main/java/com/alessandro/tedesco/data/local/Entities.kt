@@ -14,8 +14,14 @@ data class WordEntity(
     val lesson: Int,
     val tags: String,
     val archived: Boolean,
-    val createdAt: Long
+    val createdAt: Long,
+    val source: WordSource = WordSource.SYNCED
 )
+
+enum class WordSource {
+    SYNCED,     // Da feed GitHub
+    CUSTOM      // Aggiunta manualmente dall'utente
+}
 
 @Serializable
 data class ReviewEntity(
