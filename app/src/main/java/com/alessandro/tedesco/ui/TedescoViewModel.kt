@@ -9,10 +9,13 @@ import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.data.SyncResult
+import com.alessandro.tedesco.data.TestB1
 import com.alessandro.tedesco.data.WordRepository
+import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.TestGrammatica
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +60,11 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
+
+    /** Lezione corrente dal feed (lezione del giorno). */
+    val lezioneCorrente: StateFlow<Int> = repo.observeLessons()
+        .map { lessons -> lessons.maxOrNull() ?: 1 }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
 
     /** Statistiche complete per la schermata Progressi. */
     val statistiche: StateFlow<Statistiche?> = combine(
@@ -251,6 +259,54 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     fun pulisciMessaggio() {
         _messaggio.value = null
+    }
+
+    // ---- Test di grammatica ----
+
+    fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.local.TestGrammatica(
+                data = System.currentTimeMillis(),
+                punteggio = punteggio,
+                errori = errori,
+                totale = totale
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testGrammatica = profilo.stato.progresso.testGrammatica + nuovoTest
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
+    // ---- Test B1 ----
+
+    fun salvaTestB1(
+        punteggioLesen: Float,
+        punteggioHoeren: Float,
+        punteggioSchreiben: Float,
+        punteggioSprechen: Float
+    ) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.TestB1(
+                id = "test_${System.currentTimeMillis()}",
+                data = System.currentTimeMillis(),
+                punteggioLesen = punteggioLesen,
+                punteggioHoeren = punteggioHoeren,
+                punteggioSchreiben = punteggioSchreiben,
+                punteggioSprechen = punteggioSprechen,
+                punteggioComplessivo = (punteggioLesen + punteggioHoeren + punteggioSchreiben + punteggioSprechen) / 4
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testB1 = profilo.stato.progresso.testB1 + nuovoTest
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
     }
 
     companion object {

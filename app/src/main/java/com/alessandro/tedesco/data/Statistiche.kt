@@ -5,6 +5,7 @@ import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.local.WordSource
+import com.alessandro.tedesco.data.CalcoloCompetenze
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -41,7 +42,8 @@ data class Statistiche(
     val progressoB1: Float,
     val livelloStimato: LivelloCEFR,
     val perLezione: List<ConteggioLezione>,
-    val ultimi7giorni: List<AttivitaGiorno>
+    val ultimi7giorni: List<AttivitaGiorno>,
+    val punteggiCompetenze: CalcoloCompetenze.PunteggiCompetenze?
 )
 
 /**
@@ -145,6 +147,14 @@ object CalcoloStatistiche {
             AttivitaGiorno(etichetta = etichetta, ripassi = ripassi)
         }
 
+        // Calcolo delle 4 competenze
+        val punteggiCompetenze = CalcoloCompetenze.calcola(
+            parole = parole,
+            reviews = reviews,
+            progresso = progresso,
+            now = now
+        )
+
         return Statistiche(
             paroleTotali = paroleTotali,
             paroleSynced = paroleSynced,
@@ -163,7 +173,8 @@ object CalcoloStatistiche {
             progressoB1 = progressoB1,
             livelloStimato = livelloStimato,
             perLezione = perLezione,
-            ultimi7giorni = ultimi7giorni
+            ultimi7giorni = ultimi7giorni,
+            punteggiCompetenze = punteggiCompetenze
         )
     }
 

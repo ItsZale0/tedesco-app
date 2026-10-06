@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data.local
 
+import com.alessandro.tedesco.data.TestB1
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -96,7 +97,38 @@ data class ProgressoUtente(
     val ultimoTest: TestLivello? = null,
     val storicoTest: List<TestLivello> = emptyList(),
     val ultimaAttivita: Long = 0,
-    val obiettivoLivello: LivelloCEFR = LivelloCEFR.B1
+    val obiettivoLivello: LivelloCEFR = LivelloCEFR.B1,
+    val testGrammatica: List<TestGrammatica> = emptyList(),
+    val testComprensione: List<TestComprensione> = emptyList(),
+    val testProduzione: List<TestProduzione> = emptyList(),
+    val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList()
+)
+
+/** Risultato di un test di grammatica */
+@Serializable
+data class TestGrammatica(
+    val data: Long,
+    val punteggio: Float,  // 0-100
+    val errori: Int,
+    val totale: Int
+)
+
+/** Risultato di un test di comprensione */
+@Serializable
+data class TestComprensione(
+    val data: Long,
+    val punteggio: Float,  // 0-100
+    val errori: Int,
+    val totale: Int
+)
+
+/** Risultato di un test di produzione */
+@Serializable
+data class TestProduzione(
+    val data: Long,
+    val punteggio: Float,  // 0-100
+    val errori: Int,
+    val totale: Int
 )
 
 /** Domanda per test di livello */

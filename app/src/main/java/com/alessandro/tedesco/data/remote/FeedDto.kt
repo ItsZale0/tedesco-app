@@ -13,7 +13,8 @@ data class FeedDto(
     val generatedAt: String = "",
     val guida: GuidaDto? = null,
     val words: List<WordDto> = emptyList(),
-    val lessons: List<LessonDto> = emptyList()
+    val lessons: List<LessonDto> = emptyList(),
+    val lezioneCorrente: Int = 1
 )
 
 @Serializable

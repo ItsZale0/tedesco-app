@@ -24,6 +24,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +35,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +57,7 @@ fun GuidaScreen(vm: TedescoViewModel) {
     val guida by vm.guida.collectAsStateWithLifecycle(null)
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
     val ctx = LocalContext.current
+    var mostraLezione by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -109,56 +114,131 @@ fun GuidaScreen(vm: TedescoViewModel) {
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(Modifier.height(12.dp))
+                            // Toggle Documento / Lezione del giorno
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Button(
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
-                                        ctx.startActivity(intent)
-                                    },
-                                    modifier = Modifier.weight(1f)
+                                FilterChip(
+                                    selected = !mostraLezione,
+                                    onClick = { mostraLezione = false },
+                                    label = { Text("Documento") }
+                                )
+                                FilterChip(
+                                    selected = mostraLezione,
+                                    onClick = { mostraLezione = true },
+                                    label = { Text("Lezione del giorno") }
+                                )
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            if (!mostraLezione) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.OpenInNew,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.size(8.dp))
-                                    Text("Apri in Google Docs")
-                                }
-                                Button(
-                                    onClick = { vm.sincronizza() },
-                                    enabled = !caricamento,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Refresh,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.size(8.dp))
-                                    Text("Sincronizza Guida")
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
+                                            ctx.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.OpenInNew,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(Modifier.size(8.dp))
+                                        Text("Apri in Google Docs")
+                                    }
+                                    Button(
+                                        onClick = { vm.sincronizza() },
+                                        enabled = !caricamento,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(Modifier.size(8.dp))
+                                        Text("Sincronizza Guida")
+                                    }
                                 }
                             }
                         }
-                        items(g.sezioni) { sez ->
-                            SezioneCard(sez)
-                        }
-                        item {
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = "Sincronizzata dal tuo Google Doc",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
+                        if (mostraLezione) {
+                            item {
+                                LezioneDelGiornoCard(vm)
+                            }
+                        } else {
+                            items(g.sezioni) { sez ->
+                                SezioneCard(sez)
+                            }
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Sincronizzata dal tuo Google Doc",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
+    val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
+    val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
+    val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Text(
+                text = "Lezione $lezioneCorrente",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(Modifier.height(8.dp))
+            if (paroleLezione.isNotEmpty()) {
+                Text(
+                    text = "${paroleLezione.size} parole in questa lezione",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Prima parola: ${paroleLezione.first().german}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            } else {
+                Text(
+                    text = "Nessuna parola ancora per questa lezione",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "La lezione completa viene inviata su WhatsApp e via email ogni giorno.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }

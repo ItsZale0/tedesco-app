@@ -99,7 +99,7 @@ class WordRepository(
     fun observeWordsByLesson(lesson: Int) = wordsFlow
         .map { it.filter { !it.archived && it.lesson == lesson }.sortedBy { it.german } }
 
-    fun observeLessons() = wordsFlow
+    fun observeLessons(): Flow<List<Int>> = wordsFlow
         .map { it.filter { !it.archived }.map { it.lesson }.distinct().sorted() }
 
     fun observeLastSync() = feedLogFlow.map { it.maxByOrNull { log -> log.syncedAt } }
