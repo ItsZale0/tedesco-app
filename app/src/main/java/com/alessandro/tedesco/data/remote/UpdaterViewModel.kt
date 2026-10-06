@@ -50,7 +50,7 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val version = withContext(Dispatchers.IO) {
                     val request = Request.Builder()
-                        .url("https://raw.githubusercontent.com/ItsZale0/tedesco-app/main/version.json")
+                        .url("https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json")
                         .build()
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
@@ -59,13 +59,15 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
 
+                android.util.Log.d("Updater", "Versione server: ${version.versionCode} (${version.versionName}), locale: $currentVersionCode")
+
                 if (version.versionCode > currentVersionCode) {
                     _state.value = UpdateState.Available(version)
                 } else {
                     _state.value = UpdateState.Idle
                 }
             } catch (e: Exception) {
-                // silenzioso: non bloccare l'app se il check fallisce
+                android.util.Log.e("Updater", "Errore check aggiornamenti", e)
                 _state.value = UpdateState.Idle
             }
         }

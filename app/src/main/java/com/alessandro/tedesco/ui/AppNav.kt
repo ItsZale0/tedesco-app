@@ -135,7 +135,7 @@ fun AppNav() {
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Guida.route) { GuidaScreen(vm) }
             composable(Dest.Stats.route) { StatsScreen(vm) }
-            composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm) }
+            composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }

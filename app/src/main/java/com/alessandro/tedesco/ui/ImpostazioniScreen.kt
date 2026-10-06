@@ -29,15 +29,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.remote.UpdaterViewModel
+import com.alessandro.tedesco.data.remote.UpdateState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImpostazioniScreen(vm: TedescoViewModel) {
+fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     val urlCorrente by vm.feedUrl.collectAsStateWithLifecycle("")
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
 
     var url by remember(urlCorrente) { mutableStateOf(urlCorrente) }
     var confermaReset by remember { mutableStateOf(false) }
+
+    val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Impostazioni") }) }
@@ -77,10 +81,47 @@ fun ImpostazioniScreen(vm: TedescoViewModel) {
 
             Spacer(Modifier.height(28.dp))
 
+            // --- Auto-updater sezione ---
+            Text(
+                "Aggiornamenti app",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "L'app controlla automaticamente all'apertura. Puoi forzare il controllo qui.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+
+            Button(
+                onClick = { updater.checkForUpdate() },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Controlla aggiornamenti ora") }
+
+            Spacer(Modifier.height(8.dp))
+
+            when (val s = updateState) {
+                is UpdateState.Checking -> {
+                    Text("Controllo in corso...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
+                is UpdateState.Available -> {
+                    Text("Disponibile v${s.version.versionName}: ${s.version.changelog}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
+                is UpdateState.Error -> {
+                    Text("Errore: ${s.message}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+                else -> {
+                    Text("Nessun aggiornamento disponibile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            Spacer(Modifier.height(28.dp))
+
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "Ultimo aggiornamento",
+                        "Ultimo aggiornamento vocabolario",
                         style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(Modifier.height(6.dp))
