@@ -3,6 +3,7 @@ import android.content.Context
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
+import com.alessandro.tedesco.data.remote.TutorService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
@@ -43,4 +44,5 @@ object AppModule {
         io: CoroutineDispatcher,
         profileManager: ProfileManager
     ): WordRepository = WordRepository(context, service, json, io, profileManager)
+    fun provideTutorService(): TutorService = TutorService()
 }

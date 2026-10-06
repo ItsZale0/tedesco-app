@@ -1,7 +1,7 @@
 {
-  "versionCode": 20,
-  "versionName": "1.9.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.9.0/Tedesco-v1.9.0.apk",
-  "changelog": "Chatbot tutor, vocabolario dinamico per livello, Emma completamente separata.",
+  "versionCode": 21,
+  "versionName": "1.10.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.10.0/Tedesco-v1.10.0.apk",
+  "changelog": "Tutor AI con modelli free, markdown renderizzato, guida e feed personalizzabili per profilo.",
   "minVersionCode": 1
 }

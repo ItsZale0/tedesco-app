@@ -189,4 +189,14 @@ class ProfileManager(
         _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
         saveToDataStore()
     }
+
+    /** Aggiorna la chiave API del tutor AI per il profilo attivo. */
+    suspend fun aggiornaTutorApiKey(nuovaChiave: String) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val aggiornato = profilo.copy(config = profilo.config.copy(tutorApiKey = nuovaChiave.trim()))
+        _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
+        saveToDataStore()
+    }
 }

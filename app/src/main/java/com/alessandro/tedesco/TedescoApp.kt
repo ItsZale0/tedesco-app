@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
+import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.di.AppModule
 import com.alessandro.tedesco.sync.ReminderWorker
 import com.alessandro.tedesco.sync.SyncWorker
@@ -21,6 +22,7 @@ class TedescoApp : Application(), Configuration.Provider {
     private val json: Json = AppModule.provideJson()
     private val okHttp: OkHttpClient = AppModule.provideOkHttp()
     private val feedService: FeedService = AppModule.provideFeedService(okHttp)
+    private val tutorService: TutorService = AppModule.provideTutorService()
 
     // Gestione profili utente
     private val profileManager: ProfileManager by lazy {
@@ -33,6 +35,7 @@ class TedescoApp : Application(), Configuration.Provider {
 
     val wordRepositoryInstance: WordRepository get() = wordRepository
     val profileManagerInstance: ProfileManager get() = profileManager
+    val tutorServiceInstance: TutorService get() = tutorService
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().build()

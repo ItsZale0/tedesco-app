@@ -201,6 +201,33 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     Spacer(Modifier.height(28.dp))
                 }
 
+                // --- Tutor AI ---
+                Text("Tutor AI", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Inserisci la chiave OpenRouter per usare il chatbot tutor. " +
+                        "Resta salvata solo su questo telefono, nel tuo profilo.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+
+                var chiaveTutor by remember { mutableStateOf(profilo?.config?.tutorApiKey ?: "") }
+                OutlinedTextField(
+                    value = chiaveTutor,
+                    onValueChange = { chiaveTutor = it },
+                    label = { Text("Chiave OpenRouter") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(Modifier.height(10.dp))
+                Button(
+                    onClick = { vm.aggiornaTutorApiKey(chiaveTutor) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Salva chiave") }
+
+                Spacer(Modifier.height(28.dp))
+
                 // --- Aggiornamenti ---
                 Text("Aggiornamenti", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))

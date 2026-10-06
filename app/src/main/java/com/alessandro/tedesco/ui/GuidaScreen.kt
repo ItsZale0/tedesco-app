@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -56,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,15 +65,24 @@ import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
-private const val URL_DOC = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
+private const val URL_DOC_DEFAULT = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
+
+/** Costruisce l'URL del documento Google dal valore salvato (ID o URL completo). */
+private fun urlDocumento(valore: String?): String {
+    if (valore.isNullOrBlank()) return URL_DOC_DEFAULT
+    if (valore.startsWith("http")) return valore
+    return "https://docs.google.com/document/d/$valore/edit"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuidaScreen(vm: TedescoViewModel) {
     val guida by vm.guida.collectAsStateWithLifecycle(null)
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val ctx = LocalContext.current
     var mostraLezione by remember { mutableStateOf(false) }
+    val URL_DOC = urlDocumento(profilo?.config?.guidaDocId)
 
     Scaffold(
         topBar = {
@@ -105,7 +116,7 @@ fun GuidaScreen(vm: TedescoViewModel) {
                 }
 
                 g == null || g.sezioni.isEmpty() -> {
-                    EmptyGuida(Modifier.align(Alignment.Center))
+                    EmptyGuida(Modifier.align(Alignment.Center), URL_DOC)
                 }
 
                 else -> {
@@ -325,44 +336,121 @@ fun MarkdownText(markdown: String, color: androidx.compose.ui.graphics.Color) {
     val lines = markdown.split("\n")
     Column {
         lines.forEach { line ->
+            val pulita = line.trimEnd()
             when {
-                line.startsWith("## ") -> {
-                    Text(
-                        text = line.removePrefix("## "),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = color,
-                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
-                    )
-                }
-                line.startsWith("### ") -> {
-                    Text(
-                        text = line.removePrefix("### "),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = color,
+                pulita.startsWith("### ") -> {
+                    TestoMarkdown(
+                        testo = pulita.removePrefix("### "),
+                        stile = MaterialTheme.typography.titleMedium,
+                        grassetto = true,
+                        colore = color,
                         modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                     )
                 }
-                line.startsWith("- ") -> {
-                    Text(
-                        text = "• ${line.removePrefix("- ")}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = color,
-                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                pulita.startsWith("## ") -> {
+                    TestoMarkdown(
+                        testo = pulita.removePrefix("## "),
+                        stile = MaterialTheme.typography.titleLarge,
+                        grassetto = true,
+                        colore = color,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
                     )
                 }
-                line.isNotBlank() -> {
-                    Text(
-                        text = line,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = color,
+                pulita.startsWith("# ") -> {
+                    TestoMarkdown(
+                        testo = pulita.removePrefix("# "),
+                        stile = MaterialTheme.typography.headlineSmall,
+                        grassetto = true,
+                        colore = color,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
+                    )
+                }
+                pulita.startsWith("- ") || pulita.startsWith("* ") -> {
+                    Row(modifier = Modifier.padding(start = 4.dp, top = 2.dp)) {
+                        Text("•", color = color, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.width(6.dp))
+                        TestoMarkdown(
+                            testo = pulita.drop(2),
+                            stile = MaterialTheme.typography.bodyMedium,
+                            grassetto = false,
+                            colore = color
+                        )
+                    }
+                }
+                pulita.matches(Regex("^\\d+\\.\\s.*")) -> {
+                    val numero = pulita.substringBefore(".").trim()
+                    val testo = pulita.substringAfter(".").trim()
+                    Row(modifier = Modifier.padding(start = 4.dp, top = 2.dp)) {
+                        Text("$numero.", color = color, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.width(6.dp))
+                        TestoMarkdown(
+                            testo = testo,
+                            stile = MaterialTheme.typography.bodyMedium,
+                            grassetto = false,
+                            colore = color
+                        )
+                    }
+                }
+                pulita.isNotBlank() -> {
+                    TestoMarkdown(
+                        testo = pulita,
+                        stile = MaterialTheme.typography.bodyMedium,
+                        grassetto = false,
+                        colore = color,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
+                else -> Spacer(Modifier.height(6.dp))
             }
         }
     }
+}
+
+/** Rende una riga interpretando **grassetto** e `codice`. */
+@Composable
+private fun TestoMarkdown(
+    testo: String,
+    stile: androidx.compose.ui.text.TextStyle,
+    grassetto: Boolean,
+    colore: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    val annotated = remember(testo) { buildAnnotatedStringDaMarkdown(testo) }
+    Text(
+        text = annotated,
+        style = stile,
+        color = colore,
+        fontWeight = if (grassetto) FontWeight.Bold else null,
+        modifier = modifier
+    )
+}
+
+private fun buildAnnotatedStringDaMarkdown(testo: String): androidx.compose.ui.text.AnnotatedString {
+    val builder = androidx.compose.ui.text.AnnotatedString.Builder()
+    val pattern = Regex("\\*\\*(.+?)\\*\\*|`(.+?)`")
+    var ultimo = 0
+    for (match in pattern.findAll(testo)) {
+        if (match.range.first > ultimo) {
+            builder.append(testo.substring(ultimo, match.range.first))
+        }
+        val grassetto = match.groupValues[1]
+        val codice = match.groupValues[2]
+        if (grassetto.isNotEmpty()) {
+            builder.withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold)) {
+                append(grassetto)
+            }
+        } else if (codice.isNotEmpty()) {
+            builder.withStyle(
+                androidx.compose.ui.text.SpanStyle(
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    background = androidx.compose.ui.graphics.Color(0x22000000)
+                )
+            ) { append(codice) }
+        }
+        ultimo = match.range.last + 1
+    }
+    if (ultimo < testo.length) builder.append(testo.substring(ultimo))
+    return builder.toAnnotatedString()
 }
 
 @Composable
@@ -422,7 +510,7 @@ private fun SezioneCard(sez: SezioneEntity) {
 }
 
 @Composable
-private fun EmptyGuida(modifier: Modifier = Modifier) {
+private fun EmptyGuida(modifier: Modifier = Modifier, urlDoc: String = URL_DOC_DEFAULT) {
     val ctx = LocalContext.current
     Column(
         modifier = modifier.padding(32.dp),
@@ -443,7 +531,7 @@ private fun EmptyGuida(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(20.dp))
         Button(
             onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(URL_DOC))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlDoc))
                 ctx.startActivity(intent)
             }
         ) {

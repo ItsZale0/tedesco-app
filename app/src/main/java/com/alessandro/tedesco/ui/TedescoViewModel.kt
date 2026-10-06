@@ -311,6 +311,29 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun aggiornaTutorApiKey(nuovaChiave: String) {
+        viewModelScope.launch {
+            profileManager.aggiornaTutorApiKey(nuovaChiave)
+            _messaggio.value = if (nuovaChiave.isBlank()) "Chiave tutor rimossa" else "Chiave tutor salvata"
+        }
+    }
+
+    val tutorApiKey: StateFlow<String> = profileManager.repositoryFlow
+        .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    /** Chiede una risposta al tutor AI. */
+    suspend fun chiediAlTutor(
+        cronologia: List<Pair<String, String>>,
+        livello: String,
+        lezione: Int
+    ): Result<String> {
+        val chiave = tutorApiKey.value
+        return runCatching {
+            app.tutorServiceInstance.rispondi(chiave, cronologia, livello, lezione)
+        }
+    }
+
     // ---- Test di grammatica ----
 
     fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int, domandeErrate: List<String> = emptyList()) {
