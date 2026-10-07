@@ -73,7 +73,8 @@ class TutorService {
             - Adatta la difficoltà al livello $livello: sii semplice e chiaro.
             - La lezione corrente è la numero $lezione.
             - Se lo studente sbaglia, correggi spiegando brevemente il perché.
-            - Non usare markdown complesso: solo testo semplice con trattini per gli elenchi.
+            - Usa markdown semplice: **grassetto** per i termini chiave, - per gli elenchi, ## per i titoli.
+            - Non usare tabelle né HTML.
         """.trimIndent()
 
         val messaggi = buildList {

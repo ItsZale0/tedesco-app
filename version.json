@@ -1,7 +1,7 @@
 {
-  "versionCode": 26,
-  "versionName": "1.14.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.1/Tedesco-v1.14.1.apk",
-  "changelog": "Etichette modelli free esplicite nel selettore Tutor.",
+  "versionCode": 27,
+  "versionName": "1.14.2",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.2/Tedesco-v1.14.2.apk",
+  "changelog": "Markdown nel tutor: grassetto, elenchi e titoli formattati correttamente.",
   "minVersionCode": 1
 }
