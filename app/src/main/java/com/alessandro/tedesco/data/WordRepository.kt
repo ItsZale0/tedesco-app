@@ -3,6 +3,7 @@ package com.alessandro.tedesco.data
 import android.content.Context
 import com.alessandro.tedesco.data.local.FeedLogEntity
 import com.alessandro.tedesco.data.local.GuidaEntity
+import com.alessandro.tedesco.data.local.LessonEntity
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.SezioneEntity
@@ -50,6 +51,7 @@ class WordRepository(
     private val _feedLog = MutableStateFlow<List<FeedLogEntity>>(emptyList())
     private val _guida = MutableStateFlow<GuidaEntity?>(null)
     private val _lezioneContenuto = MutableStateFlow("")
+    private val _lezioni = MutableStateFlow<List<LessonEntity>>(emptyList())
 
     val wordsFlow: Flow<List<WordEntity>> = _words
     val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
@@ -94,6 +96,14 @@ class WordRepository(
 
     fun observeGuida(): Flow<GuidaEntity?> = guidaFlow
     fun observeLezioneContenuto(): Flow<String> = _lezioneContenuto
+    fun observeLezioni(): Flow<List<LessonEntity>> = _lezioni
+
+    /** Aggiorna il contenuto mostrato quando l'utente cambia lezione. */
+    fun aggiornaLezioneContenuto(numero: Int) {
+        val lezione = _lezioni.value.firstOrNull { it.numero == numero }
+            ?: _lezioni.value.firstOrNull()
+        lezione?.let { _lezioneContenuto.value = it.contenuto }
+    }
 
     fun observeWords() = wordsFlow
         .map { it.filter { !it.archived }.sortedWith(compareBy({ it.lesson }, { it.german })) }
@@ -101,8 +111,7 @@ class WordRepository(
     fun observeWordsByLesson(lesson: Int) = wordsFlow
         .map { it.filter { !it.archived && it.lesson == lesson }.sortedBy { it.german } }
 
-    fun observeLessons(): Flow<List<Int>> = wordsFlow
-        .map { it.filter { !it.archived }.map { it.lesson }.distinct().sorted() }
+    fun observeLessons(): Flow<List<LessonEntity>> = _lezioni
 
     fun observeWordsByLevel(level: String): Flow<List<WordEntity>> = wordsFlow
         .map { it.filter { !it.archived && it.level == level }.sortedBy { it.german } }
@@ -146,9 +155,11 @@ class WordRepository(
 
             val (added, changed) = merge(feed)
 
-            feed.lessons.firstOrNull()?.let { l ->
-                _lezioneContenuto.value = l.contenuto
-            }
+            _lezioni.value = feed.lessons.map { LessonEntity(it.numero, it.titolo, it.contenuto) }
+            val lezioneCorrente = profileManager.statoAttivo().progresso.lezioneCorrente
+            val lezione = feed.lessons.firstOrNull { it.numero == lezioneCorrente }
+                ?: feed.lessons.firstOrNull()
+            lezione?.let { _lezioneContenuto.value = it.contenuto }
             feed.guida?.let { g ->
                 _guida.value = GuidaEntity(
                     titolo = g.titolo,

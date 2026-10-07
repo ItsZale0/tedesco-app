@@ -57,6 +57,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     val parole = repo.observeWords()
     val lezioni = repo.observeLessons()
+    val numeriLezioni: StateFlow<List<Int>> = lezioni.map { l -> l.map { it.numero } }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
@@ -306,6 +307,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 progresso = profilo.stato.progresso.copy(lezioneCorrente = nuovaLezione)
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
+            // Aggiorna subito il contenuto mostrato
+            repo.aggiornaLezioneContenuto(nuovaLezione)
             _messaggio.value = "Lezione ${nuovaLezione} selezionata"
         }
     }

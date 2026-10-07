@@ -55,7 +55,7 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 @Composable
 fun NuoveParoleScreen(vm: TedescoViewModel) {
     val parole: List<WordEntity> by vm.parole.collectAsStateWithLifecycle(emptyList())
-    val lezioni: List<Int> by vm.lezioni.collectAsStateWithLifecycle(emptyList())
+    val lezioni: List<Int> by vm.numeriLezioni.collectAsStateWithLifecycle(emptyList())
     val caricamento: Boolean by vm.caricamento.collectAsStateWithLifecycle(false)
 
     var ricerca by remember { mutableStateOf("") }

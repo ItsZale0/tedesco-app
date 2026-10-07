@@ -52,6 +52,13 @@ data class SezioneEntity(
 )
 
 @Serializable
+data class LessonEntity(
+    val numero: Int,
+    val titolo: String,
+    val contenuto: String
+)
+
+@Serializable
 data class GuidaEntity(
     val titolo: String = "",
     val docUrl: String = "",

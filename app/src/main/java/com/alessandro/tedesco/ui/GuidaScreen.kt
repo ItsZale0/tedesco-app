@@ -64,6 +64,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.data.local.GuidaEntity
+import com.alessandro.tedesco.data.local.LessonEntity
 
 private const val URL_DOC_DEFAULT = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
@@ -221,6 +223,7 @@ fun GuidaScreen(vm: TedescoViewModel) {
 @Composable
 private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
+    val lezioni by vm.lezioni.collectAsStateWithLifecycle(emptyList())
     val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
     val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
@@ -280,6 +283,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                     Spacer(Modifier.height(8.dp))
                     LezioniDisponibili(
                         lezioneCorrente = lezioneCorrente,
+                        lezioni = lezioni,
                         onLezioneSelezionata = { nuovaLezione ->
                             vm.cambiaLezione(nuovaLezione)
                             mostraSelettore = false
@@ -315,16 +319,16 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
 @Composable
 private fun LezioniDisponibili(
     lezioneCorrente: Int,
+    lezioni: List<LessonEntity>,
     onLezioneSelezionata: (Int) -> Unit
 ) {
-    val lezioni = (1..10).toList()
     Column {
         lezioni.forEach { lezione ->
-            val selezionata = lezione == lezioneCorrente
+            val selezionata = lezione.numero == lezioneCorrente
             FilterChip(
                 selected = selezionata,
-                onClick = { onLezioneSelezionata(lezione) },
-                label = { Text("Lezione $lezione") },
+                onClick = { onLezioneSelezionata(lezione.numero) },
+                label = { Text("Lezione ${lezione.numero}: ${lezione.titolo}") },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
             )
         }
