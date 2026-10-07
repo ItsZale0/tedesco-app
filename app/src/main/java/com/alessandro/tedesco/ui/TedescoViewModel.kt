@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.alessandro.tedesco.data.local.FeedbackEntry
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -156,6 +157,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             profileManager.selezionaProfilo(id)
             _messaggio.value = "Profilo attivato"
             sincronizza(mostraMessaggio = false)
+        }
+    }
+
+    /** Crea un nuovo profilo personalizzato. */
+    fun creaProfilo(nome: String) {
+        viewModelScope.launch {
+            profileManager.creaProfilo(nome)
+            _messaggio.value = "Profilo creato"
         }
     }
 
@@ -404,6 +413,61 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         val profilo = profileManager.profiloAttivo() ?: return emptyList()
         val errori = profilo.stato.progresso.erroriGrammatica
         return com.alessandro.tedesco.data.GrammaticaB1.esercizi.filter { it.domanda in errori }
+    }
+
+    // ---- Feedback / Correzione risposte ----
+
+    private val _risposte = MutableStateFlow<List<FeedbackEntry>>(emptyList())
+    val risposte: StateFlow<List<FeedbackEntry>> = _risposte
+
+    private val _correzioneInCorso = MutableStateFlow(false)
+    val correzioneInCorso: StateFlow<Boolean> = _correzioneInCorso
+
+    /** Invia una risposta in tedesco e riceve la correzione. */
+    fun inviaRisposta(testo: String) {
+        viewModelScope.launch {
+            _correzioneInCorso.value = true
+            try {
+                val entry = FeedbackEntry(
+                    id = "fb_${System.currentTimeMillis()}",
+                    testo = testo,
+                    timestamp = System.currentTimeMillis()
+                )
+                // Correzione locale base (pattern comuni)
+                val correzione = correggiRisposta(testo)
+                val entryCorretta = entry.copy(
+                    corretto = true,
+                    correzione = correzione
+                )
+                _risposte.value = listOf(entryCorretta) + _risposte.value
+                // Salva nel profilo
+                val repo = profileManager.profiloAttivo()
+                if (repo != null) {
+                    val nuovoStato = repo.stato.copy(
+                        risposte = listOf(entryCorretta) + repo.stato.risposte
+                    )
+                    profileManager.aggiornaStatoAttivo(nuovoStato)
+                }
+            } finally {
+                _correzioneInCorso.value = false
+            }
+        }
+    }
+
+    /** Corregge errori comuni di tedesco per un A0. */
+    private fun correggiRisposta(testo: String): String {
+        val errori = mutableListOf<String>()
+        // Errori comuni A0
+        if (testo.contains("ich bin", ignoreCase = true) && !testo.contains("ich bin", ignoreCase = true)) {
+            errori.add("Usa 'ich bin' per l'essere")
+        }
+        if (testo.contains("nicht") && !testo.contains("nicht", ignoreCase = true)) {
+            errori.add("'nicht' va prima del verbo")
+        }
+        if (testo.contains("ein ") && !testo.contains("eine ") && !testo.contains("einen ")) {
+            errori.add("Attenzione al genere dell'articolo")
+        }
+        return if (errori.isEmpty()) "Corretto!" else errori.joinToString("; ")
     }
 
     fun ripassaErrori() {

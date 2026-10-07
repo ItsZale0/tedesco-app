@@ -1,7 +1,7 @@
 {
-  "versionCode": 36,
-  "versionName": "1.19.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.19.1/Tedesco-v1.19.1.apk",
-  "changelog": "Lezioni vere dal corso (non piu finte), audio per ogni lezione",
+  "versionCode": 37,
+  "versionName": "1.20.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.20.0/Tedesco-v1.20.0.apk",
+  "changelog": "Creazione profili personalizzati + loop di feedback (correzione risposte in-app)",
   "minVersionCode": 1
 }

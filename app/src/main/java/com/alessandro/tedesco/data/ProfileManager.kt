@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.alessandro.tedesco.data.local.ProfiliRepository
+import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
@@ -140,6 +141,29 @@ class ProfileManager(
             profili = repo.profili + (profiloId to aggiornato),
             profiloAttivoId = profiloId
         )
+        saveToDataStore()
+    }
+
+    /** Crea un nuovo profilo personalizzato. */
+    suspend fun creaProfilo(nome: String, tipo: TipoProfilo = TipoProfilo.PERSONALIZZATO) {
+        val repo = _repository.value
+        val id = "profilo_${System.currentTimeMillis()}"
+        val nuovo = ProfiloUtente(
+            id = id,
+            config = ProfiloConfig(
+                tipo = tipo,
+                nomeVisualizzato = nome,
+                enableCustomWords = true,
+                enableGoogleSheets = false,
+                googleSheetId = null,
+                feedUrl = ProfiliPreset.FEED_URL,
+                guidaDocId = null
+            ),
+            stato = ProfiloStato(),
+            creatoIl = System.currentTimeMillis(),
+            ultimoAccesso = System.currentTimeMillis()
+        )
+        _repository.value = repo.copy(profili = repo.profili + (id to nuovo))
         saveToDataStore()
     }
 

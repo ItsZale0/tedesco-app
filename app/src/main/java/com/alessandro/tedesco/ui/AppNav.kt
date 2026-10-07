@@ -51,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
+import com.alessandro.tedesco.ui.FeedbackScreen
 
 private sealed class Dest(
     val route: String,
@@ -121,7 +122,8 @@ fun AppNav() {
                 ProfileSelectionScreen(
                     profili = profili,
                     onSeleziona = { vm.selezionaProfilo(it) },
-                    onRiprova = { vm.ricaricaProfili() }
+                    onRiprova = { vm.ricaricaProfili() },
+                    onCreaProfilo = { vm.creaProfilo(it) }
                 )
                 SnackbarHost(
                     hostState = snackbar,
@@ -222,7 +224,17 @@ private fun ContenutoApp(
                     onVaiATest = { nav.navigate("testb1") },
                     onVaiAStats = { nav.navigate("stats") },
                     onVaiATraduttore = { nav.navigate("traduttore") },
-                    onVaiATutor = { nav.navigate("tutor") }
+                    onVaiATutor = { nav.navigate("tutor") },
+                    onVaiAFeedback = { nav.navigate("feedback") }
+                )
+            }
+            // Feedback / Correzione risposte
+            composable("feedback") {
+                FeedbackScreen(
+                    onIndietro = { nav.popBackStack() },
+                    onInviaRisposta = { vm.inviaRisposta(it) },
+                    risposte = vm.risposte.collectAsStateWithLifecycle().value,
+                    correzioneInCorso = vm.correzioneInCorso.collectAsStateWithLifecycle().value
                 )
             }
             composable("grammatica") { GrammaticaScreen(vm) }

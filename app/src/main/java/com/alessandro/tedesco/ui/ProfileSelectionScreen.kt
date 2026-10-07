@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +36,15 @@ import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 /**
  * Schermata iniziale: si sceglie il profilo prima di entrare nel corso.
@@ -44,8 +54,10 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 fun ProfileSelectionScreen(
     profili: List<ProfiloUtente>,
     onSeleziona: (String) -> Unit,
-    onRiprova: () -> Unit
+    onRiprova: () -> Unit,
+    onCreaProfilo: (String) -> Unit = {}
 ) {
+    var mostraCreazione by remember { mutableStateOf(false) }
     val maxLarghezza = dimensioneContenuto()
 
     Surface(
@@ -114,6 +126,51 @@ fun ProfileSelectionScreen(
             }
 
             Spacer(Modifier.height(40.dp))
+
+            // Pulsante per creare un nuovo profilo
+            Spacer(Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = { mostraCreazione = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Crea nuovo profilo")
+            }
+            
+            // Dialog per creazione profilo
+            if (mostraCreazione) {
+                var nuovoNome by remember { mutableStateOf("") }
+                AlertDialog(
+                    onDismissRequest = { mostraCreazione = false },
+                    title = { Text("Nuovo profilo") },
+                    text = {
+                        Column {
+                            Text("Inserisci un nome per il nuovo profilo:")
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = nuovoNome,
+                                onValueChange = { nuovoNome = it },
+                                label = { Text("Nome profilo") },
+                                singleLine = true
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                if (nuovoNome.isNotBlank()) {
+                                    onCreaProfilo(nuovoNome)
+                                    mostraCreazione = false
+                                }
+                            }
+                        ) { Text("Crea") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { mostraCreazione = false }) { Text("Annulla") }
+                    }
+                )
+            }
         }
     }
 }

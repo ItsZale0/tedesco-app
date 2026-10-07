@@ -186,6 +186,13 @@ enum class TipoProfilo(
         enableCustomWords = true,
         enableGoogleSheets = true
     ),
+    PERSONALIZZATO(
+        id = "personalizzato",
+        nome = "Personalizzato",
+        descrizione = "Profilo personalizzato creato dall'utente",
+        enableCustomWords = true,
+        enableGoogleSheets = false
+    ),
     EMMA(
         id = "emma",
         nome = "Emma",
@@ -219,7 +226,18 @@ data class ProfiloStato(
     val progresso: ProgressoUtente = ProgressoUtente(),
     val lezioneContenuto: String = "",
     val etag: String = "",
-    val lastSync: Long = 0L
+    val lastSync: Long = 0L,
+    val risposte: List<FeedbackEntry> = emptyList()
+)
+
+/** Risposta dell'utente da correggere. */
+@Serializable
+data class FeedbackEntry(
+    val id: String,
+    val testo: String,
+    val timestamp: Long,
+    val corretto: Boolean = false,
+    val correzione: String? = null
 )
 
 /** Profilo utente completo con stato */
