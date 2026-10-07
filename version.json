@@ -1,7 +1,7 @@
 {
-  "versionCode": 27,
-  "versionName": "1.14.2",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.2/Tedesco-v1.14.2.apk",
-  "changelog": "Markdown nel tutor: grassetto, elenchi e titoli formattati correttamente.",
+  "versionCode": 28,
+  "versionName": "1.15.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.15.0/Tedesco-v1.15.0.apk",
+  "changelog": "Material You: nuovi colori, tipografia e raggi arrotondati.",
   "minVersionCode": 1
 }

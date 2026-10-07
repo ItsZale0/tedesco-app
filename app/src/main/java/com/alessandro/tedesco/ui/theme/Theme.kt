@@ -29,68 +29,97 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val Blu = Color(0xFF1B5E9B)
-private val BluChiaro = Color(0xFF9EC9F0)
+// Palette Material You — tonalità M3 (basate su seed blu)
+private val Blu = Color(0xFF415F91)
+private val BluChiaro = Color(0xFFA9C7FF)
 
 private val SchemaChiaro = lightColorScheme(
-    primary = Blu,
+    primary = Color(0xFF415F91),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD3E4FF),
-    onPrimaryContainer = Color(0xFF001C38),
-    secondary = Color(0xFF00696E),
+    primaryContainer = Color(0xFFD6E3FF),
+    onPrimaryContainer = Color(0xFF001B3D),
+    secondary = Color(0xFF565F71),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFF9DF0F6),
-    onSecondaryContainer = Color(0xFF002021),
-    tertiary = Color(0xFF7C5800),
-    error = Color(0xFFBA1A1A)
+    secondaryContainer = Color(0xFFDAE2F9),
+    onSecondaryContainer = Color(0xFF131C2B),
+    tertiary = Color(0xFF705575),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFFAD8FD),
+    onTertiaryContainer = Color(0xFF28132F),
+    error = Color(0xFFBA1A1A),
+    onError = Color.White,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    background = Color(0xFFFEFBFF),
+    onBackground = Color(0xFF1B1B1F),
+    surface = Color(0xFFFEFBFF),
+    onSurface = Color(0xFF1B1B1F),
+    surfaceVariant = Color(0xFFE0E2EC),
+    onSurfaceVariant = Color(0xFF44474E),
+    outline = Color(0xFF74777F),
+    outlineVariant = Color(0xFFC4C6D0)
 )
 
 private val SchemaScuro = darkColorScheme(
-    primary = Color(0xFFA3C9FF),
-    onPrimary = Color(0xFF00325B),
-    primaryContainer = Color(0xFF004881),
-    onPrimaryContainer = Color(0xFFD3E4FF),
-    secondary = Color(0xFF81D3DA),
-    onSecondary = Color(0xFF003739),
-    secondaryContainer = Color(0xFF004F53),
-    onSecondaryContainer = Color(0xFF9DF0F6),
-    tertiary = Color(0xFFF2BE48),
-    error = Color(0xFFFFB4AB)
+    primary = Color(0xFFA9C7FF),
+    onPrimary = Color(0xFF003062),
+    primaryContainer = Color(0xFF284777),
+    onPrimaryContainer = Color(0xFFD6E3FF),
+    secondary = Color(0xFFBEC6DC),
+    onSecondary = Color(0xFF283141),
+    secondaryContainer = Color(0xFF3E4759),
+    onSecondaryContainer = Color(0xFFDAE2F9),
+    tertiary = Color(0xFFDDBCE0),
+    onTertiary = Color(0xFF3F2844),
+    tertiaryContainer = Color(0xFF573E5C),
+    onTertiaryContainer = Color(0xFFFAD8FD),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    background = Color(0xFF1B1B1F),
+    onBackground = Color(0xFFE3E2E6),
+    surface = Color(0xFF1B1B1F),
+    onSurface = Color(0xFFE3E2E6),
+    surfaceVariant = Color(0xFF44474E),
+    onSurfaceVariant = Color(0xFFC4C6D0),
+    outline = Color(0xFF8E9099),
+    outlineVariant = Color(0xFF44474E)
 )
 
 private val TipografiaBase = Typography(
-    displayLarge = TextStyle(fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 68.sp, letterSpacing = -1.5.sp),
-    displayMedium = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 56.sp, letterSpacing = -0.5.sp),
-    displaySmall = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold, lineHeight = 48.sp),
-    headlineLarge = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold, lineHeight = 42.sp),
-    headlineMedium = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, lineHeight = 38.sp),
-    headlineSmall = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, lineHeight = 34.sp),
-    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 30.sp),
-    titleMedium = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Medium, lineHeight = 27.sp),
-    titleSmall = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Medium, lineHeight = 23.sp),
-    bodyLarge = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Normal, lineHeight = 25.sp),
-    bodyMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp),
-    bodySmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp),
-    labelLarge = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 22.sp),
-    labelMedium = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 15.sp)
+    displayLarge = TextStyle(fontSize = 57.sp, fontWeight = FontWeight.Normal, lineHeight = 64.sp, letterSpacing = -0.25.sp),
+    displayMedium = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Normal, lineHeight = 52.sp),
+    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Normal, lineHeight = 44.sp),
+    headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Normal, lineHeight = 40.sp),
+    headlineMedium = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.Normal, lineHeight = 36.sp),
+    headlineSmall = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Normal, lineHeight = 32.sp),
+    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Normal, lineHeight = 28.sp),
+    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp, letterSpacing = 0.15.sp),
+    titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
+    bodyLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp, letterSpacing = 0.5.sp),
+    bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.25.sp),
+    bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 16.sp, letterSpacing = 0.4.sp),
+    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
+    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp),
+    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp)
 )
 
 /** Spaziature standard per padding e gap */
 object Spaziature {
     val xs = 4.dp
     val sm = 8.dp
-    val md = 16.dp
-    val lg = 24.dp
-    val xl = 32.dp
-    val xxl = 48.dp
+    val md = 12.dp
+    val lg = 16.dp
+    val xl = 24.dp
+    val xxl = 32.dp
 }
 
 /** Raggi standard per card, chip e bottoni */
 object Raggi {
-    val card = 16.dp
-    val chip = 12.dp
-    val bottone = 14.dp
+    val card = 28.dp
+    val chip = 16.dp
+    val bottone = 20.dp
 }
 
 /** Altezza del bottone principale, adattiva */
@@ -114,11 +143,10 @@ fun TitoloSchermata(testo: String) {
 
 /** Breakpoints per responsive design (in dp) */
 object Breakpoints {
-    const val SMALL = 360
-    const val MEDIUM = 450
-    const val LARGE = 600
-    const val TABLET = 840
-    const val DESKTOP = 1200
+    const val COMPACT = 0
+    const val MEDIUM = 600
+    const val EXPANDED = 840
+    const val LARGE = 1200
 }
 
 /** Classi dimensione finestra per layout adattivi */
@@ -217,9 +245,9 @@ fun responsiveButtonHeight(): Int {
 fun responsiveCornerRadius(): Int {
     val windowSize = rememberWindowSizeClass()
     return when (windowSize) {
-        WindowSize.COMPACT -> 12
-        WindowSize.MEDIUM -> 16
-        WindowSize.EXPANDED -> 20
+        WindowSize.COMPACT -> 16
+        WindowSize.MEDIUM -> 20
+        WindowSize.EXPANDED -> 28
     }
 }
 
