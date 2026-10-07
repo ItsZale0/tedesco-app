@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val apiKey by vm.tutorApiKey.collectAsStateWithLifecycle("")
+    val modelloTutor by vm.modelloTutor.collectAsStateWithLifecycle(null)
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -115,6 +117,12 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 }
             }
 
+            // Selettore modello
+            ModelloSelector(
+                modello = modelloTutor,
+                onModelloCambiato = { vm.cambiaModelloTutor(it) }
+            )
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -163,6 +171,51 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Invia")
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelloSelector(
+    modello: String?,
+    onModelloCambiato: (String?) -> Unit
+) {
+    var espanso by remember { mutableStateOf(false) }
+    val modelli = listOf(
+        null to "Automatico (free)",
+        "nvidia/nemotron-3.5-lightning:free" to "Nemotron 3.5 Lightning",
+        "liquid/lfm-2.5-2.6b:free" to "LFM 2.5",
+        "inclusionai/ling-3.0-flash-sante:free" to "Ling 3.0 Flash",
+        "google/gemma-4-31b-it:free" to "Gemma 4 31B",
+        "google/gemma-4-26b-a4b-it:free" to "Gemma 4 26B",
+        "nvidia/nemotron-3-super-120b-a12b:free" to "Nemotron 3 Super 120B"
+    )
+    val etichetta = modelli.firstOrNull { it.first == modello }?.second ?: "Automatico (free)"
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spaziaturaSchermo(), vertical = 4.dp)
+    ) {
+        AssistChip(
+            onClick = { espanso = true },
+            label = { Text(etichetta, style = MaterialTheme.typography.bodySmall) },
+            trailingIcon = { Icon(Icons.Filled.ExpandMore, contentDescription = null, modifier = Modifier.size(16.dp)) }
+        )
+        DropdownMenu(
+            expanded = espanso,
+            onDismissRequest = { espanso = false }
+        ) {
+            modelli.forEach { (id, nome) ->
+                DropdownMenuItem(
+                    text = { Text(nome) },
+                    onClick = {
+                        onModelloCambiato(id)
+                        espanso = false
+                    }
+                )
             }
         }
     }

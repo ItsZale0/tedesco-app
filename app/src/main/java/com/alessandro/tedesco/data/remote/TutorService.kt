@@ -57,7 +57,8 @@ class TutorService {
         apiKey: String,
         cronologia: List<Pair<String, String>>,
         livello: String,
-        lezione: Int
+        lezione: Int,
+        modello: String? = null
     ): String = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
             throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
@@ -82,15 +83,18 @@ class TutorService {
             }
         }
 
+        // Se l'utente ha scelto un modello, usa quello; altrimenti prova i free in cascata
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+
         var ultimoErrore: String? = null
-        for (modello in MODELLI_FREE) {
+        for (m in modelli) {
             try {
-                return@withContext chiamaModello(apiKey, modello, messaggi)
+                return@withContext chiamaModello(apiKey, m, messaggi)
             } catch (e: IOException) {
                 ultimoErrore = e.message
                 // 401 = chiave non valida: inutile provare altri modelli
                 if (e.message?.contains("non valida") == true) throw e
-                // altrimenti prova il prossimo modello free
+                // altrimenti prova il prossimo modello
             }
         }
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")

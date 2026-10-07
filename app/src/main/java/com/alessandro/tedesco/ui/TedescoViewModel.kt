@@ -327,6 +327,11 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Imposta il modello del tutor (null = automatico). */
+    fun cambiaModelloTutor(modello: String?) {
+        _modelloTutor.value = modello
+    }
+
     fun aggiornaTutorApiKey(nuovaChiave: String) {
         viewModelScope.launch {
             profileManager.aggiornaTutorApiKey(nuovaChiave)
@@ -338,6 +343,10 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    /** Modello OpenRouter scelto dall'utente (null = automatico tra i free). */
+    private val _modelloTutor = MutableStateFlow<String?>(null)
+    val modelloTutor: StateFlow<String?> = _modelloTutor
+
     /** Chiede una risposta al tutor AI. */
     suspend fun chiediAlTutor(
         cronologia: List<Pair<String, String>>,
@@ -346,7 +355,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     ): Result<String> {
         val chiave = tutorApiKey.value
         return runCatching {
-            app.tutorServiceInstance.rispondi(chiave, cronologia, livello, lezione)
+            app.tutorServiceInstance.rispondi(chiave, cronologia, livello, lezione, _modelloTutor.value)
         }
     }
 

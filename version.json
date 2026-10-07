@@ -1,7 +1,7 @@
 {
-  "versionCode": 24,
-  "versionName": "1.13.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.13.0/Tedesco-v1.13.0.apk",
-  "changelog": "Lezioni dinamiche: selezione funzionante, contenuto completo per ogni lezione.",
+  "versionCode": 25,
+  "versionName": "1.14.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.0/Tedesco-v1.14.0.apk",
+  "changelog": "Selettore modello OpenRouter nella sezione Tutor.",
   "minVersionCode": 1
 }
