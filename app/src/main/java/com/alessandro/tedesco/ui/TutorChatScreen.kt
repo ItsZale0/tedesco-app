@@ -184,13 +184,13 @@ private fun ModelloSelector(
 ) {
     var espanso by remember { mutableStateOf(false) }
     val modelli = listOf(
-        null to "Automatico (free)",
-        "nvidia/nemotron-3.5-lightning:free" to "Nemotron 3.5 Lightning",
-        "liquid/lfm-2.5-2.6b:free" to "LFM 2.5",
-        "inclusionai/ling-3.0-flash-sante:free" to "Ling 3.0 Flash",
-        "google/gemma-4-31b-it:free" to "Gemma 4 31B",
-        "google/gemma-4-26b-a4b-it:free" to "Gemma 4 26B",
-        "nvidia/nemotron-3-super-120b-a12b:free" to "Nemotron 3 Super 120B"
+        null to "Automatico (sceglie il più veloce)",
+        "nvidia/nemotron-3.5-lightning:free" to "Nemotron 3.5 Lightning (free)",
+        "liquid/lfm-2.5-2.6b:free" to "LFM 2.5 (free)",
+        "inclusionai/ling-3.0-flash-sante:free" to "Ling 3.0 Flash (free)",
+        "google/gemma-4-31b-it:free" to "Gemma 4 31B (free)",
+        "google/gemma-4-26b-a4b-it:free" to "Gemma 4 26B (free)",
+        "nvidia/nemotron-3-super-120b-a12b:free" to "Nemotron 3 Super 120B (free)"
     )
     val etichetta = modelli.firstOrNull { it.first == modello }?.second ?: "Automatico (free)"
 

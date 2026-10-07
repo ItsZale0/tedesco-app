@@ -1,7 +1,7 @@
 {
-  "versionCode": 25,
-  "versionName": "1.14.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.0/Tedesco-v1.14.0.apk",
-  "changelog": "Selettore modello OpenRouter nella sezione Tutor.",
+  "versionCode": 26,
+  "versionName": "1.14.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.14.1/Tedesco-v1.14.1.apk",
+  "changelog": "Etichette modelli free esplicite nel selettore Tutor.",
   "minVersionCode": 1
 }
