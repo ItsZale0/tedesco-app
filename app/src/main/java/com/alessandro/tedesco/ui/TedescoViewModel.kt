@@ -31,6 +31,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.alessandro.tedesco.data.local.FeedbackEntry
+import com.alessandro.tedesco.data.local.PianoEntity
+import com.alessandro.tedesco.data.local.ProgressoFeedEntity
+import com.alessandro.tedesco.data.local.SessioneEntity
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -62,6 +65,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
+    val piano = repo.pianoFlow.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val progressoFeed = repo.progressoFeedFlow.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val sessioni = repo.sessioniFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val lezioneContenuto = repo.observeLezioneContenuto()
     val livelliDisponibili = repo.observeLevels()
     val parolePerLivello: StateFlow<List<WordEntity>> = combine(
@@ -407,12 +413,69 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ---- Test di comprensione ----
+
+    fun salvaTestComprensione(punteggio: Float, errori: Int, totale: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.local.TestComprensione(
+                data = System.currentTimeMillis(),
+                punteggio = punteggio,
+                errori = errori,
+                totale = totale
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testComprensione = profilo.stato.progresso.testComprensione + nuovoTest
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
+    // ---- Test di produzione ----
+
+    fun salvaTestProduzione(punteggio: Float, errori: Int, totale: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.local.TestProduzione(
+                data = System.currentTimeMillis(),
+                punteggio = punteggio,
+                errori = errori,
+                totale = totale
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testProduzione = profilo.stato.progresso.testProduzione + nuovoTest
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
     // ---- Ripasso errori ----
 
     fun eserciziErrori(): List<com.alessandro.tedesco.data.EsercizioGrammatica> {
         val profilo = profileManager.profiloAttivo() ?: return emptyList()
         val errori = profilo.stato.progresso.erroriGrammatica
         return com.alessandro.tedesco.data.GrammaticaB1.esercizi.filter { it.domanda in errori }
+    }
+
+    /** Avvia una sessione strutturata. */
+    fun avviaSessione(tipo: String) {
+        when (tipo) {
+            "SESSIONE" -> {
+                _messaggio.value = "Sessione avviata: inizia dal ripasso"
+                nuovaSessione()
+            }
+            "TEST" -> _messaggio.value = "Test: vai in Altro > Test"
+            "ROLEPLAY" -> _messaggio.value = "Roleplay: scrivi il dialogo nel tutor"
+            "RIPASSO" -> {
+                _messaggio.value = "Ripasso errori"
+                ripassaErrori()
+            }
+            else -> _messaggio.value = "Sessione: $tipo"
+        }
     }
 
     // ---- Feedback / Correzione risposte ----

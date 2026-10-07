@@ -24,6 +24,12 @@ import kotlinx.serialization.json.Json
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.comparisons.compareBy
+import com.alessandro.tedesco.data.local.PianoEntity
+import com.alessandro.tedesco.data.local.ProgressoFeedEntity
+import com.alessandro.tedesco.data.local.SessioneEntity
+import com.alessandro.tedesco.data.local.TappaEntity
+import com.alessandro.tedesco.data.local.CertificazioneEntity
+import com.alessandro.tedesco.data.local.RisorsaEntity
 
 sealed class SyncResult {
     data object NotModified : SyncResult()
@@ -52,11 +58,17 @@ class WordRepository(
     private val _guida = MutableStateFlow<GuidaEntity?>(null)
     private val _lezioneContenuto = MutableStateFlow("")
     private val _lezioni = MutableStateFlow<List<LessonEntity>>(emptyList())
+    private val _piano = MutableStateFlow<PianoEntity?>(null)
+    private val _progressoFeed = MutableStateFlow<ProgressoFeedEntity?>(null)
+    private val _sessioni = MutableStateFlow<List<SessioneEntity>>(emptyList())
 
     val wordsFlow: Flow<List<WordEntity>> = _words
     val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
     val feedLogFlow: Flow<List<FeedLogEntity>> = _feedLog
     val guidaFlow: Flow<GuidaEntity?> = _guida
+    val pianoFlow: Flow<PianoEntity?> = _piano
+    val progressoFeedFlow: Flow<ProgressoFeedEntity?> = _progressoFeed
+    val sessioniFlow: Flow<List<SessioneEntity>> = _sessioni
 
     init {
         // Ad ogni cambio di profilo (o al primo caricamento) ricarica i dati
@@ -78,6 +90,9 @@ class WordRepository(
         _reviews.value = stato.reviews
         _feedLog.value = stato.feedLog
         _guida.value = stato.guida
+        _piano.value = stato.piano
+        _progressoFeed.value = stato.progressoFeed
+        _sessioni.value = stato.sessioni
     }
 
     private suspend fun salvaSuProfilo() {
@@ -87,6 +102,9 @@ class WordRepository(
                 reviews = _reviews.value,
                 feedLog = _feedLog.value,
                 guida = _guida.value,
+                piano = _piano.value,
+                progressoFeed = _progressoFeed.value,
+                sessioni = _sessioni.value,
                 progresso = profileManager.statoAttivo().progresso,
                 etag = profileManager.statoAttivo().etag,
                 lastSync = System.currentTimeMillis()
@@ -166,6 +184,30 @@ class WordRepository(
                     docUrl = g.docUrl,
                     sezioni = g.sezioni.map { SezioneEntity(it.titolo, it.testo) }
                 )
+            }
+            feed.piano?.let { p ->
+                _piano.value = PianoEntity(
+                    obiettivo = p.obiettivo,
+                    orizzonte = p.orizzonte,
+                    tappe = p.tappe.map { TappaEntity(it.nome, it.descrizione, it.lezioni, it.stato) },
+                    certificazioni = p.certificazioni.map {
+                        CertificazioneEntity(it.nome, it.ente, it.livello, it.note, it.url)
+                    },
+                    risorse = p.risorse.map { RisorsaEntity(it.nome, it.tipo, it.nota) }
+                )
+            }
+            feed.progresso?.let { pr ->
+                _progressoFeed.value = ProgressoFeedEntity(
+                    lezioneCorrente = pr.lezioneCorrente,
+                    streakCorrente = pr.streakCorrente,
+                    streakRecord = pr.streakRecord,
+                    totaleFatte = pr.totaleFatte,
+                    paroleTotali = pr.paroleTotali,
+                    paroleMature = pr.paroleMature
+                )
+            }
+            _sessioni.value = feed.sessioni.map {
+                SessioneEntity(it.tipo, it.titolo, it.descrizione, it.durata)
             }
 
             val logEntry = FeedLogEntity(

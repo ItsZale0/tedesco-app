@@ -14,7 +14,64 @@ data class FeedDto(
     val guida: GuidaDto? = null,
     val words: List<WordDto> = emptyList(),
     val lessons: List<LessonDto> = emptyList(),
-    val lezioneCorrente: Int = 1
+    val lezioneCorrente: Int = 1,
+    val piano: PianoDto? = null,
+    val progresso: ProgressoDto? = null,
+    val sessioni: List<SessioneDto> = emptyList()
+)
+
+/** Piano di studio verso il B2, con tappe e certificazioni. */
+@Serializable
+data class PianoDto(
+    val obiettivo: String = "",
+    val orizzonte: String = "",
+    val tappe: List<TappaDto> = emptyList(),
+    val certificazioni: List<CertificazioneDto> = emptyList(),
+    val risorse: List<RisorsaDto> = emptyList()
+)
+
+@Serializable
+data class TappaDto(
+    val nome: String = "",
+    val descrizione: String = "",
+    val lezioni: String = "",
+    val stato: String = ""
+)
+
+@Serializable
+data class CertificazioneDto(
+    val nome: String = "",
+    val ente: String = "",
+    val livello: String = "",
+    val note: String = "",
+    val url: String = ""
+)
+
+@Serializable
+data class RisorsaDto(
+    val nome: String = "",
+    val tipo: String = "",
+    val nota: String = ""
+)
+
+/** Streak e contatori correnti. */
+@Serializable
+data class ProgressoDto(
+    val lezioneCorrente: Int = 1,
+    val streakCorrente: Int = 0,
+    val streakRecord: Int = 0,
+    val totaleFatte: Int = 0,
+    val paroleTotali: Int = 0,
+    val paroleMature: Int = 0
+)
+
+/** Tipo di sessione strutturata. */
+@Serializable
+data class SessioneDto(
+    val tipo: String = "",
+    val titolo: String = "",
+    val descrizione: String = "",
+    val durata: Int = 0
 )
 
 @Serializable

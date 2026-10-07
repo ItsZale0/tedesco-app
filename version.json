@@ -1,7 +1,7 @@
 {
-  "versionCode": 37,
-  "versionName": "1.20.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.20.0/Tedesco-v1.20.0.apk",
-  "changelog": "Creazione profili personalizzati + loop di feedback (correzione risposte in-app)",
+  "versionCode": 38,
+  "versionName": "1.21.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.21.0/Tedesco-v1.21.0.apk",
+  "changelog": "App unica: piano di studio, certificazioni, sessioni strutturate, correzione risposte. WhatsApp eliminato.",
   "minVersionCode": 1
 }

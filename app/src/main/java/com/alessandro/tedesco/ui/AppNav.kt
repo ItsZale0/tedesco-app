@@ -52,6 +52,8 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.FeedbackScreen
+import com.alessandro.tedesco.ui.PianoScreen
+import com.alessandro.tedesco.ui.SessioniScreen
 
 private sealed class Dest(
     val route: String,
@@ -225,7 +227,28 @@ private fun ContenutoApp(
                     onVaiAStats = { nav.navigate("stats") },
                     onVaiATraduttore = { nav.navigate("traduttore") },
                     onVaiATutor = { nav.navigate("tutor") },
-                    onVaiAFeedback = { nav.navigate("feedback") }
+                    onVaiAFeedback = { nav.navigate("feedback") },
+                    onVaiACompetenze = { nav.navigate("competenze") },
+                    onVaiAQuizComprensione = { nav.navigate("quiz-comprensione") },
+                    onVaiAQuizProduzione = { nav.navigate("quiz-produzione") },
+                    onVaiAPiano = { nav.navigate("piano") },
+                    onVaiASessioni = { nav.navigate("sessioni") }
+                )
+            }
+            // Piano di studio
+            composable("piano") {
+                PianoScreen(
+                    onIndietro = { nav.popBackStack() },
+                    piano = vm.piano.collectAsStateWithLifecycle().value,
+                    progresso = vm.progressoFeed.collectAsStateWithLifecycle().value
+                )
+            }
+            // Sessioni strutturate
+            composable("sessioni") {
+                SessioniScreen(
+                    onIndietro = { nav.popBackStack() },
+                    sessioni = vm.sessioni.collectAsStateWithLifecycle().value,
+                    onAvvia = { tipo -> vm.avviaSessione(tipo) }
                 )
             }
             // Feedback / Correzione risposte
@@ -243,6 +266,9 @@ private fun ContenutoApp(
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
+            composable("competenze") { CompetenzeScreen(vm) }
+            composable("quiz-comprensione") { ComprensioneScreen(vm) }
+            composable("quiz-produzione") { ProduzioneScreen(vm) }
         }
     }
 }

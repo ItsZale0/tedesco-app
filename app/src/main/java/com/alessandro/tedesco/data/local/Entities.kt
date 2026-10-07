@@ -227,7 +227,53 @@ data class ProfiloStato(
     val lezioneContenuto: String = "",
     val etag: String = "",
     val lastSync: Long = 0L,
-    val risposte: List<FeedbackEntry> = emptyList()
+    val risposte: List<FeedbackEntry> = emptyList(),
+    val piano: PianoEntity? = null,
+    val progressoFeed: ProgressoFeedEntity? = null,
+    val sessioni: List<SessioneEntity> = emptyList()
+)
+
+/** Piano di studio verso il B2. */
+@Serializable
+data class PianoEntity(
+    val obiettivo: String = "",
+    val orizzonte: String = "",
+    val tappe: List<TappaEntity> = emptyList(),
+    val certificazioni: List<CertificazioneEntity> = emptyList(),
+    val risorse: List<RisorsaEntity> = emptyList()
+)
+
+@Serializable
+data class TappaEntity(
+    val nome: String = "",
+    val descrizione: String = "",
+    val lezioni: String = "",
+    val stato: String = ""
+)
+
+@Serializable
+data class CertificazioneEntity(
+    val nome: String = "",
+    val ente: String = "",
+    val livello: String = "",
+    val note: String = "",
+    val url: String = ""
+)
+
+@Serializable
+data class RisorsaEntity(
+    val nome: String = "",
+    val tipo: String = "",
+    val nota: String = ""
+)
+
+/** Sessione strutturata disponibile nell'app. */
+@Serializable
+data class SessioneEntity(
+    val tipo: String = "",
+    val titolo: String = "",
+    val descrizione: String = "",
+    val durata: Int = 0
 )
 
 /** Risposta dell'utente da correggere. */
@@ -238,6 +284,17 @@ data class FeedbackEntry(
     val timestamp: Long,
     val corretto: Boolean = false,
     val correzione: String? = null
+)
+
+/** Progresso corrente pubblicato dal tutor nel feed. */
+@Serializable
+data class ProgressoFeedEntity(
+    val lezioneCorrente: Int = 1,
+    val streakCorrente: Int = 0,
+    val streakRecord: Int = 0,
+    val totaleFatte: Int = 0,
+    val paroleTotali: Int = 0,
+    val paroleMature: Int = 0
 )
 
 /** Profilo utente completo con stato */
