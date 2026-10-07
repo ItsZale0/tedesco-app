@@ -155,7 +155,7 @@ class WordRepository(
 
             val (added, changed) = merge(feed)
 
-            _lezioni.value = feed.lessons.map { LessonEntity(it.numero, it.titolo, it.contenuto) }
+            _lezioni.value = feed.lessons.map { LessonEntity(it.numero, it.titolo, it.contenuto, it.audioUrl) }
             val lezioneCorrente = profileManager.statoAttivo().progresso.lezioneCorrente
             val lezione = feed.lessons.firstOrNull { it.numero == lezioneCorrente }
                 ?: feed.lessons.firstOrNull()

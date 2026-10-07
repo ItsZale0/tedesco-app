@@ -55,7 +55,8 @@ data class SezioneEntity(
 data class LessonEntity(
     val numero: Int,
     val titolo: String,
-    val contenuto: String
+    val contenuto: String,
+    val audioUrl: String = ""
 )
 
 @Serializable

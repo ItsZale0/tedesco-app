@@ -45,6 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -224,7 +225,9 @@ fun GuidaScreen(vm: TedescoViewModel) {
 private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val lezioni by vm.lezioni.collectAsStateWithLifecycle(emptyList())
+    val context = androidx.compose.ui.platform.LocalContext.current
     val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
+    val audioUrl by vm.lezioneAudioUrl.collectAsStateWithLifecycle("")
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
     val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
     var mostraSelettore by remember { mutableStateOf(false) }
@@ -292,6 +295,43 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                 }
             }
             Spacer(Modifier.height(12.dp))
+            if (audioUrl.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.VolumeUp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Ascolta la lezione",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                text = "Pronuncia lenta delle parole",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        TextButton(onClick = {
+                            val i = Intent(Intent.ACTION_VIEW, Uri.parse(audioUrl))
+                            context.startActivity(i)
+                        }) { Text("Apri") }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
             if (contenuto.isNotBlank()) {
                 MarkdownText(
                     markdown = contenuto,

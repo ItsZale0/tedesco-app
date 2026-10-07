@@ -79,6 +79,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
 
+    /** URL dell'audio della lezione corrente (vuoto se non disponibile). */
+    val lezioneAudioUrl: StateFlow<String> = combine(
+        repo.observeLessons(),
+        lezioneCorrente
+    ) { lezioni, n ->
+        lezioni.firstOrNull { it.numero == n }?.audioUrl ?: ""
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
     /** Statistiche complete per la schermata Progressi. */
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
