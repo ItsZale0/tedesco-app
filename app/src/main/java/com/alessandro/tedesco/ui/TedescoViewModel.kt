@@ -248,6 +248,19 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 repo.addCustomWord(german, italian, example, article, pronunciation, lesson, tags)
             }.onSuccess {
                 _messaggio.value = "Parola aggiunta"
+                // Pubblica sul canale: un cron la committa nel vocabolario su GitHub.
+                val topic = profileManager.topicPubblicazione()
+                if (topic.isNotBlank()) {
+                    app.vocabPublishServiceInstance.pubblica(
+                        topic = topic,
+                        german = german,
+                        italian = italian,
+                        example = example,
+                        article = article,
+                        level = "A1",
+                        lesson = lesson
+                    )
+                }
             }.onFailure {
                 _messaggio.value = "Errore: ${it.message}"
             }

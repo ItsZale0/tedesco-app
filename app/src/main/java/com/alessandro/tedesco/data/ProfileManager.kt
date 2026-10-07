@@ -190,6 +190,14 @@ class ProfileManager(
         saveToDataStore()
     }
 
+    /**
+     * Canale ntfy su cui pubblicare le parole nuove.
+     * Solo per i profili personalizzati (Emma e Alessandro Personalizzato):
+     * gli altri non hanno un vocabolario su GitHub da aggiornare.
+     */
+    fun topicPubblicazione(): String =
+        if (isCustomWordsEnabled()) ProfiliPreset.NTFY_TOPIC_EMMA else ""
+
     /** Aggiorna la chiave API del tutor AI per il profilo attivo. */
     suspend fun aggiornaTutorApiKey(nuovaChiave: String) {
         val repo = _repository.value

@@ -17,8 +17,14 @@ object ProfiliPreset {
 
     const val FEED_URL =
         "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
+    /** Vocabolario personale di Emma: ospitato sul GitHub di Alessandro. */
+    const val FEED_URL_EMMA =
+        "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab-emma/main/vokabeln.json"
     const val GUIDA_DOC_ID = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
     const val SHEET_CUSTOM = "1OZ0BIbOC1wRVwWjJOLpgiBLGf6OzkRzJL7n9-5WbfD8"
+
+    /** Canale ntfy su cui l'app pubblica le parole nuove di Emma. */
+    const val NTFY_TOPIC_EMMA = "tedesco-emma-vocab-c7f3a91b"
 
     /** Id di tutti i preset previsti, in ordine. */
     val ID_PRESET: List<String> = TipoProfilo.entries.map { it.id }
@@ -47,8 +53,9 @@ object ProfiliPreset {
         return mapOf(
             TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null, FEED_URL, GUIDA_DOC_ID),
             TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, SHEET_CUSTOM, FEED_URL, GUIDA_DOC_ID),
-            // Emma: nessun feed condiviso, nessun documento predefinito. Deve personalizzare tutto.
-            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, SHEET_CUSTOM, "", null)
+            // Emma: vocabolario suo, ospitato sul GitHub di Alessandro.
+            // Parte vuota e si popola con le parole che aggiunge nell'app.
+            TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, SHEET_CUSTOM, FEED_URL_EMMA, GUIDA_DOC_ID)
         )
     }
 

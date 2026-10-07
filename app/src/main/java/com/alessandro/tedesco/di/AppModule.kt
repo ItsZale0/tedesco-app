@@ -4,6 +4,7 @@ import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.TutorService
+import com.alessandro.tedesco.data.remote.VocabPublishService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
@@ -45,4 +46,5 @@ object AppModule {
         profileManager: ProfileManager
     ): WordRepository = WordRepository(context, service, json, io, profileManager)
     fun provideTutorService(): TutorService = TutorService()
+    fun provideVocabPublishService(): VocabPublishService = VocabPublishService()
 }

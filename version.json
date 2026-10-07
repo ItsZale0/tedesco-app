@@ -1,7 +1,7 @@
 {
-  "versionCode": 22,
-  "versionName": "1.11.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.11.0/Tedesco-v1.11.0.apk",
-  "changelog": "Tutorial passo-passo in grigio sotto ogni campo, pulsanti precompilati col vocabolario di Alessandro.",
+  "versionCode": 23,
+  "versionName": "1.12.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.12.0/Tedesco-v1.12.0.apk",
+  "changelog": "Vocabolario di Emma su GitHub, parole aggiunte sincronizzate in automatico.",
   "minVersionCode": 1
 }
