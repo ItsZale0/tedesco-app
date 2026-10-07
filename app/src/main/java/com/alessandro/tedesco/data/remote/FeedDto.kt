@@ -36,7 +36,8 @@ data class LessonDto(
     val titolo: String = "",
     val data: String = "",
     val pdfUrl: String = "",
-    val contenuto: String = ""
+    val contenuto: String = "",
+    val audioUrl: String = ""
 )
 
 @Serializable

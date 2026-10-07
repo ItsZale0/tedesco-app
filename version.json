@@ -1,7 +1,7 @@
 {
-  "versionCode": 34,
-  "versionName": "1.18.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.18.0/Tedesco-v1.18.0.apk",
-  "changelog": "Fix colori: palette ora applicata davvero (bug MainActivity), 5 temi distinti",
+  "versionCode": 35,
+  "versionName": "1.19.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.19.0/Tedesco-v1.19.0.apk",
+  "changelog": "Lezioni vere dal corso (non piu finte), audio per ogni lezione",
   "minVersionCode": 1
 }
