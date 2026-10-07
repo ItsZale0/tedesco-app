@@ -209,7 +209,7 @@ class ProfileManager(
     /** Flusso della palette colore scelta per il profilo attivo. */
     val paletteFlow: StateFlow<String> = repositoryFlow
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.palette } ?: "material" }
-        .stateIn(scope, SharingStarted.Eagerly, "material")
+        .stateIn(scope, SharingStarted.Eagerly, "uber")
 
     /** Cambia la palette colore per il profilo attivo. */
     suspend fun cambiaPalette(nuovaPalette: String) {

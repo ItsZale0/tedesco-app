@@ -205,7 +205,7 @@ data class ProfiloConfig(
     val feedUrl: String = "",
     val guidaDocId: String? = null,
     val tutorApiKey: String = "",
-    val palette: String = "material"
+    val palette: String = "uber"
 )
 
 /** Stato persistente per profilo — dati completamente separati per utente */

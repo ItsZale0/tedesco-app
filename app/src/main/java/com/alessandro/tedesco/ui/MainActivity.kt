@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             // La palette viene letta dal DataStore tramite il ViewModel
-            val palette = PaletteApp.MATERIAL_YOU
+            val palette = PaletteApp.UBER
 
             TedescoTheme(palette = palette) {
                 Surface(

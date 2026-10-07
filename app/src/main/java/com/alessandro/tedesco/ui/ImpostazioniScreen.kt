@@ -92,7 +92,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     val googleSheets by vm.enableGoogleSheets.collectAsStateWithLifecycle(false)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
-    val palette by vm.palette.collectAsStateWithLifecycle("material")
+    val palette by vm.palette.collectAsStateWithLifecycle("uber")
 
     var cambiaProfilo by remember { mutableStateOf(false) }
     var esciSelezione by remember { mutableStateOf(false) }
@@ -383,8 +383,8 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
 
                 val palette = PaletteApp.daId(palette)
                 val paletteList = listOf(
-                    PaletteApp.MATERIAL_YOU to "Material You",
-                    PaletteApp.VERDE to "Verde",
+                    PaletteApp.UBER to "Uber (Nero)",
+                    PaletteApp.BLU to "Blu",
                     PaletteApp.ARANCIO to "Arancio",
                     PaletteApp.VIOLA to "Viola",
                     PaletteApp.ROSSO to "Rosso"

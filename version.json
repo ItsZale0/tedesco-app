@@ -1,7 +1,7 @@
 {
-  "versionCode": 30,
-  "versionName": "1.16.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.16.1/Tedesco-v1.16.1.apk",
-  "changelog": "Tutor: risposte più lunghe e animazione di digitazione.",
+  "versionCode": 31,
+  "versionName": "1.17.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.17.0/Tedesco-v1.17.0.apk",
+  "changelog": "Rework design stile Uber: scuro, pulito, ad alto contrasto.",
   "minVersionCode": 1
 }
