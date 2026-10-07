@@ -1,7 +1,7 @@
 {
-  "versionCode": 32,
-  "versionName": "1.17.1",
+  "versionCode": 33,
+  "versionName": "1.17.2",
   "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.17.0/Tedesco-v1.17.0.apk",
-  "changelog": "Fix palette default: Uber di default, colori rimossi se non funzionano",
+  "changelog": "Fix palette default: Uber di default, colori che funzionano",
   "minVersionCode": 1
 }
