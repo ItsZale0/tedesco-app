@@ -4,23 +4,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.fillMaxSize
-import com.alessandro.tedesco.ui.theme.TedescoTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.PaletteApp
+import com.alessandro.tedesco.ui.theme.TedescoTheme
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent {
-            // La palette viene letta dal DataStore tramite il ViewModel
-            val palette = PaletteApp.UBER
+        val app = application as TedescoApp
 
-            TedescoTheme(palette = palette) {
+        setContent {
+            // La palette arriva dal DataStore del profilo attivo e reagisce ai cambi
+            val paletteId by app.profileManagerInstance.paletteFlow
+                .collectAsStateWithLifecycle("uber")
+
+            TedescoTheme(
+                darkTheme = true,
+                palette = PaletteApp.daId(paletteId)
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

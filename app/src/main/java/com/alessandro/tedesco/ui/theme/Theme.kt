@@ -118,14 +118,14 @@ private val SchemaChiaroBlu = lightColorScheme(
 )
 
 private val SchemaScuroBlu = darkColorScheme(
-    primary = Color(0xFF8AB4F8),
-    onPrimary = Nero,
+    primary = Color(0xFF5B8DEF),
+    onPrimary = Color(0xFF001B3D),
     primaryContainer = Color(0xFF1A3A6B),
     onPrimaryContainer = Color(0xFFD6E3FF),
-    secondary = GrigioMoltoChiaro,
-    onSecondary = Nero,
-    secondaryContainer = GrigioMedio,
-    onSecondaryContainer = Bianco,
+    secondary = Color(0xFF9DC0FF),
+    onSecondary = Color(0xFF001B3D),
+    secondaryContainer = Color(0xFF14315C),
+    onSecondaryContainer = Color(0xFFD6E3FF),
     tertiary = VerdeUber,
     onTertiary = Nero,
     tertiaryContainer = VerdeUberScuro,
@@ -134,14 +134,14 @@ private val SchemaScuroBlu = darkColorScheme(
     onError = Nero,
     errorContainer = Color(0xFFB71C1C),
     onErrorContainer = Bianco,
-    background = Nero,
-    onBackground = Bianco,
-    surface = Nero,
-    onSurface = Bianco,
-    surfaceVariant = NeroChiaro,
-    onSurfaceVariant = GrigioMoltoChiaro,
-    outline = GrigioMedio,
-    outlineVariant = GrigioScuro
+    background = Color(0xFF0A1420),
+    onBackground = Color(0xFFE6EEFF),
+    surface = Color(0xFF0A1420),
+    onSurface = Color(0xFFE6EEFF),
+    surfaceVariant = Color(0xFF16263A),
+    onSurfaceVariant = Color(0xFFB8C8E0),
+    outline = Color(0xFF5B8DEF),
+    outlineVariant = Color(0xFF1F3A5C)
 )
 
 private val SchemaChiaroArancio = lightColorScheme(
@@ -172,14 +172,14 @@ private val SchemaChiaroArancio = lightColorScheme(
 )
 
 private val SchemaScuroArancio = darkColorScheme(
-    primary = Color(0xFFFFB08A),
-    onPrimary = Nero,
+    primary = Color(0xFFFF8A50),
+    onPrimary = Color(0xFF3D1600),
     primaryContainer = Color(0xFF6B2D00),
     onPrimaryContainer = Color(0xFFFFE0D6),
-    secondary = GrigioMoltoChiaro,
-    onSecondary = Nero,
-    secondaryContainer = GrigioMedio,
-    onSecondaryContainer = Bianco,
+    secondary = Color(0xFFFFB68C),
+    onSecondary = Color(0xFF3D1600),
+    secondaryContainer = Color(0xFF54230A),
+    onSecondaryContainer = Color(0xFFFFE0D6),
     tertiary = VerdeUber,
     onTertiary = Nero,
     tertiaryContainer = VerdeUberScuro,
@@ -188,14 +188,14 @@ private val SchemaScuroArancio = darkColorScheme(
     onError = Nero,
     errorContainer = Color(0xFFB71C1C),
     onErrorContainer = Bianco,
-    background = Nero,
-    onBackground = Bianco,
-    surface = Nero,
-    onSurface = Bianco,
-    surfaceVariant = NeroChiaro,
-    onSurfaceVariant = GrigioMoltoChiaro,
-    outline = GrigioMedio,
-    outlineVariant = GrigioScuro
+    background = Color(0xFF1A0E06),
+    onBackground = Color(0xFFFFEDE4),
+    surface = Color(0xFF1A0E06),
+    onSurface = Color(0xFFFFEDE4),
+    surfaceVariant = Color(0xFF33200F),
+    onSurfaceVariant = Color(0xFFE8C8B0),
+    outline = Color(0xFFFF8A50),
+    outlineVariant = Color(0xFF4A2E18)
 )
 
 private val SchemaChiaroViola = lightColorScheme(
@@ -226,14 +226,14 @@ private val SchemaChiaroViola = lightColorScheme(
 )
 
 private val SchemaScuroViola = darkColorScheme(
-    primary = Color(0xFFD0A0FF),
-    onPrimary = Nero,
+    primary = Color(0xFFC08CFF),
+    onPrimary = Color(0xFF2A0050),
     primaryContainer = Color(0xFF3D1A6B),
     onPrimaryContainer = Color(0xFFE8D5FF),
-    secondary = GrigioMoltoChiaro,
-    onSecondary = Nero,
-    secondaryContainer = GrigioMedio,
-    onSecondaryContainer = Bianco,
+    secondary = Color(0xFFD8B8FF),
+    onSecondary = Color(0xFF2A0050),
+    secondaryContainer = Color(0xFF2E1450),
+    onSecondaryContainer = Color(0xFFE8D5FF),
     tertiary = VerdeUber,
     onTertiary = Nero,
     tertiaryContainer = VerdeUberScuro,
@@ -242,14 +242,14 @@ private val SchemaScuroViola = darkColorScheme(
     onError = Nero,
     errorContainer = Color(0xFFB71C1C),
     onErrorContainer = Bianco,
-    background = Nero,
-    onBackground = Bianco,
-    surface = Nero,
-    onSurface = Bianco,
-    surfaceVariant = NeroChiaro,
-    onSurfaceVariant = GrigioMoltoChiaro,
-    outline = GrigioMedio,
-    outlineVariant = GrigioScuro
+    background = Color(0xFF120A1A),
+    onBackground = Color(0xFFF0E6FF),
+    surface = Color(0xFF120A1A),
+    onSurface = Color(0xFFF0E6FF),
+    surfaceVariant = Color(0xFF26143A),
+    onSurfaceVariant = Color(0xFFD0B8E8),
+    outline = Color(0xFFC08CFF),
+    outlineVariant = Color(0xFF3A2055)
 )
 
 private val SchemaChiaroRosso = lightColorScheme(
@@ -280,30 +280,30 @@ private val SchemaChiaroRosso = lightColorScheme(
 )
 
 private val SchemaScuroRosso = darkColorScheme(
-    primary = Color(0xFFFF8A80),
-    onPrimary = Nero,
+    primary = Color(0xFFFF6B6B),
+    onPrimary = Color(0xFF3D0000),
     primaryContainer = Color(0xFF6B1A1A),
     onPrimaryContainer = Color(0xFFFFD6D6),
-    secondary = GrigioMoltoChiaro,
-    onSecondary = Nero,
-    secondaryContainer = GrigioMedio,
-    onSecondaryContainer = Bianco,
+    secondary = Color(0xFFFF9E9E),
+    onSecondary = Color(0xFF3D0000),
+    secondaryContainer = Color(0xFF521414),
+    onSecondaryContainer = Color(0xFFFFD6D6),
     tertiary = VerdeUber,
     onTertiary = Nero,
     tertiaryContainer = VerdeUberScuro,
     onTertiaryContainer = Bianco,
-    error = Color(0xFFEF5350),
+    error = Color(0xFFFF8A80),
     onError = Nero,
     errorContainer = Color(0xFFB71C1C),
     onErrorContainer = Bianco,
-    background = Nero,
-    onBackground = Bianco,
-    surface = Nero,
-    onSurface = Bianco,
-    surfaceVariant = NeroChiaro,
-    onSurfaceVariant = GrigioMoltoChiaro,
-    outline = GrigioMedio,
-    outlineVariant = GrigioScuro
+    background = Color(0xFF1A0808),
+    onBackground = Color(0xFFFFE8E8),
+    surface = Color(0xFF1A0808),
+    onSurface = Color(0xFFFFE8E8),
+    surfaceVariant = Color(0xFF331212),
+    onSurfaceVariant = Color(0xFFE8B8B8),
+    outline = Color(0xFFFF6B6B),
+    outlineVariant = Color(0xFF4A1A1A)
 )
 
 // Tipografia Uber — pulita e moderna

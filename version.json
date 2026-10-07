@@ -1,7 +1,7 @@
 {
-  "versionCode": 33,
-  "versionName": "1.17.2",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.17.2/Tedesco-v1.17.2.apk",
-  "changelog": "Fix palette default: Uber di default, colori che funzionano + auto-updater fix",
+  "versionCode": 34,
+  "versionName": "1.18.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.18.0/Tedesco-v1.18.0.apk",
+  "changelog": "Fix colori: palette ora applicata davvero (bug MainActivity), 5 temi distinti",
   "minVersionCode": 1
 }
