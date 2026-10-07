@@ -1,7 +1,7 @@
 {
-  "versionCode": 29,
-  "versionName": "1.16.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.16.0/Tedesco-v1.16.0.apk",
-  "changelog": "Rework grafico Creative Tim, selettore colore app, tutor e impostazioni migliorate.",
+  "versionCode": 30,
+  "versionName": "1.16.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.16.1/Tedesco-v1.16.1.apk",
+  "changelog": "Tutor: risposte più lunghe e animazione di digitazione.",
   "minVersionCode": 1
 }

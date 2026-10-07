@@ -11,11 +11,15 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class MessaggioTutor(
@@ -47,6 +51,9 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     }
     var input by remember { mutableStateOf("") }
     var caricamento by remember { mutableStateOf(false) }
+    var rispostaAnimata by remember { mutableStateOf("") }
+    var animazioneAttiva by remember { mutableStateOf(false) }
+    var rispostaDaAnimare by remember { mutableStateOf("") }
 
     fun invia(testo: String) {
         val t = testo.trim()
@@ -61,11 +68,32 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 .map { if (it.daUtente) "utente" to it.testo else "tutor" to it.testo }
 
             val risultato = vm.chiediAlTutor(cronologia, livello, lezioneCorrente)
-            messaggi = messaggi + risultato.fold(
-                onSuccess = { MessaggioTutor(it, daUtente = false) },
-                onFailure = { MessaggioTutor(it.message ?: "Errore sconosciuto", daUtente = false, errore = true) }
+            risultato.fold(
+                onSuccess = { risposta ->
+                    messaggi = messaggi + MessaggioTutor(risposta, daUtente = false)
+                    // Avvia animazione di digitazione
+                    rispostaAnimata = ""
+                    rispostaDaAnimare = risposta
+                    animazioneAttiva = true
+                },
+                onFailure = { e ->
+                    messaggi = messaggi + MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true)
+                }
             )
             caricamento = false
+        }
+    }
+
+    // Animazione di digitazione
+    LaunchedEffect(animazioneAttiva, rispostaDaAnimare) {
+        if (animazioneAttiva && rispostaDaAnimare.isNotEmpty()) {
+            val lunghezza = rispostaDaAnimare.length
+            for (i in 0..lunghezza step 3) {
+                rispostaAnimata = rispostaDaAnimare.substring(0, i.coerceAtMost(lunghezza))
+                delay(15)
+            }
+            rispostaAnimata = rispostaDaAnimare
+            animazioneAttiva = false
         }
     }
 
@@ -147,7 +175,14 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(messaggi) { msg -> MessaggioBubble(msg) }
+                items(messaggi) { msg ->
+                    MessaggioBubble(
+                        msg = msg,
+                        isUltima = msg == messaggi.last(),
+                        animazioneAttiva = animazioneAttiva,
+                        rispostaAnimata = rispostaAnimata
+                    )
+                }
                 if (caricamento) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -237,7 +272,12 @@ private fun ModelloSelector(
 }
 
 @Composable
-private fun MessaggioBubble(msg: MessaggioTutor) {
+private fun MessaggioBubble(
+    msg: MessaggioTutor,
+    isUltima: Boolean,
+    animazioneAttiva: Boolean,
+    rispostaAnimata: String
+) {
     val isUser = msg.daUtente
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -273,7 +313,8 @@ private fun MessaggioBubble(msg: MessaggioTutor) {
                 )
             } else {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    MarkdownText(markdown = msg.testo, color = colore)
+                    val testoMostrato = if (animazioneAttiva && isUltima) rispostaAnimata else msg.testo
+                    MarkdownText(markdown = testoMostrato, color = colore)
                 }
             }
         }

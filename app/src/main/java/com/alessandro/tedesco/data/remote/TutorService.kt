@@ -19,7 +19,7 @@ private data class ChatMessage(val role: String, val content: String)
 private data class ChatRequest(
     val model: String,
     val messages: List<ChatMessage>,
-    @SerialName("max_tokens") val maxTokens: Int = 400,
+    @SerialName("max_tokens") val maxTokens: Int = 2048,
     val temperature: Double = 0.7
 )
 
@@ -68,7 +68,7 @@ class TutorService {
             Sei un tutor di tedesco per uno studente italiano di livello $livello.
             Regole:
             - Rispondi SEMPRE in italiano, con esempi in tedesco.
-            - Sii conciso: massimo 6-8 righe.
+            - Rispondi in modo completo e dettagliato.
             - I sostantivi tedeschi vanno sempre con l'articolo (der/die/das).
             - Adatta la difficoltà al livello $livello: sii semplice e chiaro.
             - La lezione corrente è la numero $lezione.
