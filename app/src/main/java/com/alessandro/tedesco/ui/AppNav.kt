@@ -147,7 +147,6 @@ private fun SchermataCaricamento() {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(200.dp))
             CircularProgressIndicator()
             Spacer(Modifier.height(16.dp))
             Text(

@@ -10,6 +10,13 @@ import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -54,6 +61,7 @@ class ProfileManager(
     private val io: CoroutineDispatcher
 ) {
     private val _repository = MutableStateFlow(ProfiliRepository())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val repositoryFlow: Flow<ProfiliRepository> = _repository
 
     /** true quando i profili sono stati caricati (o creati) e sono utilizzabili */
@@ -197,6 +205,22 @@ class ProfileManager(
      */
     fun topicPubblicazione(): String =
         if (isCustomWordsEnabled()) ProfiliPreset.NTFY_TOPIC_EMMA else ""
+
+    /** Flusso della palette colore scelta per il profilo attivo. */
+    val paletteFlow: StateFlow<String> = repositoryFlow
+        .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.palette } ?: "material" }
+        .stateIn(scope, SharingStarted.Eagerly, "material")
+
+    /** Cambia la palette colore per il profilo attivo. */
+    suspend fun cambiaPalette(nuovaPalette: String) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val nuovoProfilo = profilo.copy(config = profilo.config.copy(palette = nuovaPalette))
+        val nuovoRepo = repo.copy(profili = repo.profili + (id to nuovoProfilo))
+        _repository.value = nuovoRepo
+        saveToDataStore()
+    }
 
     /** Aggiorna la chiave API del tutor AI per il profilo attivo. */
     suspend fun aggiornaTutorApiKey(nuovaChiave: String) {

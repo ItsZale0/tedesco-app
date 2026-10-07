@@ -204,7 +204,8 @@ data class ProfiloConfig(
     val googleSheetId: String? = null,
     val feedUrl: String = "",
     val guidaDocId: String? = null,
-    val tutorApiKey: String = ""
+    val tutorApiKey: String = "",
+    val palette: String = "material"
 )
 
 /** Stato persistente per profilo — dati completamente separati per utente */

@@ -1,7 +1,7 @@
 {
-  "versionCode": 28,
-  "versionName": "1.15.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.15.0/Tedesco-v1.15.0.apk",
-  "changelog": "Material You: nuovi colori, tipografia e raggi arrotondati.",
+  "versionCode": 29,
+  "versionName": "1.16.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.16.0/Tedesco-v1.16.0.apk",
+  "changelog": "Rework grafico Creative Tim, selettore colore app, tutor e impostazioni migliorate.",
   "minVersionCode": 1
 }

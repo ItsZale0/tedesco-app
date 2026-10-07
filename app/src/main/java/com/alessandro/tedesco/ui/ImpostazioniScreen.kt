@@ -41,6 +41,7 @@ import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.PaletteApp
 
 private const val URL_VOCAB_DEFAULT =
     "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
@@ -91,6 +92,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     val googleSheets by vm.enableGoogleSheets.collectAsStateWithLifecycle(false)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
+    val palette by vm.palette.collectAsStateWithLifecycle("material")
 
     var cambiaProfilo by remember { mutableStateOf(false) }
     var esciSelezione by remember { mutableStateOf(false) }
@@ -366,6 +368,45 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     onClick = { vm.sincronizza() },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Sincronizza adesso") }
+
+                Spacer(Modifier.height(28.dp))
+
+                // --- Colore dell'app ---
+                Text("Colore dell'app", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Scegli il colore dell'interfaccia. Material You si adatta al tuo telefono.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+
+                val palette = PaletteApp.daId(palette)
+                val paletteList = listOf(
+                    PaletteApp.MATERIAL_YOU to "Material You",
+                    PaletteApp.VERDE to "Verde",
+                    PaletteApp.ARANCIO to "Arancio",
+                    PaletteApp.VIOLA to "Viola",
+                    PaletteApp.ROSSO to "Rosso"
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        paletteList.forEach { (p, nome) ->
+                            val selezionata = p == palette
+                            FilterChip(
+                                selected = selezionata,
+                                onClick = { vm.cambiaPalette(p.id) },
+                                label = { Text(nome) },
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
 
                 Spacer(Modifier.height(28.dp))
 

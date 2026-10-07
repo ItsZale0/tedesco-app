@@ -327,6 +327,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Cambia la palette colore dell'app. */
+    fun cambiaPalette(nuovaPalette: String) {
+        viewModelScope.launch {
+            profileManager.cambiaPalette(nuovaPalette)
+            _messaggio.value = "Colore aggiornato"
+        }
+    }
+
     /** Imposta il modello del tutor (null = automatico). */
     fun cambiaModelloTutor(modello: String?) {
         _modelloTutor.value = modello
@@ -339,6 +347,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    val palette: StateFlow<String> = profileManager.paletteFlow
     val tutorApiKey: StateFlow<String> = profileManager.repositoryFlow
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")

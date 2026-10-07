@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import com.alessandro.tedesco.ui.theme.TedescoTheme
+import com.alessandro.tedesco.ui.theme.PaletteApp
 
 class MainActivity : ComponentActivity() {
 
@@ -16,7 +17,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            TedescoTheme {
+            // La palette viene letta dal DataStore tramite il ViewModel
+            val palette = PaletteApp.MATERIAL_YOU
+
+            TedescoTheme(palette = palette) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
