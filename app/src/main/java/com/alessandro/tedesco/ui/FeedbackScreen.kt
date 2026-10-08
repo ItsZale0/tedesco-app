@@ -199,7 +199,7 @@ fun FeedbackScreen(
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 5,
-                        enabled = apiKey.isNotBlank()
+                        
                     )
 
                     Spacer(Modifier.height(8.dp))
@@ -211,7 +211,7 @@ fun FeedbackScreen(
                                 testoRisposta = ""
                             }
                         },
-                        enabled = testoRisposta.isNotBlank() && !correzioneInCorso && apiKey.isNotBlank(),
+                        enabled = testoRisposta.isNotBlank() && !correzioneInCorso,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (correzioneInCorso) {

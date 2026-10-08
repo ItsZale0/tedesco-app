@@ -332,5 +332,8 @@ class TutorService {
             "nvidia/nemotron-3-super-120b-a12b:free"
         )
         const val MODELLO = "nvidia/nemotron-3.5-lightning:free"
+
+        /** Endpoint gratuito pubblico usato come fallback quando non c'è chiave API. */
+        const val FREE_ENDPOINT = "https://api.lnmn.ai/v1/chat/completions"
     }
 }

@@ -155,15 +155,15 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                         .fillMaxWidth()
                         .padding(horizontal = spaziaturaSchermo(), vertical = 8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Text(
-                        "Per usare il tutor serve una chiave API OpenRouter. " +
-                            "Vai in Profilo → Tutor AI e inseriscila.",
+                        "Il tutor è in modalità gratuita (nessuna chiave API inserita). " +
+                            "Le risposte possono essere più lente o limitate. Inserisci una chiave OpenRouter in Profilo → Tutor AI per risposte migliori.",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

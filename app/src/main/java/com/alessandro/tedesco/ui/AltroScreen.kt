@@ -115,45 +115,48 @@ fun AltroScreen(
         ),
         CategoriaAltro(
             nome = "Piano e progressi",
-            elementi = listOf(
-                ElementoAltro(
+            elementi = buildList {
+                add(ElementoAltro(
                     titolo = "Piano di studio",
                     descrizione = "Tappe, certificazioni e progresso verso il B2",
                     icona = Icons.Filled.PlayArrow,
                     onClick = onVaiAPiano,
                     usaTertiary = true
-                ),
-                ElementoAltro(
+                ))
+                add(ElementoAltro(
                     titolo = "Percorso di apprendimento",
                     descrizione = "Vedi i tuoi obiettivi e progressi livello per livello",
                     icona = Icons.Filled.BarChart,
                     onClick = onVaiAProgressione
-                ),
-                ElementoAltro(
+                ))
+                add(ElementoAltro(
                     titolo = "Sessioni",
                     descrizione = "Sessione guidata, test, roleplay, ripasso",
                     icona = Icons.Filled.PlayArrow,
                     onClick = onVaiASessioni
-                ),
-                ElementoAltro(
+                ))
+                add(ElementoAltro(
                     titolo = "Statistiche",
                     descrizione = "Progressi e statistiche",
                     icona = Icons.Filled.BarChart,
                     onClick = onVaiAStats
-                ),
-                ElementoAltro(
+                ))
+                add(ElementoAltro(
                     titolo = "Competenze",
                     descrizione = "Punteggi e livello complessivo",
                     icona = Icons.Filled.School,
                     onClick = onVaiACompetenze
-                ),
-                ElementoAltro(
-                    titolo = "Contesto medico",
-                    descrizione = "Lessico e scenari per fisioterapia",
-                    icona = Icons.Filled.School,
-                    onClick = onVaiAContestoMedico
-                )
-            )
+                ))
+                // Contesto medico solo per profili che lo richiedono (Alessandro)
+                if (profilo?.config?.mostraContestoMedico == true) {
+                    add(ElementoAltro(
+                        titolo = "Contesto medico",
+                        descrizione = "Lessico e scenari per fisioterapia",
+                        icona = Icons.Filled.School,
+                        onClick = onVaiAContestoMedico
+                    ))
+                }
+            }
         )
     )
 
