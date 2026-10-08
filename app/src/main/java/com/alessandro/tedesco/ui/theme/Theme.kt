@@ -15,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alessandro.tedesco.data.local.StileDesign
 
 // Palette Uber — nero, bianco, grigi neutri
 private val Nero = Color(0xFF000000)
@@ -327,148 +326,6 @@ private val TipografiaUber = Typography(
 )
 
 
-// Tipografia Google Pixel — geometrica e pulita
-private val TipografiaPixel = Typography(
-    displayLarge = TextStyle(fontSize = 57.sp, fontWeight = FontWeight.Bold, lineHeight = 64.sp, letterSpacing = -0.25.sp),
-    displayMedium = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold, lineHeight = 52.sp),
-    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 44.sp),
-    headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, lineHeight = 36.sp),
-    headlineSmall = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp),
-    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp, letterSpacing = 0.15.sp),
-    titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    bodyLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp, letterSpacing = 0.5.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.25.sp),
-    bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 16.sp, letterSpacing = 0.4.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp)
-)
-
-// Tipografia iOS — San Francisco style
-private val TipografiaIOS = Typography(
-    displayLarge = TextStyle(fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 68.sp, letterSpacing = -0.5.sp),
-    displayMedium = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 56.sp),
-    displaySmall = TextStyle(fontSize = 38.sp, fontWeight = FontWeight.Bold, lineHeight = 46.sp),
-    headlineLarge = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold, lineHeight = 42.sp),
-    headlineMedium = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, lineHeight = 38.sp),
-    headlineSmall = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold, lineHeight = 34.sp),
-    titleLarge = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 30.sp),
-    titleMedium = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Medium, lineHeight = 26.sp, letterSpacing = 0.15.sp),
-    titleSmall = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 22.sp, letterSpacing = 0.1.sp),
-    bodyLarge = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Normal, lineHeight = 26.sp, letterSpacing = 0.5.sp),
-    bodyMedium = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Normal, lineHeight = 22.sp, letterSpacing = 0.25.sp),
-    bodySmall = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Normal, lineHeight = 18.sp, letterSpacing = 0.4.sp),
-    labelLarge = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 22.sp, letterSpacing = 0.1.sp),
-    labelMedium = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp, letterSpacing = 0.5.sp),
-    labelSmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp, letterSpacing = 0.5.sp)
-)
-
-// Tipografia Material You — arrotondata e amichevole
-private val TipografiaMaterial = Typography(
-    displayLarge = TextStyle(fontSize = 57.sp, fontWeight = FontWeight.Bold, lineHeight = 64.sp, letterSpacing = -0.25.sp),
-    displayMedium = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold, lineHeight = 52.sp),
-    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 44.sp),
-    headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, lineHeight = 36.sp),
-    headlineSmall = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp),
-    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp, letterSpacing = 0.15.sp),
-    titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    bodyLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp, letterSpacing = 0.5.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.25.sp),
-    bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 16.sp, letterSpacing = 0.4.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp)
-)
-
-// Funzione per selezionare la tipografia in base allo stile
-private fun tipografiaPerStile(stile: StileDesign): Typography = when (stile) {
-    StileDesign.PIXEL -> TipografiaPixel
-    StileDesign.IOS -> TipografiaIOS
-    StileDesign.MATERIAL -> TipografiaMaterial
-    StileDesign.UBER -> TipografiaUber
-}
-
-// Raggi per ogni stile design
-object RaggiPixel {
-    val card = 16.dp
-    val chip = 8.dp
-    val bottone = 16.dp
-}
-
-object RaggiIOS {
-    val card = 20.dp
-    val chip = 10.dp
-    val bottone = 14.dp
-}
-
-object RaggiMaterial {
-    val card = 28.dp
-    val chip = 12.dp
-    val bottone = 20.dp
-}
-
-object RaggiUber {
-    val card = 12.dp
-    val chip = 8.dp
-    val bottone = 12.dp
-}
-
-// Funzione per selezionare i raggi in base allo stile
-fun raggiPerStile(stile: StileDesign) = when (stile) {
-    StileDesign.PIXEL -> RaggiPixel
-    StileDesign.IOS -> RaggiIOS
-    StileDesign.MATERIAL -> RaggiMaterial
-    StileDesign.UBER -> RaggiUber
-}
-
-// Spaziature per ogni stile design
-object SpaziaturePixel {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 16.dp
-    val lg = 24.dp
-    val xl = 32.dp
-    val xxl = 48.dp
-}
-
-object SpaziatureIOS {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 12.dp
-    val lg = 20.dp
-    val xl = 28.dp
-    val xxl = 40.dp
-}
-
-object SpaziatureMaterial {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 12.dp
-    val lg = 16.dp
-    val xl = 24.dp
-    val xxl = 32.dp
-}
-
-object SpaziatureUber {
-    val xs = 4.dp
-    val sm = 8.dp
-    val md = 12.dp
-    val lg = 16.dp
-    val xl = 24.dp
-    val xxl = 32.dp
-}
-
-fun spaziaturePerStile(stile: StileDesign) = when (stile) {
-    StileDesign.PIXEL -> SpaziaturePixel
-    StileDesign.IOS -> SpaziatureIOS
-    StileDesign.MATERIAL -> SpaziatureMaterial
-    StileDesign.UBER -> SpaziatureUber
-}
-
 enum class PaletteApp(val id: String, val nome: String) {
     UBER("uber", "Uber (Nero)"),
     BLU("blu", "Blu"),
@@ -486,7 +343,6 @@ fun TedescoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     palette: PaletteApp = PaletteApp.UBER,
-    stileDesign: StileDesign = StileDesign.UBER,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -508,7 +364,7 @@ fun TedescoTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = tipografiaPerStile(stileDesign),
+        typography = TipografiaUber,
         content = content
     )
 }
@@ -530,7 +386,6 @@ object Raggi {
     val bottone = 12.dp
 }
 
-// Per usare i valori dinamici, importa raggiPerStile() e spaziaturePerStile()
 
 // Breakpoints
 object Breakpoints {
@@ -627,7 +482,7 @@ fun responsiveCornerRadius(): Int {
 }
 
 @Composable
-fun responsiveTypography(stileDesign: StileDesign = StileDesign.UBER): Typography = tipografiaPerStile(stileDesign)
+fun responsiveTypography(): Typography = TipografiaUber
 
 @Composable
 fun responsiveColumnArrangement(): androidx.compose.foundation.layout.Arrangement.Vertical {

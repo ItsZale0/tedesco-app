@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.TedescoApp
-import com.alessandro.tedesco.data.local.StileDesign
 import com.alessandro.tedesco.ui.theme.PaletteApp
 import com.alessandro.tedesco.ui.theme.TedescoTheme
 
@@ -26,13 +25,10 @@ class MainActivity : ComponentActivity() {
             // La palette arriva dal DataStore del profilo attivo e reagisce ai cambi
             val paletteId by app.profileManagerInstance.paletteFlow
                 .collectAsStateWithLifecycle("uber")
-            val stileDesign by app.profileManagerInstance.stileDesignFlow
-                .collectAsStateWithLifecycle(StileDesign.UBER)
 
             TedescoTheme(
                 darkTheme = true,
-                palette = PaletteApp.daId(paletteId),
-                stileDesign = stileDesign
+                palette = PaletteApp.daId(paletteId)
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

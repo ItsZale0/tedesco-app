@@ -1,6 +1,5 @@
 package com.alessandro.tedesco.ui
 
-import com.alessandro.tedesco.data.local.StileDesign
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -474,13 +473,6 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     val palette: StateFlow<String> = profileManager.paletteFlow
 
-    val stileDesign: StateFlow<StileDesign> = profileManager.stileDesignFlow
-
-    fun cambiaStileDesign(stile: StileDesign) {
-        scope.launch {
-            profileManager.cambiaStileDesign(stile)
-        }
-    }
     val tutorApiKey: StateFlow<String> = profileManager.repositoryFlow
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
