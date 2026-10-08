@@ -1,7 +1,7 @@
 {
-  "versionCode": 44,
-  "versionName": "1.25.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.25.0/Tedesco-v1.25.0.apk",
-  "changelog": "Vocabolario completo (191 parole), gamification (streak/badge), esercizi di ascolto A0, UI migliorata",
+  "versionCode": 45,
+  "versionName": "1.26.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.26.0/Tedesco-v1.26.0.apk",
+  "changelog": "Contesto medico per Alessandro, progressione mappata, produzione scritta, UI semplificata",
   "minVersionCode": 1
 }
