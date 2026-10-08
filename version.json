@@ -1,7 +1,7 @@
 {
   "versionCode": 42,
-  "versionName": "1.23.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.1/Tedesco-v1.23.1.apk",
-  "changelog": "FIX CRITICO: crash all avvio risolto (VocabPublishService mancante dal build)",
+  "versionName": "1.23.2",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.2/Tedesco-v1.23.2.apk",
+  "changelog": "FIX: versionCode corretto (era 41, ora 42) - installazione sopra la vecchia ora funziona",
   "minVersionCode": 1
 }
