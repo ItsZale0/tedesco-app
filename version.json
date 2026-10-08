@@ -1,7 +1,7 @@
 {
-  "versionCode": 47,
-  "versionName": "1.27.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.27.0/Tedesco-v1.27.0.apk",
-  "changelog": "FIX GRAFICA: 4 stili design (Pixel/iOS/Material/Uber) con tipografia e spaziature dedicate. FIX PULSANTI: campi gamification ripristinati. FIX DUPLICATI: Entities.kt pulito.",
+  "versionCode": 100,
+  "versionName": "1.28.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.28.0/Tedesco-v1.28.0.apk",
+  "changelog": "versionCode 100 per forzare installazione sopra qualsiasi versione precedente",
   "minVersionCode": 1
 }
