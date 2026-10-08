@@ -17,6 +17,7 @@ import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.TestB1
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.local.ProfiloStato
+import com.alessandro.tedesco.data.local.LivelloIniziale
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
@@ -223,6 +224,22 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             id != null && r.profili[id]?.config?.enableGoogleSheets == true
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** True se il profilo attivo deve vedere il contesto medico. */
+    val mostraContestoMedico: StateFlow<Boolean> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id != null && r.profili[id]?.config?.mostraContestoMedico == true
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Livello CEFR iniziale del profilo attivo. */
+    val livelloIniziale: StateFlow<LivelloIniziale> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id?.let { r.profili[it]?.config?.livelloIniziale } ?: LivelloIniziale.A0
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LivelloIniziale.A0)
 
     val feedUrl: StateFlow<String> = profileManager.repositoryFlow
         .map { r ->

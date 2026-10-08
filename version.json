@@ -1,7 +1,7 @@
 {
-  "versionCode": 104,
-  "versionName": "1.32.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.32.0/Tedesco-v1.32.0.apk",
-  "changelog": "AltroScreen pulito: rimosse ridondanze (Test/Test adattivi, Produzione/Comprensione/Produzione guidata). Pratica: 4 voci AI fuse in 1 'Tutor Tedesco'. FeedbackScreen: ora mostra esercizi della lezione corrente + input libero. Bug 'Pratica vuota' fixato.",
+  "versionCode": 105,
+  "versionName": "1.33.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.33.0/Tedesco-v1.33.0.apk",
+  "changelog": "App profile-aware: Emma (B1) non vede contesto medico. Piano di studi per profilo. Esercizi Ascolto/ProduzioneScritta adattati al profilo. Livello iniziale per profilo (A0 per Alessandro, B1 per Emma).",
   "minVersionCode": 1
 }

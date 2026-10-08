@@ -192,36 +192,53 @@ enum class TipoProfilo(
     val nome: String,
     val descrizione: String,
     val enableCustomWords: Boolean,
-    val enableGoogleSheets: Boolean
+    val enableGoogleSheets: Boolean,
+    val livelloIniziale: LivelloIniziale = LivelloIniziale.A0,
+    val mostraContestoMedico: Boolean = false
 ) {
     ALESSANDRO(
         id = "alessandro",
         nome = "Alessandro",
-        descrizione = "Percorso standard: lezioni, ripasso, guida e test di livello",
+        descrizione = "Percorso A0→B2 per lavoro in sanità a Bressanone, con contesto medico",
         enableCustomWords = false,
-        enableGoogleSheets = false
+        enableGoogleSheets = false,
+        livelloIniziale = LivelloIniziale.A0,
+        mostraContestoMedico = true
     ),
     ALESSANDRO_CUSTOM(
         id = "alessandro_custom",
         nome = "Alessandro Personalizzato",
-        descrizione = "Standard + parole personalizzate e sincronizzazione Google Sheets",
+        descrizione = "Standard + parole personalizzate e sincronizzazione Google Sheets, con contesto medico",
         enableCustomWords = true,
-        enableGoogleSheets = true
+        enableGoogleSheets = true,
+        livelloIniziale = LivelloIniziale.A0,
+        mostraContestoMedico = true
     ),
     PERSONALIZZATO(
         id = "personalizzato",
         nome = "Personalizzato",
         descrizione = "Profilo personalizzato creato dall'utente",
         enableCustomWords = true,
-        enableGoogleSheets = false
+        enableGoogleSheets = false,
+        livelloIniziale = LivelloIniziale.A0,
+        mostraContestoMedico = false
     ),
     EMMA(
         id = "emma",
         nome = "Emma",
-        descrizione = "Percorso personalizzato: parole custom e Google Sheets",
+        descrizione = "Percorso B1+: parole custom e Google Sheets, niente contesto medico",
         enableCustomWords = true,
-        enableGoogleSheets = true
+        enableGoogleSheets = true,
+        livelloIniziale = LivelloIniziale.B1,
+        mostraContestoMedico = false
     )
+}
+
+/** Configurazione profilo */
+/** Livello CEFR iniziale per il profilo */
+@Serializable
+enum class LivelloIniziale(val label: String) {
+    A0("A0"), A1("A1"), A2("A2"), B1("B1"), B2("B2")
 }
 
 /** Configurazione profilo */
@@ -236,7 +253,9 @@ data class ProfiloConfig(
     val guidaDocId: String? = null,
     val tutorApiKey: String = "",
     val palette: String = "uber",
-    val stileDesign: String = "pixel"
+    val stileDesign: String = "pixel",
+    val livelloIniziale: LivelloIniziale = LivelloIniziale.A0,
+    val mostraContestoMedico: Boolean = false
 )
 
 /** Stato persistente per profilo — dati completamente separati per utente */

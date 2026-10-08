@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.alessandro.tedesco.data.local.ProfiliRepository
+import com.alessandro.tedesco.data.local.LivelloIniziale
 import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
@@ -158,7 +159,9 @@ class ProfileManager(
                 googleSheetId = null,
                 feedUrl = ProfiliPreset.FEED_URL,
                 guidaDocId = null,
-                tutorApiKey = ProfiliPreset.DEFAULT_TUTOR_API_KEY
+                tutorApiKey = ProfiliPreset.DEFAULT_TUTOR_API_KEY,
+                livelloIniziale = LivelloIniziale.A0,
+                mostraContestoMedico = false
             ),
             stato = ProfiloStato(),
             creatoIl = System.currentTimeMillis(),
@@ -197,6 +200,12 @@ class ProfileManager(
     fun getGuidaDocId(): String? = profiloAttivo()?.config?.guidaDocId
 
     fun getFeedUrl(): String = profiloAttivo()?.config?.feedUrl ?: ProfiliPreset.FEED_URL
+
+    /** Livello CEFR iniziale del profilo attivo. */
+    fun getLivelloIniziale(): LivelloIniziale = profiloAttivo()?.config?.livelloIniziale ?: LivelloIniziale.A0
+
+    /** True se il profilo deve vedere il contesto medico (fisioterapia). */
+    fun mostraContestoMedico(): Boolean = profiloAttivo()?.config?.mostraContestoMedico == true
 
     fun nomeProfiloAttivo(): String = profiloAttivo()?.config?.nomeVisualizzato ?: ""
 

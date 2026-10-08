@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.Spaziature
 
 data class EsercizioScrittura(
@@ -24,49 +25,59 @@ data class EsercizioScrittura(
     val suggerimenti: List<String>
 )
 
-val ESERCIZI_SCRITTURA = listOf(
-    EsercizioScrittura(
-        id = "sc1",
-        titolo = "Presentazione personale",
-        istruzioni = "Scrivi 3-4 frasi su di te: come ti chiami, da dove vivi, cosa fai.",
-        esempio = "Ich heiße Alessandro. Ich wohne in Bozen. Ich bin Physiotherapeut. Ich lerne Deutsch.",
-        suggerimenti = listOf("Nome", "Città", "Lavoro", "Hobby")
-    ),
-    EsercizioScrittura(
-        id = "sc2",
-        titolo = "La tua giornata",
-        istruzioni = "Descrivi la tua giornata tipica: quando ti alzi, cosa fai, quando lavori.",
-        esempio = "Ich stehe um 7 Uhr auf. Ich frühstücke um 8 Uhr. Ich arbeite von 9 bis 17 Uhr.",
-        suggerimenti = listOf("Ore", "Attività", "Lavoro", "Tempo libero")
-    ),
-    EsercizioScrittura(
-        id = "sc3",
-        titolo = "Un messaggio al collega",
-        istruzioni = "Scrivi un messaggio breve a un collega per chiedere un favore.",
-        esempio = "Hallo Marco, kannst du mir bitte helfen? Ich habe eine Frage. Danke!",
-        suggerimenti = listOf("Saluto", "Richiesta", "Ringraziamento")
-    ),
-    EsercizioScrittura(
-        id = "sc4",
-        titolo = "Descrivi il tuo studio",
-        istruzioni = "Descrivi il tuo studio di fisioterapia: dove è, cosa c'è dentro, come è organizzato.",
-        esempio = "Mein Studio ist in der Stadtmitte. Es gibt ein Behandlungszimmer und ein Wartezimmer.",
-        suggerimenti = listOf("Posizione", "Stanze", "Attrezzatura", "Personale")
-    ),
-    EsercizioScrittura(
-        id = "sc5",
-        titolo = "Email formale",
-        istruzioni = "Scrivi un'email formale per chiedere un appuntamento.",
-        esempio = "Sehr geehrte Frau Müller, ich möchte einen Termin vereinbaren. Vielen Dank.",
-        suggerimenti = listOf("Oggetto", "Saluto formale", "Richiesta", "Chiusura")
+fun getEserciziScrittura(profilo: ProfiloUtente?): List<EsercizioScrittura> {
+    val base = listOf(
+        EsercizioScrittura(
+            id = "sc1",
+            titolo = "Presentazione personale",
+            istruzioni = "Scrivi 3-4 frasi su di te: come ti chiami, da dove vivi, cosa fai.",
+            esempio = if (profilo?.config?.mostraContestoMedico == true)
+                "Ich heiße Alessandro. Ich wohne in Bozen. Ich bin Physiotherapeut. Ich lerne Deutsch."
+            else
+                "Ich heiße Emma. Ich wohne in Bozen. Ich bin Studentin. Ich lerne Deutsch.",
+            suggerimenti = listOf("Nome", "Città", "Lavoro/Studi", "Hobby")
+        ),
+        EsercizioScrittura(
+            id = "sc2",
+            titolo = "La tua giornata",
+            istruzioni = "Descrivi la tua giornata tipica: quando ti alzi, cosa fai, quando lavori/studi.",
+            esempio = "Ich stehe um 7 Uhr auf. Ich frühstücke um 8 Uhr. Ich arbeite von 9 bis 17 Uhr.",
+            suggerimenti = listOf("Ore", "Attività", "Lavoro/Studio", "Tempo libero")
+        ),
+        EsercizioScrittura(
+            id = "sc3",
+            titolo = "Un messaggio al collega",
+            istruzioni = "Scrivi un messaggio breve a un collega/compagno per chiedere un favore.",
+            esempio = "Hallo Marco, kannst du mir bitte helfen? Ich habe eine Frage. Danke!",
+            suggerimenti = listOf("Saluto", "Richiesta", "Ringraziamento")
+        ),
+        EsercizioScrittura(
+            id = "sc5",
+            titolo = "Email formale",
+            istruzioni = "Scrivi un'email formale per chiedere un appuntamento.",
+            esempio = "Sehr geehrte Frau Müller, ich möchte einen Termin vereinbaren. Vielen Dank.",
+            suggerimenti = listOf("Oggetto", "Saluto formale", "Richiesta", "Chiusura")
+        )
     )
-)
+    // Esercizio studio fisioterapia solo per profili medici
+    if (profilo?.config?.mostraContestoMedico == true) {
+        return base + EsercizioScrittura(
+            id = "sc4",
+            titolo = "Descrivi il tuo studio",
+            istruzioni = "Descrivi il tuo studio di fisioterapia: dove è, cosa c'è dentro, come è organizzato.",
+            esempio = "Mein Studio ist in der Stadtmitte. Es gibt ein Behandlungszimmer und ein Wartezimmer.",
+            suggerimenti = listOf("Posizione", "Stanze", "Attrezzatura", "Personale")
+        )
+    }
+    return base
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProduzioneScrittaScreen(
     vm: TedescoViewModel,
-    onIndietro: () -> Unit
+    onIndietro: () -> Unit,
+    profilo: ProfiloUtente? = null
 ) {
     var esercizioSelezionato by remember { mutableStateOf<EsercizioScrittura?>(null) }
     var testoUtente by remember { mutableStateOf("") }
@@ -101,7 +112,7 @@ fun ProduzioneScrittaScreen(
                     )
                 }
 
-                items(ESERCIZI_SCRITTURA) { esercizio ->
+                items(getEserciziScrittura(profilo)) { esercizio ->
                     Card(
                         onClick = { esercizioSelezionato = esercizio },
                         modifier = Modifier.fillMaxWidth()

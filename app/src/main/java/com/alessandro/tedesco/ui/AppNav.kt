@@ -245,6 +245,7 @@ private fun ContenutoApp(
             composable(Dest.Guida.route) { GuidaScreen(vm) }
             composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater) }
             composable(Dest.Altro.route) {
+                val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
                 AltroScreen(
                     onVaiAGrammatica = { nav.navigate("grammatica") },
                     onVaiATest = { nav.navigate("test-adattivi") },
@@ -263,7 +264,8 @@ private fun ContenutoApp(
                     onVaiAAscolto = { nav.navigate("ascolto") },
                     onVaiAContestoMedico = { nav.navigate("contestoMedico") },
                     onVaiAProgressione = { nav.navigate("progressione") },
-                    onVaiAProduzioneScritta = { nav.navigate("produzioneScritta") }
+                    onVaiAProduzioneScritta = { nav.navigate("produzioneScritta") },
+                    profilo = profilo
                 )
             }
             // Piano di studio
@@ -322,10 +324,10 @@ private fun ContenutoApp(
             composable("competenze") { CompetenzeScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }
             composable("quiz-produzione") { ProduzioneScreen(vm) }
-            composable("ascolto") { AscoltoScreen(vm) }
+            composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo) }
             composable("contestoMedico") { ContestoMedicoScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("progressione") { ProgressioneScreen(vm, onIndietro = { nav.popBackStack() }) }
-            composable("produzioneScritta") { ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }) }
+            composable("produzioneScritta") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }, profilo = profilo) }
         }
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 private data class ElementoAltro(
@@ -48,6 +49,7 @@ fun AltroScreen(
     onVaiACompetenze: () -> Unit = {},
     onVaiAQuizComprensione: () -> Unit = {},
     onVaiAQuizProduzione: () -> Unit = {},
+    profilo: ProfiloUtente? = null,
     onVaiAPiano: () -> Unit = {},
     onVaiASessioni: () -> Unit = {},
     onVaiARoleplay: () -> Unit = {},

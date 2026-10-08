@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.AscoltoData
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -47,10 +48,10 @@ import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AscoltoScreen(vm: TedescoViewModel) {
-    val livelli = remember { AscoltoData.livelliDisponibili() }
+fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
+    val livelli = remember { AscoltoData.livelliDisponibili(profilo) }
     var livelloSelezionato by remember { mutableStateOf(livelli.firstOrNull() ?: "A1") }
-    var esercizi by remember { mutableStateOf(AscoltoData.eserciziPerLivello(livelloSelezionato)) }
+    var esercizi by remember { mutableStateOf(AscoltoData.eserciziPerLivello(livelloSelezionato, profilo)) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -63,7 +64,7 @@ fun AscoltoScreen(vm: TedescoViewModel) {
 
     // Carica esercizi quando cambia livello
     LaunchedEffect(livelloSelezionato) {
-        esercizi = AscoltoData.eserciziPerLivello(livelloSelezionato)
+        esercizi = AscoltoData.eserciziPerLivello(livelloSelezionato, profilo)
         indice = 0
         rispostaSelezionata = null
         risultato = null

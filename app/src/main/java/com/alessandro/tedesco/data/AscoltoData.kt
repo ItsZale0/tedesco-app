@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data
 
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import kotlinx.serialization.Serializable
 
 /**
@@ -269,124 +270,185 @@ object AscoltoData {
         )
     )
 
-    fun eserciziPerLivello(livello: String): List<EsercizioAscolto> {
-        return esercizi.filter { it.livello == livello }
+    fun eserciziPerLivello(livello: String, profilo: ProfiloUtente? = null): List<EsercizioAscolto> {
+        val tutti = getTuttiEserciziAscolto(profilo)
+        return tutti.filter { it.livello == livello }
     }
 
-    fun livelliDisponibili(): List<String> {
-        return esercizi.map { it.livello }.distinct().sorted()
+    fun livelliDisponibili(profilo: ProfiloUtente? = null): List<String> {
+        val tutti = getTuttiEserciziAscolto(profilo)
+        return tutti.map { it.livello }.distinct().sorted()
     }
 }
 
-// Esercizi A0 - Presentazioni
-val eserciziA0 = listOf(
-    EsercizioAscolto(
-        id = "a0_1",
-        fraseTedesca = "Ich heiße Alessandro.",
-        traduzioneItaliana = "Mi chiamo Alessandro.",
-        domanda = "Come si chiama il parlante?",
-        opzioni = listOf("Alessandro", "Marco", "Luca"),
-        rispostaCorretta = 0,
-        spiegazione = "Il parlante dice 'Ich heiße Alessandro' (Mi chiamo Alessandro)",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_2",
-        fraseTedesca = "Ich komme aus Italien.",
-        traduzioneItaliana = "Vengo dall'Italia.",
-        domanda = "Da dove viene il parlante?",
-        opzioni = listOf("Germania", "Italia", "Austria"),
-        rispostaCorretta = 1,
-        spiegazione = "Il parlante dice 'Ich komme aus Italien' (Vengo dall'Italia)",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_3",
-        fraseTedesca = "Ich bin Physiotherapeut.",
-        traduzioneItaliana = "Sono fisioterapeuta.",
-        domanda = "Qual è il lavoro del parlante?",
-        opzioni = listOf("Medico", "Insegnante", "Fisioterapeuta"),
-        rispostaCorretta = 2,
-        spiegazione = "Il parlante dice 'Ich bin Physiotherapeut' (Sono fisioterapeuta)",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_4",
-        fraseTedesca = "Eins, zwei, drei, vier, fünf.",
-        traduzioneItaliana = "Uno, due, tre, quattro, cinque.",
-        domanda = "Quanti numeri sono stati detti?",
-        opzioni = listOf("3", "5", "7"),
-        rispostaCorretta = 1,
-        spiegazione = "Sono stati detti 5 numeri: eins, zwei, drei, vier, fünf",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_5",
-        fraseTedesca = "Das ist meine Mutter.",
-        traduzioneItaliana = "Questa è mia madre.",
-        domanda = "Chi è 'die Mutter'?",
-        opzioni = listOf("la madre", "il padre", "la sorella"),
-        rispostaCorretta = 0,
-        spiegazione = "'Die Mutter' significa 'la madre'",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_6",
-        fraseTedesca = "Ich wohne in Bozen.",
-        traduzioneItaliana = "Vivo a Bolzano.",
-        domanda = "Dove vive il parlante?",
-        opzioni = listOf("Milano", "Bozen", "Roma"),
-        rispostaCorretta = 1,
-        spiegazione = "Il parlante dice 'Ich wohne in Bozen' (Vivo a Bolzano)",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_7",
-        fraseTedesca = "Ich hätte gern ein Wasser, bitte.",
-        traduzioneItaliana = "Vorrei un'acqua, per favore.",
-        domanda = "Cosa vuole il parlante?",
-        opzioni = listOf("caffè", "vino", "acqua"),
-        rispostaCorretta = 2,
-        spiegazione = "Il parlante dice 'ein Wasser' (un'acqua)",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_8",
-        fraseTedesca = "Guten Morgen!",
-        traduzioneItaliana = "Buongiorno!",
-        domanda = "Cosa dice il parlante?",
-        opzioni = listOf("Buonanotte", "Buongiorno", "Arrivederci"),
-        rispostaCorretta = 1,
-        spiegazione = "'Guten Morgen' significa 'Buongiorno'",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_9",
-        fraseTedesca = "Danke schön!",
-        traduzioneItaliana = "Grazie mille!",
-        domanda = "Cosa dice il parlante?",
-        opzioni = listOf("Prego", "Grazie", "Scusa"),
-        rispostaCorretta = 1,
-        spiegazione = "'Danke schön' significa 'Grazie mille'",
-        livello = "A0"
-    ),
-    EsercizioAscolto(
-        id = "a0_10",
-        fraseTedesca = "Ich lerne Deutsch.",
-        traduzioneItaliana = "Imparo tedesco.",
-        domanda = "Cosa fa il parlante?",
-        opzioni = listOf("lavora", "impara tedesco", "dorme"),
-        rispostaCorretta = 1,
-        spiegazione = "Il parlante dice 'Ich lerne Deutsch' (Imparo tedesco)",
-        livello = "A0"
+// Esercizi A0 - Presentazioni (profile-aware)
+fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
+    val base = listOf(
+        EsercizioAscolto(
+            id = "a0_1",
+            fraseTedesca = if (profilo?.config?.mostraContestoMedico == true)
+                "Ich heiße Alessandro."
+            else
+                "Ich heiße Emma.",
+            traduzioneItaliana = if (profilo?.config?.mostraContestoMedico == true)
+                "Mi chiamo Alessandro."
+            else
+                "Mi chiamo Emma.",
+            domanda = "Come si chiama il parlante?",
+            opzioni = if (profilo?.config?.mostraContestoMedico == true)
+                listOf("Alessandro", "Marco", "Luca")
+            else
+                listOf("Emma", "Anna", "Julia"),
+            rispostaCorretta = 0,
+            spiegazione = if (profilo?.config?.mostraContestoMedico == true)
+                "Il parlante dice 'Ich heiße Alessandro' (Mi chiamo Alessandro)"
+            else
+                "Il parlante dice 'Ich heiße Emma' (Mi chiamo Emma)",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_2",
+            fraseTedesca = "Ich komme aus Italien.",
+            traduzioneItaliana = "Vengo dall'Italia.",
+            domanda = "Da dove viene il parlante?",
+            opzioni = listOf("Germania", "Italia", "Austria"),
+            rispostaCorretta = 1,
+            spiegazione = "Il parlante dice 'Ich komme aus Italien' (Vengo dall'Italia)",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_3",
+            fraseTedesca = if (profilo?.config?.mostraContestoMedico == true)
+                "Ich bin Physiotherapeut."
+            else
+                "Ich bin Studentin.",
+            traduzioneItaliana = if (profilo?.config?.mostraContestoMedico == true)
+                "Sono fisioterapeuta."
+            else
+                "Sono studentessa.",
+            domanda = "Qual è il lavoro/studio del parlante?",
+            opzioni = if (profilo?.config?.mostraContestoMedico == true)
+                listOf("Medico", "Insegnante", "Fisioterapeuta")
+            else
+                listOf("Studentessa", "Insegnante", "Medica"),
+            rispostaCorretta = if (profilo?.config?.mostraContestoMedico == true) 2 else 0,
+            spiegazione = if (profilo?.config?.mostraContestoMedico == true)
+                "Il parlante dice 'Ich bin Physiotherapeut' (Sono fisioterapeuta)"
+            else
+                "Il parlante dice 'Ich bin Studentin' (Sono studentessa)",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_4",
+            fraseTedesca = "Eins, zwei, drei, vier, fünf.",
+            traduzioneItaliana = "Uno, due, tre, quattro, cinque.",
+            domanda = "Quanti numeri sono stati detti?",
+            opzioni = listOf("3", "5", "7"),
+            rispostaCorretta = 1,
+            spiegazione = "Sono stati detti 5 numeri: eins, zwei, drei, vier, fünf",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_5",
+            fraseTedesca = "Das ist meine Mutter.",
+            traduzioneItaliana = "Questa è mia madre.",
+            domanda = "Chi è 'die Mutter'?",
+            opzioni = listOf("la madre", "il padre", "la sorella"),
+            rispostaCorretta = 0,
+            spiegazione = "'Die Mutter' significa 'la madre'",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_6",
+            fraseTedesca = if (profilo?.config?.mostraContestoMedico == true)
+                "Ich wohne in Bozen."
+            else
+                "Ich wohne in Berlin.",
+            traduzioneItaliana = if (profilo?.config?.mostraContestoMedico == true)
+                "Vivo a Bolzano."
+            else
+                "Vivo a Berlino.",
+            domanda = "Dove vive il parlante?",
+            opzioni = if (profilo?.config?.mostraContestoMedico == true)
+                listOf("Milano", "Bozen", "Roma")
+            else
+                listOf("Monaco", "Berlino", "Amburgo"),
+            rispostaCorretta = if (profilo?.config?.mostraContestoMedico == true) 1 else 1,
+            spiegazione = if (profilo?.config?.mostraContestoMedico == true)
+                "Il parlante dice 'Ich wohne in Bozen' (Vivo a Bolzano)"
+            else
+                "Il parlante dice 'Ich wohne in Berlin' (Vivo a Berlino)",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_7",
+            fraseTedesca = "Ich hätte gern ein Wasser, bitte.",
+            traduzioneItaliana = "Vorrei un'acqua, per favore.",
+            domanda = "Cosa vuole il parlante?",
+            opzioni = listOf("caffè", "vino", "acqua"),
+            rispostaCorretta = 2,
+            spiegazione = "Il parlante dice 'ein Wasser' (un'acqua)",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_8",
+            fraseTedesca = "Guten Morgen!",
+            traduzioneItaliana = "Buongiorno!",
+            domanda = "Cosa dice il parlante?",
+            opzioni = listOf("Buonanotte", "Buongiorno", "Arrivederci"),
+            rispostaCorretta = 1,
+            spiegazione = "'Guten Morgen' significa 'Buongiorno'",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_9",
+            fraseTedesca = "Danke schön!",
+            traduzioneItaliana = "Grazie mille!",
+            domanda = "Cosa dice il parlante?",
+            opzioni = listOf("Prego", "Grazie", "Scusa"),
+            rispostaCorretta = 1,
+            spiegazione = "'Danke schön' significa 'Grazie mille'",
+            livello = "A0"
+        ),
+        EsercizioAscolto(
+            id = "a0_10",
+            fraseTedesca = "Ich lerne Deutsch.",
+            traduzioneItaliana = "Imparo tedesco.",
+            domanda = "Cosa fa il parlante?",
+            opzioni = listOf("lavora", "impara tedesco", "dorme"),
+            rispostaCorretta = 1,
+            spiegazione = "Il parlante dice 'Ich lerne Deutsch' (Imparo tedesco)",
+            livello = "A0"
+        )
     )
-)
+    return base
+}
 
-// Aggiungi esercizi A0 alla lista principale
-val tuttiEserciziAscolto = eserciziA0 + listOf(
-    EsercizioAscolto("a1_1", "Ich habe zwei Brüder und eine Schwester.", "Ho due fratelli e una sorella.", "Quanti fratelli ha il parlante?", listOf("1", "2", "3"), 1, "Il parlante dice 'zwei Brüder' (due fratelli)", "A1"),
-    EsercizioAscolto("a1_2", "Ich arbeite in einem Krankenhaus.", "Lavoro in un ospedale.", "Dove lavora il parlante?", listOf("scuola", "ospedale", "ufficio"), 1, "Il parlante dice 'in einem Krankenhaus' (in un ospedale)", "A1"),
-    EsercizioAscolto("a1_3", "Ich wohne seit zwei Jahren in Bozen.", "Vivo a Bolzano da due anni.", "Da quanto tempo vive a Bolzano?", listOf("1 anno", "2 anni", "3 anni"), 1, "Il parlante dice 'seit zwei Jahren' (da due anni)", "A1"),
-    EsercizioAscolto("a1_4", "Ich habe gestern einen Test gemacht.", "Ieri ho fatto un test.", "Quando ha fatto il test?", listOf("oggi", "ieri", "domani"), 1, "Il parlante dice 'gestern' (ieri)", "A1"),
-    EsercizioAscolto("a1_5", "Ich werde nächste Woche nach Italien fahren.", "La prossima settimana andrò in Italia.", "Quando andrà in Italia?", listOf("questa settimana", "la prossima settimana", "il mese prossimo"), 1, "Il parlante dice 'nächste Woche' (la prossima settimana)", "A1")
-)
+// Aggiungi esercizi A0 alla lista principale (profile-aware)
+fun getTuttiEserciziAscolto(profilo: ProfiloUtente?): List<EsercizioAscolto> {
+    return getEserciziA0(profilo) + listOf(
+        EsercizioAscolto("a1_1", "Ich habe zwei Brüder und eine Schwester.", "Ho due fratelli e una sorella.", "Quanti fratelli ha il parlante?", listOf("1", "2", "3"), 1, "Il parlante dice 'zwei Brüder' (due fratelli)", "A1"),
+        EsercizioAscolto("a1_2", "Ich arbeite in einem Krankenhaus.", "Lavoro in un ospedale.", "Dove lavora il parlante?", listOf("scuola", "ospedale", "ufficio"), 1, "Il parlante dice 'in einem Krankenhaus' (in un ospedale)", "A1"),
+        EsercizioAscolto("a1_3", if (profilo?.config?.mostraContestoMedico == true)
+            "Ich wohne seit zwei Jahren in Bozen."
+        else
+            "Ich wohne seit zwei Jahren in Berlin.",
+            if (profilo?.config?.mostraContestoMedico == true)
+                "Vivo a Bolzano da due anni."
+            else
+                "Vivo a Berlino da due anni.",
+            "Da quanto tempo vive lì?",
+            if (profilo?.config?.mostraContestoMedico == true)
+                listOf("1 anno", "2 anni", "3 anni")
+            else
+                listOf("1 anno", "2 anni", "3 anni"),
+            1,
+            if (profilo?.config?.mostraContestoMedico == true)
+                "Il parlante dice 'seit zwei Jahren' (da due anni)"
+            else
+                "Il parlante dice 'seit zwei Jahren' (da due anni)",
+            "A1"),
+        EsercizioAscolto("a1_4", "Ich habe gestern einen Test gemacht.", "Ieri ho fatto un test.", "Quando ha fatto il test?", listOf("oggi", "ieri", "domani"), 1, "Il parlante dice 'gestern' (ieri)", "A1"),
+        EsercizioAscolto("a1_5", "Ich werde nächste Woche nach Italien fahren.", "La prossima settimana andrò in Italia.", "Quando andrà in Italia?", listOf("questa settimana", "la prossima settimana", "il mese prossimo"), 1, "Il parlante dice 'nächste Woche' (la prossima settimana)", "A1")
+    )
+}
