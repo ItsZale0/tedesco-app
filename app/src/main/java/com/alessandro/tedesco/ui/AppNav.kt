@@ -248,7 +248,15 @@ private fun ContenutoApp(
                 SessioniScreen(
                     onIndietro = { nav.popBackStack() },
                     sessioni = vm.sessioni.collectAsStateWithLifecycle().value,
-                    onAvvia = { tipo -> vm.avviaSessione(tipo) }
+                    onAvvia = { tipo ->
+                        // Ogni sessione porta davvero da qualche parte
+                        when (tipo) {
+                            "SESSIONE", "RIPASSO" -> nav.navigate("ripasso")
+                            "TEST" -> nav.navigate("testb1")
+                            "ROLEPLAY" -> nav.navigate("tutor")
+                            else -> nav.navigate("ripasso")
+                        }
+                    }
                 )
             }
             // Feedback / Correzione risposte
@@ -257,7 +265,8 @@ private fun ContenutoApp(
                     onIndietro = { nav.popBackStack() },
                     onInviaRisposta = { vm.inviaRisposta(it) },
                     risposte = vm.risposte.collectAsStateWithLifecycle().value,
-                    correzioneInCorso = vm.correzioneInCorso.collectAsStateWithLifecycle().value
+                    correzioneInCorso = vm.correzioneInCorso.collectAsStateWithLifecycle().value,
+                    apiKey = vm.tutorApiKey.collectAsStateWithLifecycle("").value
                 )
             }
             composable("grammatica") { GrammaticaScreen(vm) }

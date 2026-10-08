@@ -101,6 +101,58 @@ class TutorService {
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
     }
 
+    /**
+     * Corregge una risposta in tedesco di uno studente.
+     *
+     * @param apiKey chiave OpenRouter
+     * @param testoStudente la risposta da correggere
+     * @param livello livello CEFR dell'utente (A0-B2)
+     * @param lezione contesto della lezione corrente
+     * @param modello modello opzionale (null = automatico)
+     * @return la correzione in italiano, una riga per errore
+     */
+    suspend fun correggiRisposta(
+        apiKey: String,
+        testoStudente: String,
+        livello: String,
+        lezione: Int,
+        modello: String? = null
+    ): String = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) {
+            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
+        }
+
+        val systemPrompt = """
+            Sei un correttore di tedesco per uno studente italiano di livello $livello.
+            Regole:
+            - Analizza la risposta dello studente e individua TUTTI gli errori (grammatica, vocabolario, sintassi, articoli, preposizioni, coniugazioni).
+            - Per ogni errore, scrivi una riga nel formato: "- **Errore**: [descrizione] → **Correzione**: [forma corretta]"
+            - Se non ci sono errori, rispondi: "Corretto! Ottimo lavoro."
+            - Spiega brevemente il perché di ogni correzione.
+            - La lezione corrente è la numero $lezione.
+            - Usa markdown semplice: **grassetto** per i termini chiave, - per gli elenchi.
+            - Non usare tabelle né HTML.
+        """.trimIndent()
+
+        val messaggi = listOf(
+            ChatMessage("system", systemPrompt),
+            ChatMessage("user", testoStudente)
+        )
+
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+
+        var ultimoErrore: String? = null
+        for (m in modelli) {
+            try {
+                return@withContext chiamaModello(apiKey, m, messaggi)
+            } catch (e: IOException) {
+                ultimoErrore = e.message
+                if (e.message?.contains("non valida") == true) throw e
+            }
+        }
+        throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
+    }
+
     private fun chiamaModello(
         apiKey: String,
         modello: String,

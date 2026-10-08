@@ -486,51 +486,44 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     private val _correzioneInCorso = MutableStateFlow(false)
     val correzioneInCorso: StateFlow<Boolean> = _correzioneInCorso
 
-    /** Invia una risposta in tedesco e riceve la correzione. */
+    /** Invia una risposta in tedesco e riceve la correzione dal tutor AI. */
     fun inviaRisposta(testo: String) {
         viewModelScope.launch {
+            val chiave = tutorApiKey.value
+            if (chiave.isBlank()) {
+                _messaggio.value = "Per correggere le risposte serve una chiave API OpenRouter. Vai in Profilo → Tutor AI per inserirla."
+                return@launch
+            }
             _correzioneInCorso.value = true
             try {
+                val profilo = profileManager.profiloAttivo() ?: return@launch
+                val livello = profilo.stato.progresso.livelloCorrente.label.substringBefore(" ")
+                val lezione = lezioneCorrente.value
+                val correzione = app.tutorServiceInstance.correggiRisposta(
+                    apiKey = chiave,
+                    testoStudente = testo,
+                    livello = livello,
+                    lezione = lezione,
+                    modello = _modelloTutor.value
+                )
                 val entry = FeedbackEntry(
                     id = "fb_${System.currentTimeMillis()}",
                     testo = testo,
-                    timestamp = System.currentTimeMillis()
-                )
-                // Correzione locale base (pattern comuni)
-                val correzione = correggiRisposta(testo)
-                val entryCorretta = entry.copy(
+                    timestamp = System.currentTimeMillis(),
                     corretto = true,
                     correzione = correzione
                 )
-                _risposte.value = listOf(entryCorretta) + _risposte.value
-                // Salva nel profilo
-                val repo = profileManager.profiloAttivo()
-                if (repo != null) {
-                    val nuovoStato = repo.stato.copy(
-                        risposte = listOf(entryCorretta) + repo.stato.risposte
-                    )
-                    profileManager.aggiornaStatoAttivo(nuovoStato)
-                }
+                _risposte.value = listOf(entry) + _risposte.value
+                val nuovoStato = profilo.stato.copy(
+                    risposte = listOf(entry) + profilo.stato.risposte
+                )
+                profileManager.aggiornaStatoAttivo(nuovoStato)
+            } catch (e: Exception) {
+                _messaggio.value = "Errore durante la correzione: ${e.message}"
             } finally {
                 _correzioneInCorso.value = false
             }
         }
-    }
-
-    /** Corregge errori comuni di tedesco per un A0. */
-    private fun correggiRisposta(testo: String): String {
-        val errori = mutableListOf<String>()
-        // Errori comuni A0
-        if (testo.contains("ich bin", ignoreCase = true) && !testo.contains("ich bin", ignoreCase = true)) {
-            errori.add("Usa 'ich bin' per l'essere")
-        }
-        if (testo.contains("nicht") && !testo.contains("nicht", ignoreCase = true)) {
-            errori.add("'nicht' va prima del verbo")
-        }
-        if (testo.contains("ein ") && !testo.contains("eine ") && !testo.contains("einen ")) {
-            errori.add("Attenzione al genere dell'articolo")
-        }
-        return if (errori.isEmpty()) "Corretto!" else errori.joinToString("; ")
     }
 
     fun ripassaErrori() {

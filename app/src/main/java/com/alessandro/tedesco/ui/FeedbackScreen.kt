@@ -12,10 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.FeedbackEntry
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 /**
  * Schermata di feedback: l'utente invia le sue risposte in tedesco
- * e riceve la correzione automatica.
+ * e riceve la correzione dal tutor AI.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +24,8 @@ fun FeedbackScreen(
     onIndietro: () -> Unit,
     onInviaRisposta: (String) -> Unit,
     risposte: List<FeedbackEntry>,
-    correzioneInCorso: Boolean
+    correzioneInCorso: Boolean,
+    apiKey: String = ""
 ) {
     var testoRisposta by remember { mutableStateOf("") }
 
@@ -45,6 +47,25 @@ fun FeedbackScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            // Avviso se manca la chiave API
+            if (apiKey.isBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        "Per correggere le risposte serve una chiave API OpenRouter. " +
+                            "Vai in Profilo → Tutor AI e inseriscila.",
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+
             // Istruzioni
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -79,7 +100,8 @@ fun FeedbackScreen(
                 placeholder = { Text("Es: Ich bin 20 Jahre alt") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
-                maxLines = 5
+                maxLines = 5,
+                enabled = apiKey.isNotBlank()
             )
 
             Spacer(Modifier.height(8.dp))
@@ -92,7 +114,7 @@ fun FeedbackScreen(
                         testoRisposta = ""
                     }
                 },
-                enabled = testoRisposta.isNotBlank() && !correzioneInCorso,
+                enabled = testoRisposta.isNotBlank() && !correzioneInCorso && apiKey.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (correzioneInCorso) {
@@ -149,9 +171,8 @@ private fun FeedbackCard(risposta: FeedbackEntry) {
             )
             if (risposta.corretto && risposta.correzione != null) {
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "✓ ${risposta.correzione}",
-                    style = MaterialTheme.typography.bodySmall,
+                MarkdownText(
+                    markdown = risposta.correzione,
                     color = MaterialTheme.colorScheme.primary
                 )
             }

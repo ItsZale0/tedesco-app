@@ -244,6 +244,9 @@ class WordRepository(
                 reviews = _reviews.value,
                 feedLog = _feedLog.value,
                 guida = _guida.value,
+                piano = _piano.value,
+                progressoFeed = _progressoFeed.value,
+                sessioni = _sessioni.value,
                 etag = nuovoEtag ?: corrente.etag,
                 lastSync = System.currentTimeMillis()
             )

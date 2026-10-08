@@ -1,7 +1,7 @@
 {
-  "versionCode": 38,
-  "versionName": "1.21.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.21.0/Tedesco-v1.21.0.apk",
-  "changelog": "App unica: piano di studio, certificazioni, sessioni strutturate, correzione risposte. WhatsApp eliminato.",
+  "versionCode": 39,
+  "versionName": "1.21.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.21.1/Tedesco-v1.21.1.apk",
+  "changelog": "FIX: sezioni Piano/Sessioni/Progresso ora funzionanti. Correzione risposte collegata al LLM reale. Pulsanti Sessioni navigano.",
   "minVersionCode": 1
 }
