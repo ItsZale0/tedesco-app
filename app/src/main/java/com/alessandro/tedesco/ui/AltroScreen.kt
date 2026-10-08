@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -37,7 +38,8 @@ fun AltroScreen(
     onVaiAQuizProduzione: () -> Unit = {},
     onVaiAPiano: () -> Unit = {},
     onVaiASessioni: () -> Unit = {},
-    onVaiARoleplay: () -> Unit = {}
+    onVaiARoleplay: () -> Unit = {},
+    onVaiAVoiceChat: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -297,6 +299,35 @@ fun AltroScreen(
                                 "Conversazioni simulate in tedesco",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+
+                // Conversazione vocale
+                Card(
+                    onClick = onVaiAVoiceChat,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Mic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                "Conversazione vocale",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                "Parla con l'AI e ricevi correzione alla finale",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

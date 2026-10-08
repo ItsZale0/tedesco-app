@@ -1,7 +1,7 @@
 {
-  "versionCode": 40,
-  "versionName": "1.22.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.22.0/Tedesco-v1.22.0.apk",
-  "changelog": "TTS locale in tedesco, chiave OpenRouter default, roleplay vero, sessioni chiare, motore adattivo",
+  "versionCode": 41,
+  "versionName": "1.23.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.0/Tedesco-v1.23.0.apk",
+  "changelog": "Conversazione vocale push-to-talk con AI: parla in tedesco, ricevi risposte vocali, correzione LLM alla fine",
   "minVersionCode": 1
 }

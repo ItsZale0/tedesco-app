@@ -238,7 +238,8 @@ private fun ContenutoApp(
                     onVaiAQuizProduzione = { nav.navigate("quiz-produzione") },
                     onVaiAPiano = { nav.navigate("piano") },
                     onVaiASessioni = { nav.navigate("sessioni") },
-                    onVaiARoleplay = { nav.navigate("roleplay") }
+                    onVaiARoleplay = { nav.navigate("roleplay") },
+                    onVaiAVoiceChat = { nav.navigate("voicechat") }
                 )
             }
             // Piano di studio
@@ -281,6 +282,7 @@ private fun ContenutoApp(
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
             composable("roleplay") { RoleplayScreen(vm) }
+            composable("voicechat") { VoiceChatScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("competenze") { CompetenzeScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }
