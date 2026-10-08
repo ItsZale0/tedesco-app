@@ -1,6 +1,6 @@
 {
-  "versionCode": 42,
-  "versionName": "1.23.2",
+  "versionCode": 44,
+  "versionName": "1.25.0",
   "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.2/Tedesco-v1.23.2.apk",
   "changelog": "FIX: versionCode corretto (era 41, ora 42) - installazione sopra la vecchia ora funziona",
   "minVersionCode": 1
