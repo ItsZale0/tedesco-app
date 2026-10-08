@@ -1,7 +1,7 @@
 {
-  "versionCode": 45,
-  "versionName": "1.26.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.26.0/Tedesco-v1.26.0.apk",
-  "changelog": "Contesto medico per Alessandro, progressione mappata, produzione scritta, UI semplificata",
+  "versionCode": 46,
+  "versionName": "1.26.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.26.1/Tedesco-v1.26.1.apk",
+  "changelog": "FIX CRITICO: crash StileDesign.pixel (enum case mismatch)",
   "minVersionCode": 1
 }
