@@ -59,7 +59,8 @@ class PercorsoAdattivoTest {
                 reviews = reviews,
                 progresso = ProgressoUtente(accuratezzaMedia = accuratezza),
                 now = NOW
-            )
+            ),
+            progresso = emptyList()
         )
     }
 

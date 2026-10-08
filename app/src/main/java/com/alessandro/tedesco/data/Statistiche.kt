@@ -23,6 +23,13 @@ data class AttivitaGiorno(
     val ripassi: Int
 )
 
+/** Punto di progresso cumulativo in un giorno specifico. */
+data class ProgressPoint(
+    val etichetta: String,
+    val paroleMature: Int,
+    val paroleTotali: Int
+)
+
 /** Statistiche complete dell'app, calcolate in modo puro da CalcoloStatistiche. */
 data class Statistiche(
     val paroleTotali: Int,
@@ -43,7 +50,8 @@ data class Statistiche(
     val livelloStimato: LivelloCEFR,
     val perLezione: List<ConteggioLezione>,
     val ultimi7giorni: List<AttivitaGiorno>,
-    val punteggiCompetenze: CalcoloCompetenze.PunteggiCompetenze?
+    val punteggiCompetenze: CalcoloCompetenze.PunteggiCompetenze?,
+    val progresso: List<ProgressPoint>
 )
 
 /**
@@ -155,6 +163,9 @@ object CalcoloStatistiche {
             now = now
         )
 
+        // Progresso cumulativo degli ultimi 30 giorni
+        val progresso30gg = calcolaProgresso(paroleAttive, reviews, now)
+
         return Statistiche(
             paroleTotali = paroleTotali,
             paroleSynced = paroleSynced,
@@ -174,8 +185,44 @@ object CalcoloStatistiche {
             livelloStimato = livelloStimato,
             perLezione = perLezione,
             ultimi7giorni = ultimi7giorni,
-            punteggiCompetenze = punteggiCompetenze
+            punteggiCompetenze = punteggiCompetenze,
+            progresso = progresso30gg
         )
+    }
+
+    /**
+     * Calcola il progresso cumulativo degli ultimi 30 giorni.
+     * Per ogni giorno conta parole mature e totali fino a quella data.
+     */
+    private fun calcolaProgresso(
+        paroleAttive: List<WordEntity>,
+        reviews: Map<String, ReviewEntity>,
+        now: Long
+    ): List<ProgressPoint> {
+        val oggi = LocalDate.ofEpochDay(now / (1000 * 60 * 60 * 24))
+        val formatter = DateTimeFormatter.ofPattern("d/M", Locale.ITALIAN)
+
+        return (29 downTo 0).map { offset ->
+            val giorno = oggi.minusDays(offset.toLong())
+            val etichetta = giorno.format(formatter)
+            val giornoFine = giorno.plusDays(1).toEpochDay() * 1000 * 60 * 60 * 24
+
+            val paroleDelGiorno = paroleAttive.filter { w ->
+                val r = reviews[w.id]
+                r != null && r.lastReviewedAt != null && r.lastReviewedAt < giornoFine
+            }
+
+            val mature = paroleDelGiorno.count { w ->
+                val r = reviews[w.id]
+                r != null && r.repetitions >= 4
+            }
+
+            ProgressPoint(
+                etichetta = etichetta,
+                paroleMature = mature,
+                paroleTotali = paroleDelGiorno.size
+            )
+        }
     }
 
     /**

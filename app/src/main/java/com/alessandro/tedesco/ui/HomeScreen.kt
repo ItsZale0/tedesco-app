@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -23,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
+import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -49,12 +53,58 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@Composable
+private fun PassoPercorsoItem(
+    passo: CalcoloPercorsoGiornaliero.PassoPercorso,
+    onCompleta: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (passo.completato) Icons.Filled.CheckCircle
+            else Icons.Filled.RadioButtonUnchecked,
+            contentDescription = if (passo.completato) "Completato" else "Da fare",
+            tint = if (passo.completato) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = passo.titolo,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = if (passo.completato) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Text(
+                text = passo.descrizione,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (!passo.completato) {
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "Fatto",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     vm: TedescoViewModel,
     onIniziaRipasso: () -> Unit,
-    onNavigate: (String) -> Unit = {}
+    onNavigate: (String) -> Unit = {},
+    onCompletaPasso: (String) -> Unit = {}
 ) {
     val daRipassare by vm.daRipassare.collectAsStateWithLifecycle(0)
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
@@ -160,9 +210,9 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(Spaziature.lg))
 
-                // Percorso adattivo: raccomandazioni basate sui progressi
-                val percorso by vm.percorsoAdattivo.collectAsStateWithLifecycle(null)
-                percorso?.let { p ->
+                // Percorso giornaliero: passi sequenziali e interattivi
+                val percorsoGiorno by vm.percorsoGiornaliero.collectAsStateWithLifecycle(null)
+                percorsoGiorno?.let { pg ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(Raggi.card),
@@ -175,56 +225,72 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .padding(Spaziature.lg)
                         ) {
-                            Text(
-                                text = p.messaggioMotivazionale,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
+                            // Header con data e progresso
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Percorso di oggi",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = "${pg.passiCompletati}/${pg.passiTotali}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
                             Spacer(Modifier.height(Spaziature.xs))
                             Text(
-                                text = "Prossimo obiettivo: ${p.prossimoObiettivo}",
+                                text = pg.data,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Spacer(Modifier.height(Spaziature.sm))
-                            p.raccomandazioni.take(3).forEach { rac: CalcoloPercorsoAdattivo.Raccomandazione ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${rac.priorita}.",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (rac.urgente) MaterialTheme.colorScheme.error
-                                        else MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = rac.titolo,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Text(
-                                            text = rac.descrizione,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                            if (p.raccomandazioni.isNotEmpty()) {
-                                Spacer(Modifier.height(Spaziature.sm))
-                                Text(
-                                    text = "Tocca per iniziare: ${p.raccomandazioni.first().titolo}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+
+                            // Progress bar
+                            LinearProgressIndicator(
+                                progress = { pg.progressoGiornata },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(Modifier.height(Spaziature.sm))
+
+                            // Messaggio motivazionale
+                            Text(
+                                text = pg.messaggioMotivazionale,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(Modifier.height(Spaziature.xs))
+                            Text(
+                                text = "Prossimo obiettivo: ${pg.prossimoObiettivo}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(Modifier.height(Spaziature.sm))
+
+                            // Lista passi
+                            pg.passi.forEach { passo ->
+                                PassoPercorsoItem(
+                                    passo = passo,
+                                    onCompleta = { onCompletaPasso(passo.id) }
                                 )
                             }
+
+                            // Footer con tempo totale
+                            Spacer(Modifier.height(Spaziature.sm))
+                            Text(
+                                text = "Tempo stimato: ${pg.minutiTotali} min",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
                         }
                     }
 

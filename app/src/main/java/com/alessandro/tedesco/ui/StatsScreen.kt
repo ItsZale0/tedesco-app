@@ -35,6 +35,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -106,6 +109,11 @@ fun StatsScreen(vm: TedescoViewModel) {
 
                     // 5. Sezione ultimi 7 giorni
                     SezioneUltimi7Giorni(statsCorrenti)
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // 5b. Grafico di progresso (30 giorni)
+                    SezioneGraficoProgresso(statsCorrenti)
 
                     Spacer(Modifier.height(24.dp))
 
@@ -402,6 +410,130 @@ private fun GraficoBarreVerticali(dati: List<com.alessandro.tedesco.data.Attivit
         dati.forEach { attivita ->
             Text(
                 text = attivita.etichetta,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun SezioneGraficoProgresso(stats: Statistiche) {
+    Text(
+        text = "Progresso (30 giorni)",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(Modifier.height(12.dp))
+
+    if (stats.progresso.isEmpty()) {
+        Text(
+            text = "Nessun dato ancora",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+    } else {
+        GraficoLineaProgresso(stats.progresso)
+    }
+}
+
+@Composable
+private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.ProgressPoint>) {
+    val maxMature = dati.maxOfOrNull { it.paroleMature }?.coerceAtLeast(1) ?: 1
+    val maxTotali = dati.maxOfOrNull { it.paroleTotali }?.coerceAtLeast(1) ?: 1
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+    ) {
+        val n = dati.size.coerceAtLeast(1)
+        val stepX = size.width / (n - 1).coerceAtLeast(1)
+
+        // Linea parole totali (griglia di sfondo)
+        val pathTotali = Path()
+        dati.forEachIndexed { i, p ->
+            val x = i * stepX
+            val y = size.height - (p.paroleTotali.toFloat() / maxTotali) * (size.height - 20f) - 10f
+            if (i == 0) pathTotali.moveTo(x, y) else pathTotali.lineTo(x, y)
+        }
+        drawPath(
+            path = pathTotali,
+            color = Color(0xFF9EC9F0),
+            style = Stroke(width = 2f, cap = StrokeCap.Round)
+        )
+
+        // Linea parole mature
+        val pathMature = Path()
+        dati.forEachIndexed { i, p ->
+            val x = i * stepX
+            val y = size.height - (p.paroleMature.toFloat() / maxMature) * (size.height - 20f) - 10f
+            if (i == 0) pathMature.moveTo(x, y) else pathMature.lineTo(x, y)
+        }
+        drawPath(
+            path = pathMature,
+            color = Color(0xFF1B5E9B),
+            style = Stroke(width = 3f, cap = StrokeCap.Round)
+        )
+
+        // Punti sulle mature
+        dati.forEachIndexed { i, p ->
+            val x = i * stepX
+            val y = size.height - (p.paroleMature.toFloat() / maxMature) * (size.height - 20f) - 10f
+            drawCircle(
+                color = Color(0xFF1B5E9B),
+                radius = 3f,
+                center = Offset(x, y)
+            )
+        }
+    }
+
+    // Etichette date (mostra ogni 5 giorni)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        dati.forEachIndexed { i, p ->
+            if (i % 5 == 0 || i == dati.lastIndex) {
+                Text(
+                    text = p.etichetta,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    // Legenda
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(modifier = Modifier.size(12.dp)) {
+                drawCircle(color = Color(0xFF1B5E9B), radius = 6f)
+            }
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = "Mature",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(modifier = Modifier.size(12.dp)) {
+                drawCircle(color = Color(0xFF9EC9F0), radius = 6f)
+            }
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = "Totali",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

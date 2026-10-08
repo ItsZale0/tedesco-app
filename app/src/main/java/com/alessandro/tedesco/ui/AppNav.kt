@@ -55,6 +55,7 @@ import com.alessandro.tedesco.ui.FeedbackScreen
 import com.alessandro.tedesco.ui.PianoScreen
 import com.alessandro.tedesco.ui.RoleplayScreen
 import com.alessandro.tedesco.ui.SessioniScreen
+import com.alessandro.tedesco.ui.TestAdattiviScreen
 
 private sealed class Dest(
     val route: String,
@@ -219,7 +220,20 @@ private fun ContenutoApp(
                 HomeScreen(
                     vm,
                     onIniziaRipasso = { nav.navigate("ripasso") },
-                    onNavigate = { route -> nav.navigate(route) }
+                    onNavigate = { route -> nav.navigate(route) },
+                    onCompletaPasso = { passoId ->
+                        vm.completaPassoGiornaliero(passoId)
+                        // Naviga alla schermata del passo completato
+                        when (passoId) {
+                            "ripasso" -> nav.navigate("ripasso")
+                            "grammatica" -> nav.navigate("grammatica")
+                            "comprensione" -> nav.navigate("quiz-comprensione")
+                            "produzione" -> nav.navigate("quiz-produzione")
+                            "vocabolario" -> nav.navigate("nuove")
+                            "test-livello" -> nav.navigate("testb1")
+                            "sessione" -> nav.navigate("sessioni")
+                        }
+                    }
                 )
             }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
@@ -228,7 +242,8 @@ private fun ContenutoApp(
             composable(Dest.Altro.route) {
                 AltroScreen(
                     onVaiAGrammatica = { nav.navigate("grammatica") },
-                    onVaiATest = { nav.navigate("testb1") },
+                    onVaiATest = { nav.navigate("test-adattivi") },
+                    onVaiATestB1 = { nav.navigate("testb1") },
                     onVaiAStats = { nav.navigate("stats") },
                     onVaiATraduttore = { nav.navigate("traduttore") },
                     onVaiATutor = { nav.navigate("tutor") },
@@ -244,10 +259,14 @@ private fun ContenutoApp(
             }
             // Piano di studio
             composable("piano") {
+                val stats by vm.statistiche.collectAsStateWithLifecycle(null)
                 PianoScreen(
                     onIndietro = { nav.popBackStack() },
                     piano = vm.piano.collectAsStateWithLifecycle().value,
-                    progresso = vm.progressoFeed.collectAsStateWithLifecycle().value
+                    progresso = vm.progressoFeed.collectAsStateWithLifecycle().value,
+                    lezioneCorrente = vm.lezioneCorrente.collectAsStateWithLifecycle().value,
+                    paroleApprese = stats?.paroleApprese ?: 0,
+                    livelloCorrente = stats?.livelloStimato?.label?.substringBefore(" ") ?: "A0"
                 )
             }
             // Sessioni strutturate
@@ -255,12 +274,17 @@ private fun ContenutoApp(
                 SessioniScreen(
                     onIndietro = { nav.popBackStack() },
                     sessioni = vm.sessioni.collectAsStateWithLifecycle().value,
+                    sessioniAdattive = vm.sessioniAdattive.collectAsStateWithLifecycle().value,
                     onAvvia = { tipo ->
                         // Ogni sessione porta davvero da qualche parte
-                        when (tipo) {
-                            "SESSIONE", "RIPASSO" -> nav.navigate("ripasso")
-                            "TEST" -> nav.navigate("testb1")
+                        when (tipo.uppercase()) {
+                            "SESSIONE", "SESSIONE_GUIDATA", "RIPASSO" -> nav.navigate("ripasso")
+                            "TEST", "TEST_LIVELLO" -> nav.navigate("testb1")
                             "ROLEPLAY" -> nav.navigate("roleplay")
+                            "GRAMMATICA" -> nav.navigate("grammatica")
+                            "COMPRENSIONE" -> nav.navigate("quiz-comprensione")
+                            "PRODUZIONE" -> nav.navigate("quiz-produzione")
+                            "VOCABOLARIO" -> nav.navigate("nuove")
                             else -> nav.navigate("ripasso")
                         }
                     }
@@ -278,6 +302,7 @@ private fun ContenutoApp(
             }
             composable("grammatica") { GrammaticaScreen(vm) }
             composable("testb1") { TestB1Screen(vm) }
+            composable("test-adattivi") { TestAdattiviScreen(vm) }
             composable("stats") { StatsScreen(vm) }
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }

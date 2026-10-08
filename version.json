@@ -1,7 +1,7 @@
 {
-  "versionCode": 41,
-  "versionName": "1.23.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.0/Tedesco-v1.23.0.apk",
-  "changelog": "Conversazione vocale push-to-talk con AI: parla in tedesco, ricevi risposte vocali, correzione LLM alla fine",
+  "versionCode": 42,
+  "versionName": "1.23.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.23.1/Tedesco-v1.23.1.apk",
+  "changelog": "FIX CRITICO: crash all avvio risolto (VocabPublishService mancante dal build)",
   "minVersionCode": 1
 }

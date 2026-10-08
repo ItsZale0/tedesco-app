@@ -228,4 +228,60 @@ class CalcoloStatisticheTest {
         assertEquals(1, stats.perLezione[2].totale)
         assertEquals(1, stats.perLezione[2].mature)
     }
+
+    // --- Test 11: progresso 30 giorni ---
+    @Test
+    fun `progresso sempre 30 elementi`() {
+        val stats = CalcoloStatistiche.calcola(
+            parole = emptyList(),
+            reviews = emptyMap(),
+            progresso = ProgressoUtente(),
+            now = now
+        )
+        assertEquals(30, stats.progresso.size)
+    }
+
+    // --- Test 12: progresso con parole mature ---
+    @Test
+    fun `progresso conta parole mature correttamente`() {
+        val oggi = java.time.LocalDate.ofEpochDay(now / (1000 * 60 * 60 * 24))
+        val ieri = oggi.minusDays(1)
+        val dueGiorniFa = oggi.minusDays(2)
+
+        val tsIeri = ieri.toEpochDay() * 1000 * 60 * 60 * 24 + 1000
+        val tsDueGiorniFa = dueGiorniFa.toEpochDay() * 1000 * 60 * 60 * 24 + 1000
+
+        val parole = listOf(
+            parola("a"),
+            parola("b"),
+            parola("c")
+        )
+        val reviews = mapOf(
+            "a" to review("a", repetitions = 5, lastReviewedAt = tsIeri),
+            "b" to review("b", repetitions = 5, lastReviewedAt = tsDueGiorniFa),
+            "c" to review("c", repetitions = 2, lastReviewedAt = tsIeri)
+        )
+        val stats = CalcoloStatistiche.calcola(parole, reviews, ProgressoUtente(), now)
+
+        // Ultimo giorno: tutte le parole con lastReviewedAt < fine oggi
+        val ultimo = stats.progresso.last()
+        assertEquals(3, ultimo.paroleTotali)
+        assertEquals(2, ultimo.paroleMature) // a e b sono mature (repetitions >= 4)
+
+        // Il progresso è cumulativo: l'ultimo elemento ha il valore massimo
+        val maxMature = stats.progresso.maxOf { it.paroleMature }
+        assertEquals(2, maxMature)
+    }
+
+    // --- Test 13: progresso vuoto quando non ci sono parole ---
+    @Test
+    fun `progresso zeri quando nessuna parola`() {
+        val stats = CalcoloStatistiche.calcola(
+            parole = emptyList(),
+            reviews = emptyMap(),
+            progresso = ProgressoUtente(),
+            now = now
+        )
+        assertTrue(stats.progresso.all { it.paroleMature == 0 && it.paroleTotali == 0 })
+    }
 }

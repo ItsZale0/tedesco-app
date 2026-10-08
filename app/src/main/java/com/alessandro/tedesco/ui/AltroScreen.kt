@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.*
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 fun AltroScreen(
     onVaiAGrammatica: () -> Unit,
     onVaiATest: () -> Unit,
+    onVaiATestB1: () -> Unit = {},
     onVaiAStats: () -> Unit,
     onVaiATraduttore: () -> Unit,
     onVaiATutor: () -> Unit,
@@ -98,7 +100,7 @@ fun AltroScreen(
 
                 // Test
                 Card(
-                    onClick = onVaiATest,
+                    onClick = onVaiATestB1,
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -123,6 +125,40 @@ fun AltroScreen(
                             )
                             Text(
                                 "Verifica delle tue competenze",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Test adattivi
+                Card(
+                    onClick = onVaiATest,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Quiz,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                "Test adattivi",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "Domande generate in base al tuo livello e ai tuoi errori",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

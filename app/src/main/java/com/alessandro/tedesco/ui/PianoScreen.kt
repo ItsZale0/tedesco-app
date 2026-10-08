@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.alessandro.tedesco.data.CalcoloTappe
 import com.alessandro.tedesco.data.local.PianoEntity
 import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -21,14 +22,33 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 /**
  * Piano di studio verso il B2: tappe, certificazioni, risorse, progresso.
  * Tutto quello che prima arrivava su WhatsApp, ora dentro l'app.
+ *
+ * Le tappe mostrano uno stato dinamico calcolato in base ai progressi reali
+ * dell'utente (lezione corrente, parole apprese, livello).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PianoScreen(
     onIndietro: () -> Unit,
     piano: PianoEntity?,
-    progresso: ProgressoFeedEntity?
+    progresso: ProgressoFeedEntity?,
+    lezioneCorrente: Int = 1,
+    paroleApprese: Int = 0,
+    livelloCorrente: String = "A0"
 ) {
+    // Calcola gli stati dinamici delle tappe
+    val tappeConStato = if (piano != null) {
+        val livello = parseLivello(livelloCorrente)
+        CalcoloTappe.calcola(
+            tappe = piano.tappe,
+            progresso = CalcoloTappe.ProgressoTappe(
+                lezioneCorrente = lezioneCorrente,
+                paroleApprese = paroleApprese,
+                livelloCorrente = livello
+            )
+        )
+    } else emptyList()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -102,15 +122,15 @@ fun PianoScreen(
                     }
                 }
 
-                // Tappe
-                if (piano != null && piano.tappe.isNotEmpty()) {
+                // Tappe con stato dinamico
+                if (piano != null && tappeConStato.isNotEmpty()) {
                     Text(
                         "Tappe del percorso",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 8.dp)
                     )
-                    piano.tappe.forEach { tappa ->
+                    tappeConStato.forEach { tappa ->
                         TappaCard(
                             nome = tappa.nome,
                             descrizione = tappa.descrizione,
@@ -229,7 +249,7 @@ private fun StatBox(valore: String, etichetta: String) {
 @Composable
 private fun TappaCard(nome: String, descrizione: String, lezioni: String, stato: String) {
     val colore = when (stato) {
-        "fatto" -> MaterialTheme.colorScheme.secondaryContainer
+        "completata" -> MaterialTheme.colorScheme.secondaryContainer
         "in corso" -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
@@ -257,5 +277,22 @@ private fun TappaCard(nome: String, descrizione: String, lezioni: String, stato:
                 )
             }
         }
+    }
+}
+
+/**
+ * Converte una stringa di livello (es. "A0", "A1", "B1") in LivelloCEFR.
+ * Se non riconosciuto, restituisce A0.
+ */
+private fun parseLivello(livello: String): com.alessandro.tedesco.data.local.LivelloCEFR {
+    return when (livello.uppercase().trim()) {
+        "A0" -> com.alessandro.tedesco.data.local.LivelloCEFR.A0
+        "A1" -> com.alessandro.tedesco.data.local.LivelloCEFR.A1
+        "A2" -> com.alessandro.tedesco.data.local.LivelloCEFR.A2
+        "B1" -> com.alessandro.tedesco.data.local.LivelloCEFR.B1
+        "B2" -> com.alessandro.tedesco.data.local.LivelloCEFR.B2
+        "C1" -> com.alessandro.tedesco.data.local.LivelloCEFR.C1
+        "C2" -> com.alessandro.tedesco.data.local.LivelloCEFR.C2
+        else -> com.alessandro.tedesco.data.local.LivelloCEFR.A0
     }
 }

@@ -4,8 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.AdaptiveSessionEngine
+import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloStatistiche
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
+import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.Statistiche
@@ -128,6 +131,81 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             ultimoTest = profilo.stato.progresso.ultimoTest
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** IDs dei passi del percorso giornaliero completati oggi. */
+    private val _passiCompletatiOggi = MutableStateFlow<Set<String>>(emptySet())
+    val passiCompletatiOggi: StateFlow<Set<String>> = _passiCompletatiOggi.asStateFlow()
+
+    /** Percorso personalizzato del giorno, con passi sequenziali e tracking. */
+    val percorsoGiornaliero: StateFlow<CalcoloPercorsoGiornaliero.PercorsoGiornaliero?> = combine(
+        statistiche,
+        daRipassare,
+        profileManager.repositoryFlow,
+        _passiCompletatiOggi
+    ) { stats, due, repo, completati ->
+        if (stats == null) return@combine null
+        val profilo = repo.profiloAttivoId?.let { repo.profili[it] } ?: return@combine null
+        CalcoloPercorsoGiornaliero.genera(
+            statistiche = stats,
+            competenze = stats.punteggiCompetenze ?: return@combine null,
+            daRipassare = due,
+            livelloCorrente = profilo.stato.progresso.livelloCorrente,
+            obiettivoLivello = profilo.stato.progresso.obiettivoLivello,
+            ultimoTest = profilo.stato.progresso.ultimoTest,
+            passiCompletatiOggi = completati
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Sessioni adattive generate dinamicamente dai progressi dell'utente. */
+    val sessioniAdattive: StateFlow<AdaptiveSessionEngine.RisultatoGenerazione?> = combine(
+        statistiche,
+        daRipassare,
+        profileManager.repositoryFlow,
+        parole,
+        repo.reviewsFlow
+    ) { stats, due, repo, words, reviews ->
+        if (stats == null) return@combine null
+        val profilo = repo.profiloAttivoId?.let { repo.profili[it] } ?: return@combine null
+        val competenze = stats.punteggiCompetenze ?: return@combine null
+        AdaptiveSessionEngine.generaSessioni(
+            parole = words,
+            reviews = reviews,
+            progresso = profilo.stato.progresso,
+            competenze = competenze,
+            daRipassare = due,
+            livelloCorrente = profilo.stato.progresso.livelloCorrente,
+            obiettivoLivello = profilo.stato.progresso.obiettivoLivello
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Domande di test adattive generate dinamicamente dai progressi dell'utente. */
+    val testiAdattivi: StateFlow<List<com.alessandro.tedesco.data.local.DomandaTest>?> = combine(
+        statistiche,
+        daRipassare,
+        profileManager.repositoryFlow,
+        parole,
+        repo.reviewsFlow
+    ) { stats, due, repo, words, reviews ->
+        if (stats == null) return@combine null
+        val profilo = repo.profiloAttivoId?.let { repo.profili[it] } ?: return@combine null
+        val paroleAttive = words.filter { !it.archived }
+        val progresso = profilo.stato.progresso
+        AdaptiveTestEngine.generaTestAdattivo(
+            progresso = progresso,
+            parole = paroleAttive,
+            reviews = reviews
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** IDs dei passi del percorso giornaliero completati oggi. */
+    fun completaPassoGiornaliero(passoId: String) {
+        _passiCompletatiOggi.value = _passiCompletatiOggi.value + passoId
+    }
+
+    /** Resetta il percorso giornaliero (nuovo giorno). */
+    fun resetPercorsoGiornaliero() {
+        _passiCompletatiOggi.value = emptySet()
+    }
 
     val enableCustomWords: StateFlow<Boolean> = profileManager.repositoryFlow
         .map { r ->
@@ -606,6 +684,33 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
                     testB1 = profilo.stato.progresso.testB1 + nuovoTest
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
+    // ---- Test adattivi ----
+    fun salvaTestAdattivo(punteggio: Float, errori: Int, totale: Int, livello: String) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.local.TestAdattivo(
+                data = System.currentTimeMillis(),
+                punteggio = punteggio,
+                errori = errori,
+                totale = totale,
+                livello = livello
+            )
+            // Calcola il nuovo livello adattivo in base alle prestazioni
+            val nuovoLivello = AdaptiveTestEngine.calcolaLivelloAdattivo(
+                progresso = profilo.stato.progresso,
+                domandeTotali = totale,
+                errori = errori
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testAdattivi = profilo.stato.progresso.testAdattivi + nuovoTest,
+                    livelloCorrente = nuovoLivello
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)

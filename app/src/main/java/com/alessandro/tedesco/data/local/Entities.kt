@@ -111,6 +111,7 @@ data class ProgressoUtente(
     val testComprensione: List<TestComprensione> = emptyList(),
     val testProduzione: List<TestProduzione> = emptyList(),
     val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList(),
+    val testAdattivi: List<TestAdattivo> = emptyList(),
     val erroriGrammatica: List<String> = emptyList()
 )
 
@@ -139,6 +140,16 @@ data class TestProduzione(
     val punteggio: Float,  // 0-100
     val errori: Int,
     val totale: Int
+)
+
+/** Risultato di un test adattivo (domande generate dinamicamente) */
+@Serializable
+data class TestAdattivo(
+    val data: Long,
+    val punteggio: Float,  // 0-100
+    val errori: Int,
+    val totale: Int,
+    val livello: String
 )
 
 /** Domanda per test di livello */
