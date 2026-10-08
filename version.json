@@ -1,7 +1,7 @@
 {
-  "versionCode": 100,
-  "versionName": "1.28.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.28.0/Tedesco-v1.28.0.apk",
-  "changelog": "versionCode 100 per forzare installazione sopra qualsiasi versione precedente",
+  "versionCode": 101,
+  "versionName": "1.29.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.29.0/Tedesco-v1.29.0.apk",
+  "changelog": "FIX GRAFICA Altro: rimossa struttura annidata che rompeva il layout (mostrava 1 voce su 18). FIX PULSANTI: collegati i 3 callback mancanti (Contesto medico, Percorso apprendimento, Produzione scritta). Aggiunto chevron a tutte le voci.",
   "minVersionCode": 1
 }

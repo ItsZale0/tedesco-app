@@ -260,7 +260,10 @@ private fun ContenutoApp(
                     onVaiASessioni = { nav.navigate("sessioni") },
                     onVaiARoleplay = { nav.navigate("roleplay") },
                     onVaiAVoiceChat = { nav.navigate("voicechat") },
-                    onVaiAAscolto = { nav.navigate("ascolto") }
+                    onVaiAAscolto = { nav.navigate("ascolto") },
+                    onVaiAContestoMedico = { nav.navigate("contestoMedico") },
+                    onVaiAProgressione = { nav.navigate("progressione") },
+                    onVaiAProduzioneScritta = { nav.navigate("produzioneScritta") }
                 )
             }
             // Piano di studio
