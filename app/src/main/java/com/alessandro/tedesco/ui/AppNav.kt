@@ -306,7 +306,8 @@ private fun ContenutoApp(
                     onInviaRisposta = { vm.inviaRisposta(it) },
                     risposte = vm.risposte.collectAsStateWithLifecycle().value,
                     correzioneInCorso = vm.correzioneInCorso.collectAsStateWithLifecycle().value,
-                    apiKey = vm.tutorApiKey.collectAsStateWithLifecycle("").value
+                    apiKey = vm.tutorApiKey.collectAsStateWithLifecycle("").value,
+                    lezioneCorrente = vm.lezioneCorrente.collectAsStateWithLifecycle().value
                 )
             }
             composable("grammatica") { GrammaticaScreen(vm) }

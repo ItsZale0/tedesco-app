@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
-/** Una voce della schermata Altro. */
 private data class ElementoAltro(
     val titolo: String,
     val descrizione: String,
@@ -31,7 +30,6 @@ private data class ElementoAltro(
     val usaTertiary: Boolean = false
 )
 
-/** Gruppo di voci. */
 private data class CategoriaAltro(
     val nome: String,
     val elementi: List<ElementoAltro>
@@ -71,70 +69,39 @@ fun AltroScreen(
                 ),
                 ElementoAltro(
                     titolo = "Test",
-                    descrizione = "Verifica delle tue competenze",
+                    descrizione = "Test B1 + test adattivi personalizzati",
                     icona = Icons.Filled.Quiz,
                     onClick = onVaiATestB1
                 ),
                 ElementoAltro(
-                    titolo = "Test adattivi",
-                    descrizione = "Domande generate sul tuo livello e sui tuoi errori",
-                    icona = Icons.Filled.Quiz,
-                    onClick = onVaiATest
-                ),
-                ElementoAltro(
-                    titolo = "Comprensione",
-                    descrizione = "Quiz di lettura e comprensione del testo",
+                    titolo = "Lettura e comprensione",
+                    descrizione = "Quiz di lettura e vocabolario",
                     icona = Icons.Filled.Quiz,
                     onClick = onVaiAQuizComprensione
                 ),
                 ElementoAltro(
-                    titolo = "Produzione",
-                    descrizione = "Quiz di produzione scritta",
-                    icona = Icons.Filled.Quiz,
-                    onClick = onVaiAQuizProduzione
+                    titolo = "Scrittura e grammatica",
+                    descrizione = "Esercizi guidati e quiz di completamento",
+                    icona = Icons.Filled.School,
+                    onClick = onVaiAProduzioneScritta
                 ),
                 ElementoAltro(
                     titolo = "Ascolto",
                     descrizione = "Esercizi di ascolto (Hörverstehen) con voce tedesca",
                     icona = Icons.Filled.Hearing,
                     onClick = onVaiAAscolto
-                ),
-                ElementoAltro(
-                    titolo = "Produzione scritta guidata",
-                    descrizione = "Esercizi di scrittura con esempi e suggerimenti",
-                    icona = Icons.Filled.School,
-                    onClick = onVaiAProduzioneScritta
                 )
             )
         ),
         CategoriaAltro(
-            nome = "Pratica",
+            nome = "Pratica con AI",
             elementi = listOf(
                 ElementoAltro(
                     titolo = "Tutor Tedesco",
-                    descrizione = "Chatbot che ti aiuta con grammatica ed esercizi",
+                    descrizione = "Chat, correzione, roleplay e conversazione vocale",
                     icona = Icons.AutoMirrored.Filled.Chat,
                     onClick = onVaiATutor,
                     usaTertiary = true
-                ),
-                ElementoAltro(
-                    titolo = "Correzione risposte",
-                    descrizione = "Invia le tue risposte in tedesco e ricevi la correzione",
-                    icona = Icons.AutoMirrored.Filled.Chat,
-                    onClick = onVaiAFeedback
-                ),
-                ElementoAltro(
-                    titolo = "Gioco di ruolo",
-                    descrizione = "Conversazioni simulate in tedesco",
-                    icona = Icons.AutoMirrored.Filled.Chat,
-                    onClick = onVaiARoleplay,
-                    usaTertiary = true
-                ),
-                ElementoAltro(
-                    titolo = "Conversazione vocale",
-                    descrizione = "Parla con l'AI e ricevi la correzione alla fine",
-                    icona = Icons.Filled.Mic,
-                    onClick = onVaiAVoiceChat
                 ),
                 ElementoAltro(
                     titolo = "Traduttore",

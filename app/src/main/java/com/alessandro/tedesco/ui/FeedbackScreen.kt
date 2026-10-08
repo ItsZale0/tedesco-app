@@ -6,10 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.FeedbackEntry
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
@@ -18,11 +20,8 @@ import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
+import com.alessandro.tedesco.data.GrammaticaB1
 
-/**
- * Schermata di feedback: l'utente invia le sue risposte in tedesco
- * e riceve la correzione dal tutor AI.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedbackScreen(
@@ -30,9 +29,16 @@ fun FeedbackScreen(
     onInviaRisposta: (String) -> Unit,
     risposte: List<FeedbackEntry>,
     correzioneInCorso: Boolean,
-    apiKey: String = ""
+    apiKey: String = "",
+    lezioneCorrente: Int = 1
 ) {
     var testoRisposta by remember { mutableStateOf("") }
+    var esercizioSelezionato by remember { mutableStateOf<String?>(null) }
+
+    // Esercizi di grammatica per la lezione corrente
+    val eserciziLezione = remember(lezioneCorrente) {
+        GrammaticaB1.eserciziPerLezione(lezioneCorrente)
+    }
 
     Scaffold(
         topBar = {
@@ -71,68 +77,156 @@ fun FeedbackScreen(
                 Spacer(Modifier.height(12.dp))
             }
 
-            // Istruzioni
+            // Sezione: Esercizi della lezione
+            if (eserciziLezione.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Esercizi lezione $lezioneCorrente",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Scegli un esercizio, scrivi la tua risposta in tedesco e invia per la correzione.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Lista esercizi
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(eserciziLezione) { esercizio ->
+                        val selezionato = esercizioSelezionato == esercizio.id
+                        Card(
+                            onClick = { esercizioSelezionato = esercizio.id },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selezionato)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Esercizio ${esercizio.id} (L${esercizio.lezione})",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = esercizio.domanda,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2
+                                    )
+                                }
+                                if (selezionato) {
+                                    Icon(
+                                        Icons.Filled.CheckCircle,
+                                        contentDescription = "Selezionato",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Testo dell'esercizio selezionato
+                esercizioSelezionato?.let { id ->
+                    val esercizio = eserciziLezione.find { it.id == id }
+                    esercizio?.let { e ->
+                        Spacer(Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Esercizio selezionato: ${e.domanda}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Campo di input libero
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Come funziona",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        text = "Oppure scrivi liberamente in tedesco",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "1. Scrivi la tua risposta in tedesco\n" +
-                               "2. Invia e ricevi la correzione\n" +
-                               "3. Gli errori vengono registrati per il ripasso",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    OutlinedTextField(
+                        value = testoRisposta,
+                        onValueChange = { testoRisposta = it },
+                        label = { Text("La tua risposta in tedesco") },
+                        placeholder = { Text("Es: Ich bin 20 Jahre alt") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
+                        enabled = apiKey.isNotBlank()
                     )
-                }
-            }
 
-            Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(8.dp))
 
-            // Campo di input
-            OutlinedTextField(
-                value = testoRisposta,
-                onValueChange = { testoRisposta = it },
-                label = { Text("La tua risposta in tedesco") },
-                placeholder = { Text("Es: Ich bin 20 Jahre alt") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 5,
-                enabled = apiKey.isNotBlank()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // Pulsante invia
-            Button(
-                onClick = {
-                    if (testoRisposta.isNotBlank()) {
-                        onInviaRisposta(testoRisposta)
-                        testoRisposta = ""
+                    Button(
+                        onClick = {
+                            if (testoRisposta.isNotBlank()) {
+                                onInviaRisposta(testoRisposta)
+                                testoRisposta = ""
+                            }
+                        },
+                        enabled = testoRisposta.isNotBlank() && !correzioneInCorso && apiKey.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (correzioneInCorso) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Correzione in corso...")
+                        } else {
+                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Invia e correggi")
+                        }
                     }
-                },
-                enabled = testoRisposta.isNotBlank() && !correzioneInCorso && apiKey.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (correzioneInCorso) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Correzione in corso...")
-                } else {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Invia e correggi")
                 }
             }
 

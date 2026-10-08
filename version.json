@@ -1,7 +1,7 @@
 {
-  "versionCode": 103,
-  "versionName": "1.31.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.31.0/Tedesco-v1.31.0.apk",
-  "changelog": "Sostituito triangolo di pericolo con badge 'Priorita' nelle sessioni. Messaggi incoraggianti per chi e agli inizi invece di 'Hai priorita oggi'.",
+  "versionCode": 104,
+  "versionName": "1.32.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.32.0/Tedesco-v1.32.0.apk",
+  "changelog": "AltroScreen pulito: rimosse ridondanze (Test/Test adattivi, Produzione/Comprensione/Produzione guidata). Pratica: 4 voci AI fuse in 1 'Tutor Tedesco'. FeedbackScreen: ora mostra esercizi della lezione corrente + input libero. Bug 'Pratica vuota' fixato.",
   "minVersionCode": 1
 }
