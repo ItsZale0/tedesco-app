@@ -1,7 +1,7 @@
 {
-  "versionCode": 39,
-  "versionName": "1.21.1",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.21.1/Tedesco-v1.21.1.apk",
-  "changelog": "FIX: sezioni Piano/Sessioni/Progresso ora funzionanti. Correzione risposte collegata al LLM reale. Pulsanti Sessioni navigano.",
+  "versionCode": 40,
+  "versionName": "1.22.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.22.0/Tedesco-v1.22.0.apk",
+  "changelog": "Sessioni con icone e colori distintivi. Pronuncia frasi d'esempio. Aggiungi parole al vocabolario dalla schermata Parole.",
   "minVersionCode": 1
 }

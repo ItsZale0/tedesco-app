@@ -202,13 +202,27 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         )
                         if (carta.example.isNotBlank()) {
                             Spacer(Modifier.height(14.dp))
-                            Text(
-                                text = carta.example,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = carta.example,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { ttsHelper.speak(carta.example) }) {
+                                    Icon(
+                                        Icons.Filled.VolumeUp,
+                                        contentDescription = "Ascolta frase",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
                 }

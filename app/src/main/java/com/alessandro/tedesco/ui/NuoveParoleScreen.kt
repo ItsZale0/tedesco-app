@@ -2,6 +2,8 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,7 +22,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -60,6 +66,8 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
 
     var ricerca by remember { mutableStateOf("") }
     var lezioneFiltrata by remember { mutableStateOf<Int?>(null) }
+    var mostraAggiungiParola by remember { mutableStateOf(false) }
+    val customWordsAbilitate by vm.enableCustomWords.collectAsStateWithLifecycle(false)
 
     // un solo motore TTS per tutta la schermata, non uno per riga
     val context = LocalContext.current
@@ -95,6 +103,11 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
             TopAppBar(
                 title = { Text("Parole", style = MaterialTheme.typography.titleLarge) },
                 actions = {
+                    if (customWordsAbilitate) {
+                        IconButton(onClick = { mostraAggiungiParola = true }) {
+                            Icon(Icons.Filled.Add, contentDescription = "Aggiungi parola")
+                        }
+                    }
                     IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
                     }
@@ -186,7 +199,11 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(filtrate, key = { it.id }) { w: WordEntity ->
-                                WordRow(w, onAscolta = { ttsHelper.speak(w.german) })
+                                WordRow(
+                                    w,
+                                    onAscolta = { ttsHelper.speak(w.german) },
+                                    onAscoltaFrase = { ttsHelper.speak(w.example) }
+                                )
                             }
                         }
                     }
@@ -194,10 +211,20 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
             }
         }
     }
+
+    if (mostraAggiungiParola) {
+        AggiungiParolaDialog(
+            onDismiss = { mostraAggiungiParola = false },
+            onConferma = { de, italiano, frase, articolo, pronuncia, lezione ->
+                vm.aggiungiParolaCustom(de, italiano, frase, articolo, pronuncia, lezione, "")
+                mostraAggiungiParola = false
+            }
+        )
+    }
 }
 
 @Composable
-private fun WordRow(w: WordEntity, onAscolta: () -> Unit) {
+private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -226,11 +253,27 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit) {
                 )
                 w.example.takeIf { it.isNotBlank() }?.let {
                     Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { onAscoltaFrase() },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = "Ascolta frase",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
 
@@ -258,6 +301,92 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun AggiungiParolaDialog(
+    onDismiss: () -> Unit,
+    onConferma: (String, String, String, String?, String?, Int) -> Unit
+) {
+    var tedesco by remember { mutableStateOf("") }
+    var italiano by remember { mutableStateOf("") }
+    var frase by remember { mutableStateOf("") }
+    var articolo by remember { mutableStateOf("") }
+    var pronuncia by remember { mutableStateOf("") }
+    var lezione by remember { mutableStateOf("") }
+
+    val valido = tedesco.isNotBlank() && italiano.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nuova parola") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = tedesco,
+                    onValueChange = { tedesco = it },
+                    label = { Text("Tedesco *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = italiano,
+                    onValueChange = { italiano = it },
+                    label = { Text("Italiano *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = articolo,
+                    onValueChange = { articolo = it },
+                    label = { Text("Articolo (der/die/das)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = pronuncia,
+                    onValueChange = { pronuncia = it },
+                    label = { Text("Pronuncia") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = frase,
+                    onValueChange = { frase = it },
+                    label = { Text("Frase d'esempio") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = lezione,
+                    onValueChange = { lezione = it.filter { c -> c.isDigit() } },
+                    label = { Text("Lezione (numero)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConferma(
+                        tedesco,
+                        italiano,
+                        frase,
+                        articolo.ifBlank { null },
+                        pronuncia.ifBlank { null },
+                        lezione.toIntOrNull() ?: 0
+                    )
+                },
+                enabled = valido
+            ) { Text("Aggiungi") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annulla") }
+        }
+    )
 }
 
 @Composable

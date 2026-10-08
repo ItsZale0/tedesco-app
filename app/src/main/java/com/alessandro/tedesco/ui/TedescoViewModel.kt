@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.CalcoloStatistiche
+import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.Statistiche
@@ -106,6 +107,24 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             reviews = reviews,
             progresso = profilo?.stato?.progresso ?: ProgressoUtente(),
             now = System.currentTimeMillis()
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Percorso adattivo calcolato dai progressi dell'utente. */
+    val percorsoAdattivo: StateFlow<CalcoloPercorsoAdattivo.PercorsoAdattivo?> = combine(
+        statistiche,
+        daRipassare,
+        profileManager.repositoryFlow
+    ) { stats, due, repo ->
+        if (stats == null) return@combine null
+        val profilo = repo.profiloAttivoId?.let { repo.profili[it] } ?: return@combine null
+        CalcoloPercorsoAdattivo.calcola(
+            statistiche = stats,
+            competenze = stats.punteggiCompetenze ?: return@combine null,
+            daRipassare = due,
+            livelloCorrente = profilo.stato.progresso.livelloCorrente,
+            obiettivoLivello = profilo.stato.progresso.obiettivoLivello,
+            ultimoTest = profilo.stato.progresso.ultimoTest
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 

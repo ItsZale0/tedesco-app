@@ -215,7 +215,11 @@ private fun ContenutoApp(
             modifier = Modifier.padding(inner)
         ) {
             composable(Dest.Home.route) {
-                HomeScreen(vm, onIniziaRipasso = { nav.navigate("ripasso") })
+                HomeScreen(
+                    vm,
+                    onIniziaRipasso = { nav.navigate("ripasso") },
+                    onNavigate = { route -> nav.navigate(route) }
+                )
             }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Guida.route) { GuidaScreen(vm) }
