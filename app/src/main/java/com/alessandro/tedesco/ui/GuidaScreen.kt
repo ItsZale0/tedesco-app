@@ -67,6 +67,7 @@ import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.LessonEntity
+import androidx.compose.ui.platform.LocalContext
 
 private const val URL_DOC_DEFAULT = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
@@ -231,6 +232,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
     val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
     var mostraSelettore by remember { mutableStateOf(false) }
+    val ttsHelper = rememberTtsHelper(context)
 
     Card(
         modifier = Modifier
@@ -333,6 +335,18 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                 Spacer(Modifier.height(12.dp))
             }
             if (contenuto.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = { ttsHelper.speak(contenuto) }) {
+                        Icon(
+                            Icons.Filled.VolumeUp,
+                            contentDescription = "Ascolta contenuto lezione",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
                 MarkdownText(
                     markdown = contenuto,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -499,6 +513,8 @@ private fun buildAnnotatedStringDaMarkdown(testo: String): androidx.compose.ui.t
 
 @Composable
 private fun SezioneCard(sez: SezioneEntity) {
+    val context = LocalContext.current
+    val ttsHelper = rememberTtsHelper(context)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -543,12 +559,26 @@ private fun SezioneCard(sez: SezioneEntity) {
             )
             Spacer(Modifier.height(14.dp))
 
-            Text(
-                text = sez.testo,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = sez.testo,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { ttsHelper.speak("${sez.titolo}. ${sez.testo}") }) {
+                    Icon(
+                        Icons.Filled.VolumeUp,
+                        contentDescription = "Ascolta sezione",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
     }
 }

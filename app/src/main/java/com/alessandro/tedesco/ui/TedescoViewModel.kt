@@ -19,6 +19,7 @@ import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.TestGrammatica
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.data.remote.TutorService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -407,6 +408,37 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         val chiave = tutorApiKey.value
         return runCatching {
             app.tutorServiceInstance.rispondi(chiave, cronologia, livello, lezione, _modelloTutor.value)
+        }
+    }
+
+    // ---- Roleplay ----
+
+    private val _roleplayScenario = MutableStateFlow<TutorService.RoleplayScenario?>(null)
+    val roleplayScenario: StateFlow<TutorService.RoleplayScenario?> = _roleplayScenario.asStateFlow()
+
+    private val _roleplayAttivo = MutableStateFlow(false)
+    val roleplayAttivo: StateFlow<Boolean> = _roleplayAttivo.asStateFlow()
+
+    fun avviaRoleplay(scenario: TutorService.RoleplayScenario) {
+        _roleplayScenario.value = scenario
+        _roleplayAttivo.value = true
+    }
+
+    fun terminaRoleplay() {
+        _roleplayAttivo.value = false
+        _roleplayScenario.value = null
+    }
+
+    suspend fun chiediAlRoleplay(
+        cronologia: List<Pair<String, String>>,
+        livello: String,
+        lezione: Int
+    ): Result<String> {
+        val chiave = tutorApiKey.value
+        val scenario = _roleplayScenario.value
+            ?: return Result.failure(IllegalStateException("Nessuno scenario selezionato"))
+        return runCatching {
+            app.tutorServiceInstance.roleplay(chiave, scenario, cronologia, livello, lezione, _modelloTutor.value)
         }
     }
 

@@ -36,7 +36,8 @@ fun AltroScreen(
     onVaiAQuizComprensione: () -> Unit = {},
     onVaiAQuizProduzione: () -> Unit = {},
     onVaiAPiano: () -> Unit = {},
-    onVaiASessioni: () -> Unit = {}
+    onVaiASessioni: () -> Unit = {},
+    onVaiARoleplay: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -261,6 +262,41 @@ fun AltroScreen(
                                 "Sessione guidata, test, roleplay, ripasso",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Roleplay
+                Card(
+                    onClick = onVaiARoleplay,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Chat,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                "Gioco di ruolo",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                "Conversazioni simulate in tedesco",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }

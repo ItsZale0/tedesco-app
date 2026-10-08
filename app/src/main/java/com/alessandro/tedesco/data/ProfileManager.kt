@@ -157,7 +157,8 @@ class ProfileManager(
                 enableGoogleSheets = false,
                 googleSheetId = null,
                 feedUrl = ProfiliPreset.FEED_URL,
-                guidaDocId = null
+                guidaDocId = null,
+                tutorApiKey = ProfiliPreset.DEFAULT_TUTOR_API_KEY
             ),
             stato = ProfiloStato(),
             creatoIl = System.currentTimeMillis(),

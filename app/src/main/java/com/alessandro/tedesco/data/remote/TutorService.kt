@@ -153,6 +153,82 @@ class TutorService {
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
     }
 
+    /**
+     * Scenario di gioco di ruolo preimpostato.
+     */
+    @Serializable
+    data class RoleplayScenario(
+        val id: String,
+        val titolo: String,
+        val descrizione: String,
+        val ruoloAI: String,
+        val ruoloUtente: String,
+        val situazione: String
+    )
+
+    /**
+     * Avvia un gioco di ruolo con uno scenario preimpostato.
+     *
+     * @param apiKey chiave OpenRouter
+     * @param scenario lo scenario di gioco di ruolo
+     * @param cronologia conversazione precedente
+     * @param livello livello CEFR dell'utente (A0-B2)
+     * @param lezione contesto della lezione corrente
+     * @param modello modello opzionale (null = automatico)
+     */
+    suspend fun roleplay(
+        apiKey: String,
+        scenario: RoleplayScenario,
+        cronologia: List<Pair<String, String>>,
+        livello: String,
+        lezione: Int,
+        modello: String? = null
+    ): String = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) {
+            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
+        }
+
+        val systemPrompt = """
+            Sei un ${scenario.ruoloAI} in un gioco di ruolo per uno studente italiano di tedesco di livello $livello.
+
+            SCENARIO: ${scenario.titolo}
+            SITUAZIONE: ${scenario.situazione}
+            TUO RUOLO: ${scenario.ruoloAI}
+            RUOLO DELLO STUDENTE: ${scenario.ruoloUtente}
+
+            Regole:
+            - Interagisci SEMPRE in tedesco (con traduzione in italiano tra parentesi se necessario).
+            - Resti nel personaggio per tutta la conversazione.
+            - Adatta la difficoltà al livello $livello: usa frasi semplici e vocabolario di base.
+            - Se lo studente sbaglia, correggi gentilmente e continua la conversazione.
+            - La lezione corrente è la numero $lezione.
+            - Mantieni la conversazione naturale e realistica.
+            - Se lo studente usa l'italiano, rispondi in tedesco incoraggiandolo a continuare.
+            - Usa markdown semplice: **grassetto** per i termini chiave.
+            - Non usare tabelle né HTML.
+        """.trimIndent()
+
+        val messaggi = buildList {
+            add(ChatMessage("system", systemPrompt))
+            cronologia.takeLast(8).forEach { (ruolo, testo) ->
+                add(ChatMessage(if (ruolo == "utente") "user" else "assistant", testo))
+            }
+        }
+
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+
+        var ultimoErrore: String? = null
+        for (m in modelli) {
+            try {
+                return@withContext chiamaModello(apiKey, m, messaggi)
+            } catch (e: IOException) {
+                ultimoErrore = e.message
+                if (e.message?.contains("non valida") == true) throw e
+            }
+        }
+        throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
+    }
+
     private fun chiamaModello(
         apiKey: String,
         modello: String,
@@ -196,6 +272,52 @@ class TutorService {
     }
 
     companion object {
+        /**
+         * Scenari di gioco di ruolo preimpostati.
+         */
+        val SCENARI = listOf(
+            RoleplayScenario(
+                id = "ristorante",
+                titolo = "Al ristorante",
+                descrizione = "Ordina un pasto in un ristorante tedesco",
+                ruoloAI = "Cameriere",
+                ruoloUtente = "Cliente",
+                situazione = "Sei in un ristorante a Berlino. Il cameriere ti accoglie e ti porta al tavolo."
+            ),
+            RoleplayScenario(
+                id = "stazione",
+                titolo = "Alla stazione",
+                descrizione = "Chiedi informazioni e biglietti alla stazione",
+                ruoloAI = "Impiegato della stazione",
+                ruoloUtente = "Viaggiatore",
+                situazione = "Sei alla stazione centrale di Monaco e devi comprare un biglietto per Vienna."
+            ),
+            RoleplayScenario(
+                id = "negozio",
+                titolo = "Negozio",
+                descrizione = "Fai shopping e chiedi informazioni sui prodotti",
+                ruoloAI = "Commesso",
+                ruoloUtente = "Cliente",
+                situazione = "Sei in un negozio di abititi a Amburgo e cerchi un vestito per una festa."
+            ),
+            RoleplayScenario(
+                id = "medico",
+                titolo = "Al medico",
+                descrizione = "Descrivi i tuoi sintomi al medico",
+                ruoloAI = "Medico",
+                ruoloUtente = "Paziente",
+                situazione = "Sei dal medico perché hai mal di testa e febbre da due giorni."
+            ),
+            RoleplayScenario(
+                id = "albergo",
+                titolo = "In albergo",
+                descrizione = "Fai il check-in e chiedi informazioni",
+                ruoloAI = "Receptionist",
+                ruoloUtente = "Ospite",
+                situazione = "Arrivi in un albergo a Zurigo e fai il check-in. Hai una prenotazione."
+            )
+        )
+
         /**
          * Modelli free, in ordine di preferenza.
          * Se uno è in rate limit si passa al successivo: così il tutor

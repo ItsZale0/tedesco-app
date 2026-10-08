@@ -99,6 +99,35 @@ class ProfiliPresetTest {
     }
 
     @Test
+    fun `i preset hanno la chiave OpenRouter di default`() {
+        val p = ProfiliPreset.crea()
+
+        p.forEach { (_, profilo) ->
+            assertTrue(
+                "Il profilo ${profilo.config.nomeVisualizzato} deve avere la chiave API di default",
+                profilo.config.tutorApiKey.isNotBlank()
+            )
+            assertEquals(
+                "La chiave API di default deve essere quella di ProfiliPreset",
+                ProfiliPreset.DEFAULT_TUTOR_API_KEY,
+                profilo.config.tutorApiKey
+            )
+        }
+    }
+
+    @Test
+    fun `la chiave OpenRouter di default non e' vuota`() {
+        assertTrue(
+            "DEFAULT_TUTOR_API_KEY non deve essere vuota",
+            ProfiliPreset.DEFAULT_TUTOR_API_KEY.isNotBlank()
+        )
+        assertTrue(
+            "DEFAULT_TUTOR_API_KEY deve iniziare con sk-or-v1-",
+            ProfiliPreset.DEFAULT_TUTOR_API_KEY.startsWith("sk-or-v1-")
+        )
+    }
+
+    @Test
     fun `il repository serializza e deserializza senza perdere profili`() {
         val originale = ProfiliPreset.riconcilia(ProfiliRepository())
         val stringa = json.encodeToString(ProfiliRepository.serializer(), originale)

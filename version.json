@@ -2,6 +2,6 @@
   "versionCode": 40,
   "versionName": "1.22.0",
   "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.22.0/Tedesco-v1.22.0.apk",
-  "changelog": "Sessioni con icone e colori distintivi. Pronuncia frasi d'esempio. Aggiungi parole al vocabolario dalla schermata Parole.",
+  "changelog": "TTS locale in tedesco, chiave OpenRouter default, roleplay vero, sessioni chiare, motore adattivo",
   "minVersionCode": 1
 }

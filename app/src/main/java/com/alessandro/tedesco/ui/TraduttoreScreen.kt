@@ -6,10 +6,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -21,6 +23,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import java.net.URLEncoder
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +33,10 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
     var traduzione by remember { mutableStateOf("") }
     var caricamento by remember { mutableStateOf(false) }
     var errore by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val ttsHelperTedesco = rememberTtsHelper(context, Locale.GERMAN)
+    val ttsHelperItaliano = rememberTtsHelper(context, Locale.ITALIAN)
 
     Scaffold(
         topBar = {
@@ -63,7 +70,18 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
                     onValueChange = { testo = it },
                     label = { Text("Testo in tedesco") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    trailingIcon = {
+                        if (testo.isNotBlank()) {
+                            IconButton(onClick = { ttsHelperTedesco.speak(testo) }) {
+                                Icon(
+                                    Icons.Filled.VolumeUp,
+                                    contentDescription = "Ascolta testo tedesco",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 )
 
                 Button(
@@ -109,11 +127,24 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                "Traduzione",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Traduzione",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                IconButton(onClick = { ttsHelperItaliano.speak(traduzione) }) {
+                                    Icon(
+                                        Icons.Filled.VolumeUp,
+                                        contentDescription = "Ascolta traduzione",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 traduzione,

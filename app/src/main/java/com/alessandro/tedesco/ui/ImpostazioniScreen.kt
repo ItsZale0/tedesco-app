@@ -299,7 +299,8 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     placeholder = { Text("sk-or-v1-...") }
                 )
                 TutorialGrigio(
-                    testo = "Come ottenere la chiave OpenRouter (gratis):\n\n" +
+                    testo = "L'app include una chiave OpenRouter di default per il tutor AI.\n\n" +
+                        "Puoi usarla così com'è, oppure inserire la tua chiave personale:\n\n" +
                         "1. Vai su openrouter.ai e crea un account (anche con Google)\n" +
                         "2. Apri il menu del tuo profilo → Keys\n" +
                         "3. Tocca \"Create Key\", dagli un nome\n" +

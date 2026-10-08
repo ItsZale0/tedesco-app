@@ -5,12 +5,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +47,9 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     val scope = rememberCoroutineScope()
     val erroriRef = remember { mutableListOf<String>() }
 
+    val context = LocalContext.current
+    val ttsHelper = rememberTtsHelper(context)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -73,7 +78,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                         label = { Text(esercizio.categoria.name.replace("_", " ")) }
                     )
 
-                    // Domanda con traduttore
+                    // Domanda con traduttore e TTS
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
@@ -89,6 +94,13 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                     style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
+                                IconButton(onClick = { ttsHelper.speak(esercizio.domanda) }) {
+                                    Icon(
+                                        Icons.Filled.VolumeUp,
+                                        contentDescription = "Ascolta domanda",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 IconButton(
                                     onClick = {
                                         testoTraduzione = esercizio.domanda
@@ -124,7 +136,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                         }
                     }
 
-                    // Opzioni con traduttore
+                    // Opzioni con traduttore e TTS
                     esercizio.opzioni.forEachIndexed { index, opzione ->
                         val selezionato = rispostaSelezionata == index
                         val colore = when {
@@ -157,6 +169,13 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                     text = opzione,
                                     modifier = Modifier.weight(1f)
                                 )
+                                IconButton(onClick = { ttsHelper.speak(opzione) }) {
+                                    Icon(
+                                        Icons.Filled.VolumeUp,
+                                        contentDescription = "Ascolta opzione",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 IconButton(
                                     onClick = {
                                         testoTraduzione = opzione

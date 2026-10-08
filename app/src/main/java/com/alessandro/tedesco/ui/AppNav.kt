@@ -53,6 +53,7 @@ import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.FeedbackScreen
 import com.alessandro.tedesco.ui.PianoScreen
+import com.alessandro.tedesco.ui.RoleplayScreen
 import com.alessandro.tedesco.ui.SessioniScreen
 
 private sealed class Dest(
@@ -236,7 +237,8 @@ private fun ContenutoApp(
                     onVaiAQuizComprensione = { nav.navigate("quiz-comprensione") },
                     onVaiAQuizProduzione = { nav.navigate("quiz-produzione") },
                     onVaiAPiano = { nav.navigate("piano") },
-                    onVaiASessioni = { nav.navigate("sessioni") }
+                    onVaiASessioni = { nav.navigate("sessioni") },
+                    onVaiARoleplay = { nav.navigate("roleplay") }
                 )
             }
             // Piano di studio
@@ -257,7 +259,7 @@ private fun ContenutoApp(
                         when (tipo) {
                             "SESSIONE", "RIPASSO" -> nav.navigate("ripasso")
                             "TEST" -> nav.navigate("testb1")
-                            "ROLEPLAY" -> nav.navigate("tutor")
+                            "ROLEPLAY" -> nav.navigate("roleplay")
                             else -> nav.navigate("ripasso")
                         }
                     }
@@ -278,6 +280,7 @@ private fun ContenutoApp(
             composable("stats") { StatsScreen(vm) }
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
+            composable("roleplay") { RoleplayScreen(vm) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("competenze") { CompetenzeScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }

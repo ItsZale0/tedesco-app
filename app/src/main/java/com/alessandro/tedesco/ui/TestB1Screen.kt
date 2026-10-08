@@ -16,6 +16,11 @@ import com.alessandro.tedesco.data.SezioneTestB1
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +32,10 @@ fun TestB1Screen(vm: TedescoViewModel) {
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableStateOf(0) }
     var completato by remember { mutableStateOf(false) }
-    
+
+    val context = LocalContext.current
+    val ttsHelper = rememberTtsHelper(context)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,11 +69,25 @@ fun TestB1Screen(vm: TedescoViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Text(
-                            text = domanda.domanda,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(Spaziature.md)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spaziature.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = domanda.domanda,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { ttsHelper.speak(domanda.domanda) }) {
+                                Icon(
+                                    Icons.Filled.VolumeUp,
+                                    contentDescription = "Ascolta domanda",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                     
                     // Opzioni
@@ -77,7 +99,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                             selezionato -> MaterialTheme.colorScheme.error
                             else -> MaterialTheme.colorScheme.surface
                         }
-                        
+
                         Card(
                             onClick = {
                                 if (risultato == null) {
@@ -89,10 +111,24 @@ fun TestB1Screen(vm: TedescoViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = colore)
                         ) {
-                            Text(
-                                text = opzione,
-                                modifier = Modifier.padding(Spaziature.md)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Spaziature.md),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = opzione,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { ttsHelper.speak(opzione) }) {
+                                    Icon(
+                                        Icons.Filled.VolumeUp,
+                                        contentDescription = "Ascolta opzione",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
                     

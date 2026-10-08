@@ -26,6 +26,13 @@ object ProfiliPreset {
     /** Canale ntfy su cui l'app pubblica le parole nuove di Emma. */
     const val NTFY_TOPIC_EMMA = "tedesco-emma-vocab-c7f3a91b"
 
+    /**
+     * Chiave OpenRouter di default per il tutor AI.
+     * Sostituire con una chiave reale prima di pubblicare l'app.
+     * L'utente può sovrascriverla in Profilo → Tutor AI.
+     */
+    const val DEFAULT_TUTOR_API_KEY = "sk-or-v1-REPLACE_WITH_REAL_KEY"
+
     /** Id di tutti i preset previsti, in ordine. */
     val ID_PRESET: List<String> = TipoProfilo.entries.map { it.id }
 
@@ -43,7 +50,8 @@ object ProfiliPreset {
                 enableGoogleSheets = tipo.enableGoogleSheets,
                 googleSheetId = sheetId,
                 feedUrl = feedUrl,
-                guidaDocId = guidaDocId
+                guidaDocId = guidaDocId,
+                tutorApiKey = DEFAULT_TUTOR_API_KEY
             ),
             stato = ProfiloStato(),
             creatoIl = now,

@@ -155,6 +155,43 @@ class ProfileManagerIntegrationTest {
 
         assertEquals(3, manager.profiliDisponibili().size)
     }
+
+    @Test
+    fun `il profilo attivo ha la chiave OpenRouter di default`() = runBlocking {
+        val manager = nuovoManager()
+        manager.inizializza()
+        manager.selezionaProfilo(TipoProfilo.ALESSANDRO.id)
+
+        val profilo = manager.profiloAttivo()
+        assertNotNull(profilo)
+        assertTrue(
+            "Il profilo attivo deve avere la chiave API di default",
+            profilo!!.config.tutorApiKey.isNotBlank()
+        )
+        assertEquals(
+            ProfiliPreset.DEFAULT_TUTOR_API_KEY,
+            profilo.config.tutorApiKey
+        )
+    }
+
+    @Test
+    fun `creaProfilo imposta la chiave OpenRouter di default`() = runBlocking {
+        val manager = nuovoManager()
+        manager.inizializza()
+        manager.creaProfilo("Test Custom")
+
+        // Trova il profilo creato nella lista dei profili disponibili
+        val profilo = manager.profiliDisponibili().find { it.config.nomeVisualizzato == "Test Custom" }
+        assertNotNull("Il profilo creato deve essere nella lista", profilo)
+        assertTrue(
+            "Il profilo personalizzato deve avere la chiave API di default",
+            profilo!!.config.tutorApiKey.isNotBlank()
+        )
+        assertEquals(
+            ProfiliPreset.DEFAULT_TUTOR_API_KEY,
+            profilo.config.tutorApiKey
+        )
+    }
 }
 
 private suspend fun <T> kotlinx.coroutines.flow.Flow<T>.firstValue(): T = first()
