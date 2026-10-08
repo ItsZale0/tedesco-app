@@ -259,7 +259,7 @@ object CalcoloPercorsoGiornaliero {
         val minutiCompletati = passi.filter { it.completato }.sumOf { it.stimaMinuti }
 
         val messaggio = when {
-            passi.any { it.urgente } -> "Hai priorità oggi. Concentrati sulle aree evidenziate."
+            passi.any { it.urgente } -> "Oggi conviene concentrarsi sulle aree con il badge Priorità."
             daRipassare >= 20 -> "Tante parole da ripassare. Inizia dal ripasso!"
             daRipassare >= 10 -> "Buon ritmo! Mantieni la costanza."
             statistiche.streakGiorni >= 7 -> "Streak di ${statistiche.streakGiorni} giorni! Sei inarrestabile."

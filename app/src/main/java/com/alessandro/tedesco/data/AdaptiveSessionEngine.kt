@@ -277,12 +277,14 @@ object AdaptiveSessionEngine {
         val tempoTotale = sessioni.sumOf { it.durataMinuti }
 
         val messaggio = when {
-            sessioni.any { it.urgente } -> "Hai priorità oggi. Concentrati sulle aree evidenziate."
+            // Chi è agli inizi non ha "priorità": ha solo tanto da imparare. Messaggio incoraggiante.
+            competenze.lessico < 30f && daRipassare < 10 ->
+                "Sei all'inizio del viaggio. Parti dalle nuove parole: ogni parola conta!"
+            sessioni.any { it.urgente } -> "Oggi conviene concentrarsi sulle aree con il badge Priorità."
             daRipassare >= 20 -> "Tante parole da ripassare. Inizia dal ripasso!"
             daRipassare >= 10 -> "Buon ritmo! Mantieni la costanza."
             progresso.streakGiorni >= 7 -> "Streak di ${progresso.streakGiorni} giorni! Sei inarrestabile."
             competenze.grammatica >= 60f && daRipassare == 0 -> "Prosegui così, stai facendo ottimi progressi."
-            competenze.lessico < 30f -> "Sei all'inizio del viaggio. Ogni parola conta!"
             else -> "Buona sessione di studio!"
         }
 

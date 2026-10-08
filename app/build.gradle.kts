@@ -13,8 +13,8 @@ android {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 102
-        versionName = "1.30.0"
+        versionCode = 103
+        versionName = "1.31.0"
     }
 
     buildTypes {

@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -169,12 +168,18 @@ fun SessioniScreen(
                                         )
                                         if (sessione.urgente) {
                                             Spacer(Modifier.width(8.dp))
-                                            Icon(
-                                                Icons.Filled.Warning,
-                                                contentDescription = "Urgente",
-                                                tint = MaterialTheme.colorScheme.error,
-                                                modifier = Modifier.size(16.dp)
-                                            )
+                                            Surface(
+                                                shape = MaterialTheme.shapes.small,
+                                                color = MaterialTheme.colorScheme.tertiaryContainer
+                                            ) {
+                                                Text(
+                                                    "Priorità",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                                )
+                                            }
                                         }
                                     }
                                     Text(
