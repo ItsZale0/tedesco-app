@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,39 +33,49 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.alessandro.tedesco.data.QuizData
-import com.alessandro.tedesco.data.local.DomandaTest
+import com.alessandro.tedesco.data.AscoltoData
+import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.ui.platform.LocalContext
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ComprensioneScreen(vm: TedescoViewModel) {
-    val domande = remember { QuizData.domandeComprensione }
+fun AscoltoScreen(vm: TedescoViewModel) {
+    val livelli = remember { AscoltoData.livelliDisponibili() }
+    var livelloSelezionato by remember { mutableStateOf(livelli.firstOrNull() ?: "A1") }
+    var esercizi by remember { mutableStateOf(AscoltoData.eserciziPerLivello(livelloSelezionato)) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableIntStateOf(0) }
     var completato by remember { mutableStateOf(false) }
+    var mostraTraduzione by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
+    // Carica esercizi quando cambia livello
+    LaunchedEffect(livelloSelezionato) {
+        esercizi = AscoltoData.eserciziPerLivello(livelloSelezionato)
+        indice = 0
+        rispostaSelezionata = null
+        risultato = null
+        punteggio = 0
+        completato = false
+        mostraTraduzione = false
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Comprensione", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Ascolto (Hörverstehen)", style = MaterialTheme.typography.titleLarge) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -81,48 +94,112 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
-                if (!completato) {
-                    val domanda = domande[indice]
+                // Selettore livello
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    livelli.forEach { livello ->
+                        val selezionato = livello == livelloSelezionato
+                        Card(
+                            onClick = { livelloSelezionato = livello },
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selezionato)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = livello,
+                                modifier = Modifier.padding(12.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (selezionato) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selezionato)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                if (!completato && esercizi.isNotEmpty()) {
+                    val esercizio = esercizi[indice]
 
                     // Progress
                     Text(
-                        text = "Domanda ${indice + 1}/${domande.size}",
+                        text = "Esercizio ${indice + 1}/${esercizi.size}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    // Card con la frase da ascoltare
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spaziature.md),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Ascolta la frase in tedesco:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { ttsHelper.speak(esercizio.fraseTedesca) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.VolumeUp,
+                                    contentDescription = "Ascolta"
+                                )
+                                Spacer(Modifier.padding(4.dp))
+                                Text("Ascolta")
+                            }
+                            if (mostraTraduzione) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = esercizio.traduzioneItaliana,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            } else {
+                                Spacer(Modifier.height(4.dp))
+                                Button(
+                                    onClick = { mostraTraduzione = true }
+                                ) {
+                                    Text("Mostra traduzione", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
 
                     // Domanda
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spaziature.md),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = domanda.domanda,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(onClick = { ttsHelper.speak(domanda.domanda) }) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.VolumeUp,
-                                    contentDescription = "Ascolta domanda",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
+                        Text(
+                            text = esercizio.domanda,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(Spaziature.md)
+                        )
                     }
 
                     // Opzioni
-                    domanda.opzioni.forEachIndexed { index, opzione ->
+                    esercizio.opzioni.forEachIndexed { index, opzione ->
                         val selezionato = rispostaSelezionata == index
                         val colore = when {
                             risultato == null -> MaterialTheme.colorScheme.surface
-                            index == domanda.rispostaCorretta -> MaterialTheme.colorScheme.primary
+                            index == esercizio.rispostaCorretta -> MaterialTheme.colorScheme.primary
                             selezionato -> MaterialTheme.colorScheme.error
                             else -> MaterialTheme.colorScheme.surface
                         }
@@ -131,7 +208,7 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                             onClick = {
                                 if (risultato == null) {
                                     rispostaSelezionata = index
-                                    risultato = index == domanda.rispostaCorretta
+                                    risultato = index == esercizio.rispostaCorretta
                                     if (risultato == true) {
                                         punteggio++
                                     }
@@ -140,24 +217,10 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = colore)
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(Spaziature.md),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = opzione,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                IconButton(onClick = { ttsHelper.speak(opzione) }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.VolumeUp,
-                                        contentDescription = "Ascolta opzione",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
+                            Text(
+                                text = opzione,
+                                modifier = Modifier.padding(Spaziature.md)
+                            )
                         }
                     }
 
@@ -177,29 +240,31 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                                     text = if (risultato == true) "✓ Corretto!" else "✗ Sbagliato",
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text(text = domanda.spiegazione)
+                                Spacer(Modifier.height(4.dp))
+                                Text(text = esercizio.spiegazione)
                             }
                         }
 
                         Button(
                             onClick = {
-                                if (indice < domande.size - 1) {
+                                if (indice < esercizi.size - 1) {
                                     indice++
                                     rispostaSelezionata = null
                                     risultato = null
+                                    mostraTraduzione = false
                                 } else {
                                     completato = true
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (indice < domande.size - 1) "Prossimo" else "Vedi risultato")
+                            Text(if (indice < esercizi.size - 1) "Prossimo" else "Vedi risultato")
                         }
                     }
-                } else {
+                } else if (completato) {
                     // Risultato finale
-                    val punteggioPct = if (domande.isNotEmpty()) (punteggio * 100 / domande.size) else 0
-                    val errori = domande.size - punteggio
+                    val punteggioPct = if (esercizi.isNotEmpty()) (punteggio * 100 / esercizi.size) else 0
+                    val errori = esercizi.size - punteggio
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -212,7 +277,7 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Punteggio: $punteggio/${domande.size}",
+                                text = "Punteggio: $punteggio/${esercizi.size}",
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             Text(
@@ -231,10 +296,11 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                     // Salva risultato
                     LaunchedEffect(completato) {
                         if (completato) {
-                            vm.salvaTestComprensione(
+                            vm.salvaTestAscolto(
                                 punteggio = punteggioPct.toFloat(),
                                 errori = errori,
-                                totale = domande.size
+                                totale = esercizi.size,
+                                livello = livelloSelezionato
                             )
                         }
                     }
@@ -248,12 +314,24 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                             risultato = null
                             punteggio = 0
                             completato = false
+                            mostraTraduzione = false
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Nuovo quiz")
                     }
+                } else {
+                    // Stato vuoto
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "Nessun esercizio disponibile per questo livello.",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
+
+                Spacer(Modifier.height(16.dp))
             }
         }
     }

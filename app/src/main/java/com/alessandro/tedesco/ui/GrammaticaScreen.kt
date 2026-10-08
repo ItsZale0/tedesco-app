@@ -5,7 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
@@ -28,6 +28,22 @@ import com.alessandro.tedesco.data.CategoriaGrammatica
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
+
+private fun etichettaCategoria(categoria: CategoriaGrammatica): String = when (categoria) {
+    CategoriaGrammatica.VERBI_TEMPI -> "Verbi e tempi"
+    CategoriaGrammatica.VERBI_MODALI -> "Verbi modali"
+    CategoriaGrammatica.PASSIV -> "Passivo"
+    CategoriaGrammatica.KONJUNKTIV_II -> "Konjunktiv II"
+    CategoriaGrammatica.RELATIVSATZ -> "Frasi relative"
+    CategoriaGrammatica.KONNEKTOREN -> "Congiunzioni"
+    CategoriaGrammatica.PRAEPOSITIONEN -> "Preposizioni"
+    CategoriaGrammatica.ADJEKTIVDEKLINATION -> "Declinazione aggettivi"
+    CategoriaGrammatica.ARTICOLI -> "Articoli"
+    CategoriaGrammatica.INFINITIV_ZU -> "Infinito con zu"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +91,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                     // Categoria
                     AssistChip(
                         onClick = { },
-                        label = { Text(esercizio.categoria.name.replace("_", " ")) }
+                        label = { Text(etichettaCategoria(esercizio.categoria)) }
                     )
 
                     // Domanda con traduttore e TTS
@@ -96,7 +112,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                 )
                                 IconButton(onClick = { ttsHelper.speak(esercizio.domanda) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta domanda",
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -171,7 +187,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                 )
                                 IconButton(onClick = { ttsHelper.speak(opzione) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta opzione",
                                         tint = MaterialTheme.colorScheme.primary
                                     )

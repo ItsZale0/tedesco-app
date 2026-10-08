@@ -24,6 +24,11 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VolumeOff
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 data class MessaggioTutor(
     val testo: String,

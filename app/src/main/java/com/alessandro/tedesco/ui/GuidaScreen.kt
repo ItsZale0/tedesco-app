@@ -45,7 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -68,6 +68,10 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.LessonEntity
 import androidx.compose.ui.platform.LocalContext
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 private const val URL_DOC_DEFAULT = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
@@ -151,12 +155,12 @@ fun GuidaScreen(vm: TedescoViewModel) {
                                 FilterChip(
                                     selected = !mostraLezione,
                                     onClick = { mostraLezione = false },
-                                    label = { Text("Documento") }
+                                    label = { Text("Guida completa") }
                                 )
                                 FilterChip(
                                     selected = mostraLezione,
                                     onClick = { mostraLezione = true },
-                                    label = { Text("Lezione del giorno") }
+                                    label = { Text("Lezione di oggi") }
                                 )
                             }
                             Spacer(Modifier.height(12.dp))
@@ -309,7 +313,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.VolumeUp,
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onTertiaryContainer
                         )
@@ -341,7 +345,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                 ) {
                     IconButton(onClick = { ttsHelper.speak(contenuto) }) {
                         Icon(
-                            Icons.Filled.VolumeUp,
+                            Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = "Ascolta contenuto lezione",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -573,7 +577,7 @@ private fun SezioneCard(sez: SezioneEntity) {
                 )
                 IconButton(onClick = { ttsHelper.speak("${sez.titolo}. ${sez.testo}") }) {
                     Icon(
-                        Icons.Filled.VolumeUp,
+                        Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = "Ascolta sezione",
                         tint = MaterialTheme.colorScheme.primary
                     )

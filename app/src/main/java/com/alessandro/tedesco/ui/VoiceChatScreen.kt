@@ -7,9 +7,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +20,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.launch
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 data class MessaggioVoiceChat(
     val testo: String,
@@ -29,7 +34,7 @@ data class MessaggioVoiceChat(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoiceChatScreen(vm: TedescoViewModel) {
+fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
@@ -76,7 +81,7 @@ fun VoiceChatScreen(vm: TedescoViewModel) {
             TopAppBar(
                 title = { Text("Conversazione vocale", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
-                    IconButton(onClick = { /* nav.popBackStack() */ }) {
+                    IconButton(onClick = onIndietro) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
@@ -266,7 +271,7 @@ fun MessaggioBubble(msg: MessaggioVoiceChat, ttsHelper: TtsHelper) {
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
-                            Icons.Filled.VolumeUp,
+                            Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = "Ascolta",
                             modifier = Modifier.size(16.dp)
                         )

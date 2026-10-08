@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +21,11 @@ import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 data class MessaggioRoleplay(
     val testo: String,
@@ -122,7 +127,7 @@ fun RoleplayScreen(vm: TedescoViewModel) {
                     }
                     Spacer(Modifier.width(8.dp))
                     Icon(
-                        Icons.Filled.Chat,
+                        Icons.AutoMirrored.Filled.Chat,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary

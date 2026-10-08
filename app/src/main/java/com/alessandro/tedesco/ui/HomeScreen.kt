@@ -158,6 +158,58 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(Spaziature.lg))
 
+                // Gamification: Streak e Badge
+                val streakGiorni = profilo?.stato?.streakGiorni ?: 0
+                val streakRecord = profilo?.stato?.streakRecord ?: 0
+                val badgeSbloccati = profilo?.stato?.badgeSbloccati ?: emptyList()
+                val puntiTotali = profilo?.stato?.puntiTotali ?: 0
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(Raggi.card),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Spaziature.md)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "🔥 Streak: $streakGiorni giorni",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "🏆 $puntiTotali punti",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        if (streakRecord > 0) {
+                            Text(
+                                text = "Record: $streakRecord giorni",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        if (badgeSbloccati.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Badge: ${badgeSbloccati.size} sbloccati",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(Spaziature.md))
+
                 // Card principale: parole da ripassare
                 Card(
                     modifier = Modifier.fillMaxWidth(),

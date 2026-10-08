@@ -47,6 +47,10 @@ import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -56,6 +56,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,7 +159,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                         FilterChip(
                             selected = lezioneFiltrata == l,
                             onClick = { lezioneFiltrata = if (lezioneFiltrata == l) null else l },
-                            label = { Text("L${l.toString().padStart(2, '0')}") }
+                            label = { Text("Lezione $l") }
                         )
                     }
                 }

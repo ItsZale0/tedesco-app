@@ -9,6 +9,7 @@ import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
+import com.alessandro.tedesco.data.local.StileDesign
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -237,6 +238,22 @@ class ProfileManager(
         .stateIn(scope, SharingStarted.Eagerly, "uber")
 
     /** Cambia la palette colore per il profilo attivo. */
+    /** Flusso dello stile design scelto per il profilo attivo. */
+    val stileDesignFlow: StateFlow<StileDesign> = repositoryFlow
+        .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.stileDesign }?.let { StileDesign.valueOf(it.uppercase()) } ?: StileDesign.PIXEL }
+        .stateIn(scope, SharingStarted.Eagerly, StileDesign.PIXEL)
+
+    /** Cambia lo stile design per il profilo attivo. */
+    suspend fun cambiaStileDesign(nuovoStile: StileDesign) {
+        val repo = _repository.value
+        val id = repo.profiloAttivoId ?: return
+        val profilo = repo.profili[id] ?: return
+        val nuovoProfilo = profilo.copy(config = profilo.config.copy(stileDesign = nuovoStile.name))
+        val nuovoRepo = repo.copy(profili = repo.profili + (id to nuovoProfilo))
+        _repository.value = nuovoRepo
+        saveToDataStore()
+    }
+
     suspend fun cambiaPalette(nuovaPalette: String) {
         val repo = _repository.value
         val id = repo.profiloAttivoId ?: return

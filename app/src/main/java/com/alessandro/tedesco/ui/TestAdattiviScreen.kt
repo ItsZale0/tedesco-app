@@ -16,7 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -206,7 +206,7 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
                                 )
                                 IconButton(onClick = { ttsHelper.speak(opzione) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta opzione",
                                         tint = MaterialTheme.colorScheme.primary
                                     )

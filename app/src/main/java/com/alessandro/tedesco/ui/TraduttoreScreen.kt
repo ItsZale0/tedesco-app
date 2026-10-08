@@ -6,7 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +24,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import java.net.URLEncoder
 import java.util.Locale
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +79,7 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
                         if (testo.isNotBlank()) {
                             IconButton(onClick = { ttsHelperTedesco.speak(testo) }) {
                                 Icon(
-                                    Icons.Filled.VolumeUp,
+                                    Icons.AutoMirrored.Filled.VolumeUp,
                                     contentDescription = "Ascolta testo tedesco",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -139,7 +143,7 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
                                 )
                                 IconButton(onClick = { ttsHelperItaliano.speak(traduzione) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta traduzione",
                                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                                     )

@@ -18,7 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,6 +50,10 @@ import androidx.compose.ui.platform.LocalContext
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,7 +172,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             Spacer(Modifier.size(12.dp))
                             IconButton(onClick = { ttsHelper.speak(carta.german) }) {
                                 Icon(
-                                    Icons.Filled.VolumeUp,
+                                    Icons.AutoMirrored.Filled.VolumeUp,
                                     contentDescription = "Ascolta pronuncia",
                                     modifier = Modifier.size(24.dp),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -216,7 +220,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 )
                                 IconButton(onClick = { ttsHelper.speak(carta.example) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta frase",
                                         modifier = Modifier.size(20.dp),
                                         tint = MaterialTheme.colorScheme.primary

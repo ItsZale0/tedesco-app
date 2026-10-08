@@ -8,7 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -22,12 +22,16 @@ import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.local.SessioneEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @Composable
 private fun iconaPerTipo(tipo: String): ImageVector = when (tipo.uppercase()) {
     "SESSIONE", "SESSIONE_GUIDATA" -> Icons.Filled.School
     "TEST", "TEST_LIVELLO" -> Icons.Filled.Quiz
-    "ROLEPLAY" -> Icons.Filled.Chat
+    "ROLEPLAY" -> Icons.AutoMirrored.Filled.Chat
     "RIPASSO" -> Icons.Filled.Refresh
     "GRAMMATICA" -> Icons.Filled.School
     "COMPRENSIONE" -> Icons.Filled.Quiz

@@ -2,6 +2,7 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,11 @@ import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.ui.theme.PaletteApp
+import com.alessandro.tedesco.data.local.StileDesign
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 private const val URL_VOCAB_DEFAULT =
     "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
@@ -158,6 +164,43 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     onClick = { esciSelezione = true },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Torna alla scelta del profilo") }
+
+
+                // --- Stile Design ---
+                Text("Stile Design", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Scegli lo stile grafico dell'app",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+
+                val stileDesign by vm.stileDesign.collectAsStateWithLifecycle(StileDesign.PIXEL)
+                val stileList = listOf(
+                    StileDesign.PIXEL to "Google Pixel",
+                    StileDesign.IOS to "iOS",
+                    StileDesign.MATERIAL to "Material You",
+                    StileDesign.UBER to "Uber (Dark)"
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        stileList.forEach { (stile, nome) ->
+                            val selezionato = stile == stileDesign
+                            FilterChip(
+                                selected = selezionato,
+                                onClick = { vm.cambiaStileDesign(stile) },
+                                label = { Text(nome) },
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
 
                 Spacer(Modifier.height(28.dp))
 
@@ -401,7 +444,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                             val selezionata = p == palette
                             FilterChip(
                                 selected = selezionata,
-                                onClick = { vm.cambiaPalette(p.id) },
+                                onClick = { vm.cambiaPalette(nome.lowercase()) },
                                 label = { Text(nome) },
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
                             )

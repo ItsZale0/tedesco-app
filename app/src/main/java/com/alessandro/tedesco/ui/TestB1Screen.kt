@@ -17,10 +17,20 @@ import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.platform.LocalContext
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
+
+private fun etichettaSezione(sezione: SezioneTestB1): String = when (sezione) {
+    SezioneTestB1.LESEN -> "Lettura"
+    SezioneTestB1.HOEREN -> "Ascolto"
+    SezioneTestB1.SCHREIBEN -> "Scrittura"
+    SezioneTestB1.SPRECHEN -> "Conversazione"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +49,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Test - ${sezione.name}", style = MaterialTheme.typography.titleLarge) }
+                title = { Text("Test - ${etichettaSezione(sezione)}", style = MaterialTheme.typography.titleLarge) }
             )
         }
     ) { padding ->
@@ -61,7 +71,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                     // Sezione
                     AssistChip(
                         onClick = { },
-                        label = { Text(sezione.name) }
+                        label = { Text(etichettaSezione(sezione)) }
                     )
                     
                     // Domanda
@@ -82,7 +92,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                             )
                             IconButton(onClick = { ttsHelper.speak(domanda.domanda) }) {
                                 Icon(
-                                    Icons.Filled.VolumeUp,
+                                    Icons.AutoMirrored.Filled.VolumeUp,
                                     contentDescription = "Ascolta domanda",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -123,7 +133,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                                 )
                                 IconButton(onClick = { ttsHelper.speak(opzione) }) {
                                     Icon(
-                                        Icons.Filled.VolumeUp,
+                                        Icons.AutoMirrored.Filled.VolumeUp,
                                         contentDescription = "Ascolta opzione",
                                         tint = MaterialTheme.colorScheme.primary
                                     )

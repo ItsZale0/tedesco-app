@@ -18,6 +18,10 @@ import com.alessandro.tedesco.data.local.PianoEntity
 import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import com.alessandro.tedesco.ui.theme.Spaziature
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 /**
  * Piano di studio verso il B2: tappe, certificazioni, risorse, progresso.

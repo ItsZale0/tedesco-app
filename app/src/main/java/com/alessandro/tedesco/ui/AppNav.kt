@@ -1,5 +1,10 @@
 package com.alessandro.tedesco.ui
 
+import com.alessandro.tedesco.ui.ProgressioneScreen
+import com.alessandro.tedesco.ui.ProduzioneScrittaScreen
+
+import com.alessandro.tedesco.ui.ContestoMedicoScreen
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -254,7 +259,8 @@ private fun ContenutoApp(
                     onVaiAPiano = { nav.navigate("piano") },
                     onVaiASessioni = { nav.navigate("sessioni") },
                     onVaiARoleplay = { nav.navigate("roleplay") },
-                    onVaiAVoiceChat = { nav.navigate("voicechat") }
+                    onVaiAVoiceChat = { nav.navigate("voicechat") },
+                    onVaiAAscolto = { nav.navigate("ascolto") }
                 )
             }
             // Piano di studio
@@ -307,11 +313,15 @@ private fun ContenutoApp(
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
             composable("roleplay") { RoleplayScreen(vm) }
-            composable("voicechat") { VoiceChatScreen(vm) }
+            composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("competenze") { CompetenzeScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }
             composable("quiz-produzione") { ProduzioneScreen(vm) }
+            composable("ascolto") { AscoltoScreen(vm) }
+            composable("contestoMedico") { ContestoMedicoScreen(vm, onIndietro = { nav.popBackStack() }) }
+            composable("progressione") { ProgressioneScreen(vm, onIndietro = { nav.popBackStack() }) }
+            composable("produzioneScritta") { ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }) }
         }
     }
 }

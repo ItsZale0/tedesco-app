@@ -112,6 +112,7 @@ data class ProgressoUtente(
     val testProduzione: List<TestProduzione> = emptyList(),
     val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList(),
     val testAdattivi: List<TestAdattivo> = emptyList(),
+    val testAscolto: List<TestAscolto> = emptyList(),
     val erroriGrammatica: List<String> = emptyList()
 )
 
@@ -145,6 +146,16 @@ data class TestProduzione(
 /** Risultato di un test adattivo (domande generate dinamicamente) */
 @Serializable
 data class TestAdattivo(
+    val data: Long,
+    val punteggio: Float,  // 0-100
+    val errori: Int,
+    val totale: Int,
+    val livello: String
+)
+
+/** Risultato di un test di ascolto (Hörverstehen) */
+@Serializable
+data class TestAscolto(
     val data: Long,
     val punteggio: Float,  // 0-100
     val errori: Int,
@@ -224,7 +235,8 @@ data class ProfiloConfig(
     val feedUrl: String = "",
     val guidaDocId: String? = null,
     val tutorApiKey: String = "",
-    val palette: String = "uber"
+    val palette: String = "uber",
+    val stileDesign: String = "pixel"
 )
 
 /** Stato persistente per profilo — dati completamente separati per utente */
@@ -241,7 +253,13 @@ data class ProfiloStato(
     val risposte: List<FeedbackEntry> = emptyList(),
     val piano: PianoEntity? = null,
     val progressoFeed: ProgressoFeedEntity? = null,
-    val sessioni: List<SessioneEntity> = emptyList()
+    val sessioni: List<SessioneEntity> = emptyList(),
+    val streakGiorni: Int = 0,
+    val streakRecord: Int = 0,
+    val ultimoGiornoStudio: String? = null,
+    val badgeSbloccati: List<String> = emptyList(),
+    val puntiTotali: Int = 0
+
 )
 
 /** Piano di studio verso il B2. */
@@ -324,3 +342,11 @@ data class ProfiliRepository(
     val profili: Map<String, ProfiloUtente> = emptyMap(),
     val profiloAttivoId: String? = null
 )
+
+// Stile design dell'app
+enum class StileDesign {
+    PIXEL,      // Google Pixel: colori vivaci, animazioni fluide
+    IOS,        // iOS: glassmorphism, ombre profonde
+    MATERIAL,   // Material You: tonalità dinamiche
+    UBER        // Uber: dark minimal, alto contrasto
+}

@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.ui
 
+import com.alessandro.tedesco.data.local.StileDesign
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,6 +43,8 @@ import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.data.local.SessioneEntity
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
 
     private val app = application as TedescoApp
     private val repo = app.wordRepositoryInstance
@@ -469,6 +473,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     }
 
     val palette: StateFlow<String> = profileManager.paletteFlow
+
+    val stileDesign: StateFlow<StileDesign> = profileManager.stileDesignFlow
+
+    fun cambiaStileDesign(stile: StileDesign) {
+        scope.launch {
+            profileManager.cambiaStileDesign(stile)
+        }
+    }
     val tutorApiKey: StateFlow<String> = profileManager.repositoryFlow
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
@@ -711,6 +723,26 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 progresso = profilo.stato.progresso.copy(
                     testAdattivi = profilo.stato.progresso.testAdattivi + nuovoTest,
                     livelloCorrente = nuovoLivello
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+        }
+    }
+
+    // ---- Test di ascolto ----
+    fun salvaTestAscolto(punteggio: Float, errori: Int, totale: Int, livello: String) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nuovoTest = com.alessandro.tedesco.data.local.TestAscolto(
+                data = System.currentTimeMillis(),
+                punteggio = punteggio,
+                errori = errori,
+                totale = totale,
+                livello = livello
+            )
+            val nuovoStato = profilo.stato.copy(
+                progresso = profilo.stato.progresso.copy(
+                    testAscolto = profilo.stato.progresso.testAscolto + nuovoTest
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
