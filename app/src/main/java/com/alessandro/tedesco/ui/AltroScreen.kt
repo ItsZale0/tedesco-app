@@ -55,7 +55,6 @@ fun AltroScreen(
     onVaiARoleplay: () -> Unit = {},
     onVaiAVoiceChat: () -> Unit = {},
     onVaiAContestoMedico: () -> Unit = {},
-    onVaiAProgressione: () -> Unit = {},
     onVaiAProduzioneScritta: () -> Unit = {},
     onVaiAAscolto: () -> Unit = {},
     onVaiASpeaking: () -> Unit = {}
@@ -130,12 +129,6 @@ fun AltroScreen(
                     icona = Icons.Filled.PlayArrow,
                     onClick = onVaiAPiano,
                     usaTertiary = true
-                ))
-                add(ElementoAltro(
-                    titolo = "Percorso di apprendimento",
-                    descrizione = "Vedi i tuoi obiettivi e progressi livello per livello",
-                    icona = Icons.Filled.BarChart,
-                    onClick = onVaiAProgressione
                 ))
                 add(ElementoAltro(
                     titolo = "Sessioni",

@@ -1,6 +1,5 @@
 package com.alessandro.tedesco.ui
 
-import com.alessandro.tedesco.ui.ProgressioneScreen
 import com.alessandro.tedesco.ui.ProduzioneScrittaScreen
 
 import com.alessandro.tedesco.ui.ContestoMedicoScreen
@@ -39,11 +38,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
@@ -188,7 +192,17 @@ private fun ContenutoApp(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             if (mostraBarra) {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .height(72.dp),
+                    containerColor = if (isSystemInDarkTheme())
+                        Color(0x601E1E1E)
+                    else
+                        Color(0x60FFFFFF),
+                ) {
                     listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Impostazioni, Dest.Altro)
                         .forEach { d ->
                             val label = d.label
@@ -264,7 +278,6 @@ private fun ContenutoApp(
                     onVaiAAscolto = { nav.navigate("ascolto") },
                     onVaiASpeaking = { nav.navigate("speaking") },
                     onVaiAContestoMedico = { nav.navigate("contestoMedico") },
-                    onVaiAProgressione = { nav.navigate("progressione") },
                     onVaiAProduzioneScritta = { nav.navigate("produzioneScritta") },
                     profilo = profilo
                 )
@@ -331,7 +344,6 @@ private fun ContenutoApp(
             composable("quiz-produzione") { ProduzioneScreen(vm) }
             composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo) }
             composable("contestoMedico") { ContestoMedicoScreen(vm, onIndietro = { nav.popBackStack() }) }
-            composable("progressione") { ProgressioneScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("produzioneScritta") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }, profilo = profilo) }
         }
     }

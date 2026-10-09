@@ -164,12 +164,9 @@ fun HomeScreen(
                 val badgeSbloccati = profilo?.stato?.badgeSbloccati ?: emptyList()
                 val puntiTotali = profilo?.stato?.puntiTotali ?: 0
 
-                Card(
+                GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Raggi.card),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
                 ) {
                     Column(
                         modifier = Modifier.padding(Spaziature.md)
@@ -211,12 +208,9 @@ fun HomeScreen(
                 Spacer(Modifier.height(Spaziature.md))
 
                 // Card principale: parole da ripassare
-                Card(
+                GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Raggi.card),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                 ) {
                     Column(
                         modifier = Modifier
@@ -265,13 +259,10 @@ fun HomeScreen(
                 // Percorso giornaliero: passi sequenziali e interattivi
                 val percorsoGiorno by vm.percorsoGiornaliero.collectAsStateWithLifecycle(null)
                 percorsoGiorno?.let { pg ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                        )
-                    ) {
+                    GlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
+                ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -374,12 +365,9 @@ fun HomeScreen(
                 Spacer(Modifier.height(Spaziature.lg))
 
                 // Sezione 'Come procede'
-                Card(
+                GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Raggi.card),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                 ) {
                     Column(
                         modifier = Modifier
