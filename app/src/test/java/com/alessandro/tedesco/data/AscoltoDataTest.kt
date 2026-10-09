@@ -132,8 +132,8 @@ class AscoltoDataTest {
     fun `livelli sono A1 A2 o B1`() {
         AscoltoData.livelliDisponibili().forEach { livello ->
             assertTrue(
-                "Livello $livello non è valido (attesi: A1, A2, B1)",
-                livello in listOf("A1", "A2", "B1")
+                "Livello $livello non è valido (attesi: A0-A2, B1)",
+                livello in listOf("A0", "A1", "A2", "B1")
             )
         }
     }
