@@ -641,7 +641,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val chiave = tutorApiKey.value
             if (chiave.isBlank()) {
-                _messaggio.value = "Correzione in modalità gratuita (nessuna chiave API). Inseriscine una in Profilo → Tutor AI per risposte migliori."
+                _messaggio.value = "Inserisci una chiave API OpenRouter gratuita in Profilo → Tutor AI."
             }
             _correzioneInCorso.value = true
             try {

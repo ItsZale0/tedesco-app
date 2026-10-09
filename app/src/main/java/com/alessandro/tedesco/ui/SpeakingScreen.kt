@@ -194,7 +194,7 @@ fun SpeakingScreen(
                     if (apiKey.isBlank()) {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Modalità gratuita (nessuna chiave API). Inseriscine una in Profilo → Tutor AI per risposte migliori.",
+                            "Inserisci una chiave API OpenRouter gratuita in Profilo → Tutor AI per usare il tutor.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -251,7 +251,7 @@ fun SpeakingScreen(
                         if (ascoltoAttivo) {
                             FilledTonalButton(
                                 onClick = { fermaAscolto() },
-                                modifier = Modifier.size(AltezzaBottonePrincipale())
+                                modifier = Modifier.size(72.dp)
                             ) {
                                 Icon(
                                     Icons.Filled.MicOff,
@@ -262,7 +262,7 @@ fun SpeakingScreen(
                         } else {
                             FilledTonalButton(
                                 onClick = { avviaAscolto() },
-                                modifier = Modifier.size(AltezzaBottonePrincipale())
+                                modifier = Modifier.size(72.dp)
                             ) {
                                 Icon(
                                     Icons.Filled.Mic,

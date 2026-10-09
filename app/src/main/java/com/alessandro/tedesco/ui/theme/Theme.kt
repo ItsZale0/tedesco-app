@@ -373,17 +373,17 @@ fun TedescoTheme(
 object Spaziature {
     val xs = 4.dp
     val sm = 8.dp
-    val md = 12.dp
-    val lg = 16.dp
+    val md = 20.dp
+    val lg = 24.dp
     val xl = 24.dp
     val xxl = 32.dp
 }
 
 // Raggi default (Uber) — retrocompatibilità
 object Raggi {
-    val card = 12.dp
-    val chip = 8.dp
-    val bottone = 12.dp
+    val card = 20.dp
+    val chip = 16.dp
+    val bottone = 20.dp
 }
 
 

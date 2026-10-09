@@ -1,1 +1,7 @@
-{"versionCode": 107, "versionName": "1.34.1", "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.1/Tedesco-v1.34.1.apk", "changelog": "Solo modelli free su OpenRouter. Microfono pi\u00f9 grande. Bordi arrotondati pi\u00f9 ampi su tutte le interfacce.", "minVersionCode": 1}
+{
+  "versionCode": 107,
+  "versionName": "1.34.1",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.1/Tedesco-v1.34.1.apk",
+  "changelog": "Solo modelli free su OpenRouter. Microfono più grande. Bordi arrotondati più ampi su tutte le interfacce.",
+  "minVersionCode": 1
+}

@@ -159,8 +159,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                     )
                 ) {
                     Text(
-                        "Il tutor è in modalità gratuita (nessuna chiave API inserita). " +
-                            "Le risposte possono essere più lente o limitate. Inserisci una chiave OpenRouter in Profilo → Tutor AI per risposte migliori.",
+                        "Inserisci una chiave API OpenRouter gratuita in Profilo → Tutor AI per usare il tutor.",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
