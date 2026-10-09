@@ -1,1 +1,7 @@
-{"versionCode": 106, "versionName": "1.34.0", "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.0/Tedesco-v1.34.0.apk", "changelog": "Speaking con AI: parla in tedesco con il microfono, l'AI trascrive e corregge. Funziona gratis senza chiave API.", "minVersionCode": 1}
+{
+  "versionCode": 106,
+  "versionName": "1.34.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.0/Tedesco-v1.34.0.apk",
+  "changelog": "Speaking con AI: parla in tedesco con il microfono, l'AI trascrive e corregge. Funziona gratis senza chiave API.",
+  "minVersionCode": 1
+}

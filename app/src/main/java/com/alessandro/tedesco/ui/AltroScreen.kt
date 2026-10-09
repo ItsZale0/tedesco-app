@@ -57,7 +57,8 @@ fun AltroScreen(
     onVaiAContestoMedico: () -> Unit = {},
     onVaiAProgressione: () -> Unit = {},
     onVaiAProduzioneScritta: () -> Unit = {},
-    onVaiAAscolto: () -> Unit = {}
+    onVaiAAscolto: () -> Unit = {},
+    onVaiASpeaking: () -> Unit = {}
 ) {
     val categorie = listOf(
         CategoriaAltro(
@@ -103,6 +104,13 @@ fun AltroScreen(
                     descrizione = "Chat, correzione, roleplay e conversazione vocale",
                     icona = Icons.AutoMirrored.Filled.Chat,
                     onClick = onVaiATutor,
+                    usaTertiary = true
+                ),
+                ElementoAltro(
+                    titolo = "Speaking con AI",
+                    descrizione = "Parla in tedesco con il microfono, l'AI ti corregge",
+                    icona = Icons.Filled.Mic,
+                    onClick = onVaiASpeaking,
                     usaTertiary = true
                 ),
                 ElementoAltro(

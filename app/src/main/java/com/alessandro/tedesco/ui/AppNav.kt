@@ -262,6 +262,7 @@ private fun ContenutoApp(
                     onVaiARoleplay = { nav.navigate("roleplay") },
                     onVaiAVoiceChat = { nav.navigate("voicechat") },
                     onVaiAAscolto = { nav.navigate("ascolto") },
+                    onVaiASpeaking = { nav.navigate("speaking") },
                     onVaiAContestoMedico = { nav.navigate("contestoMedico") },
                     onVaiAProgressione = { nav.navigate("progressione") },
                     onVaiAProduzioneScritta = { nav.navigate("produzioneScritta") },
@@ -318,6 +319,10 @@ private fun ContenutoApp(
             composable("stats") { StatsScreen(vm) }
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
+            composable("speaking") {
+                val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+                SpeakingScreen(vm, onIndietro = { nav.popBackStack() }, profilo = profilo)
+            }
             composable("roleplay") { RoleplayScreen(vm) }
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
