@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +46,14 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.remote.TipoEsercizio
+import com.alessandro.tedesco.data.local.toEsercizioAscolto
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,19 +67,23 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
     var punteggio by remember { mutableIntStateOf(0) }
     var completato by remember { mutableStateOf(false) }
     var mostraTraduzione by remember { mutableStateOf(false) }
+    val eserciziGen by vm.eserciziGenAscolto.collectAsStateWithLifecycle()
+    var generaInCorso by remember { mutableStateOf(false) }
+    var erroreGen by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    // Carica esercizi quando cambia livello
-    LaunchedEffect(livelloSelezionato) {
-        esercizi = AscoltoData.eserciziPerLivello(livelloSelezionato, profilo)
-        indice = 0
-        rispostaSelezionata = null
-        risultato = null
-        punteggio = 0
-        completato = false
-        mostraTraduzione = false
+    // Carica esercizi generati al primo entrata
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+
+    // Ricostruisce la lista quando cambia livello o arrivano nuovi generati
+    LaunchedEffect(livelloSelezionato, eserciziGen) {
+        esercizi = AscoltoData.eserciziPerLivello(livelloSelezionato, profilo) +
+            eserciziGen.filter { it.livello == livelloSelezionato }
+                .map { it.toEsercizioAscolto() }
+        if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
     }
 
     Scaffold(
@@ -310,6 +323,51 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
 
                     Button(
                         onClick = {
+                            scope.launch {
+                                generaInCorso = true
+                                erroreGen = null
+                                runCatching {
+                                    vm.generaEsercizi(TipoEsercizio.ASCOLTO, quanti = 5)
+                                }.onSuccess {
+                                    generaInCorso = false
+                                    indice = 0
+                                    rispostaSelezionata = null
+                                    risultato = null
+                                    punteggio = 0
+                                    completato = false
+                                    mostraTraduzione = false
+                                }.onFailure { e ->
+                                    generaInCorso = false
+                                    erroreGen = e.message ?: "Errore generazione"
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !generaInCorso
+                    ) {
+                        if (generaInCorso) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(20.dp).width(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Generazione...")
+                        } else {
+                            Text("Genera altri 5")
+                        }
+                    }
+                    if (erroreGen != null) {
+                        Text(
+                            text = erroreGen!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
                             indice = 0
                             rispostaSelezionata = null
                             risultato = null
@@ -335,5 +393,15 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
+
+    // Dialogo errore chiave API per generazione esercizi infiniti
+    if (erroreGen?.contains("Chiave API") == true) {
+        AlertDialog(
+            onDismissRequest = { erroreGen = null },
+            title = { Text("Chiave API necessaria") },
+            text = { Text("Per generare esercizi infiniti inserisci una chiave OpenRouter gratuita in Profilo → Tutor AI.") },
+            confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
+        )
     }
 }

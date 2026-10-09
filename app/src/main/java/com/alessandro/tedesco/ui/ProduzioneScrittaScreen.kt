@@ -16,6 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.Spaziature
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.remote.TipoEsercizio
+import com.alessandro.tedesco.data.local.toDomandaTest
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 
 data class EsercizioScrittura(
     val id: String,
@@ -79,9 +87,28 @@ fun ProduzioneScrittaScreen(
     onIndietro: () -> Unit,
     profilo: ProfiloUtente? = null
 ) {
+    // Esercizi generati dall'AI (persistiti nel profilo)
+    val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
     var esercizioSelezionato by remember { mutableStateOf<EsercizioScrittura?>(null) }
     var testoUtente by remember { mutableStateOf("") }
     var mostraCorrezione by remember { mutableStateOf(false) }
+    var generaInCorso by remember { mutableStateOf(false) }
+    var erroreGen by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    // Lista di base + esercizi generati convertiti in EsercizioScrittura
+    val listaBase = getEserciziScrittura(profilo)
+    val eserciziGeneratiConvenieti = eserciziGen.map { gen ->
+        EsercizioScrittura(
+            id = gen.id,
+            titolo = "Generato dall'AI",
+            istruzioni = gen.domanda,
+            esempio = gen.spiegazione,
+            suggerimenti = gen.opzioni
+        )
+    }
+    // Nota: la generazione avviene on-demand; carichiamo al primo entrata
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
 
     Scaffold(
         topBar = {
@@ -110,9 +137,45 @@ fun ProduzioneScrittaScreen(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(vertical = Spaziature.md)
                     )
+                    // Genera nuovo esercizio infinito
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                generaInCorso = true
+                                erroreGen = null
+                                runCatching {
+                                    vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 1)
+                                }.onSuccess { generaInCorso = false }
+                                  .onFailure { e ->
+                                      generaInCorso = false
+                                      erroreGen = e.message ?: "Errore generazione"
+                                  }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !generaInCorso
+                    ) {
+                        if (generaInCorso) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(20.dp).width(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(if (generaInCorso) "Generazione..." else "Genera nuovo esercizio")
+                    }
+                    if (erroreGen != null) {
+                        Text(
+                            text = erroreGen!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
 
-                items(getEserciziScrittura(profilo)) { esercizio ->
+                items(listaBase + eserciziGeneratiConvenieti) { esercizio ->
                     Card(
                         onClick = { esercizioSelezionato = esercizio },
                         modifier = Modifier.fillMaxWidth()
@@ -291,5 +354,15 @@ fun ProduzioneScrittaScreen(
                 }
             }
         }
+    }  // chiude Scaffold
+
+    // Dialogo errore chiave API per generazione esercizi infiniti
+    if (erroreGen?.contains("Chiave API") == true) {
+        AlertDialog(
+            onDismissRequest = { erroreGen = null },
+            title = { Text("Chiave API necessaria") },
+            text = { Text("Per generare esercizi infiniti inserisci una chiave OpenRouter gratuita in Profilo → Tutor AI.") },
+            confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
+        )
     }
 }

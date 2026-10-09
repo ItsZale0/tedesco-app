@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import com.alessandro.tedesco.data.ProfileManager
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
+import com.alessandro.tedesco.data.remote.GeneratoreEsercizi
 import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.data.remote.VocabPublishService
 import com.alessandro.tedesco.di.AppModule
@@ -25,6 +26,7 @@ class TedescoApp : Application(), Configuration.Provider {
     private val feedService: FeedService = AppModule.provideFeedService(okHttp)
     private val tutorService: TutorService = AppModule.provideTutorService()
     private val vocabPublishService: VocabPublishService = AppModule.provideVocabPublishService()
+    private val generatoreEsercizi: GeneratoreEsercizi by lazy { AppModule.provideGeneratoreEsercizi() }
 
     // Gestione profili utente
     private val profileManager: ProfileManager by lazy {
@@ -39,6 +41,7 @@ class TedescoApp : Application(), Configuration.Provider {
     val profileManagerInstance: ProfileManager get() = profileManager
     val tutorServiceInstance: TutorService get() = tutorService
     val vocabPublishServiceInstance: VocabPublishService get() = vocabPublishService
+    val generatoreEserciziInstance: GeneratoreEsercizi get() = generatoreEsercizi
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().build()

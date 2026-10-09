@@ -25,6 +25,9 @@ import com.alessandro.tedesco.data.local.TestGrammatica
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.remote.TutorService
+import com.alessandro.tedesco.data.remote.EsercizioGenerato
+import com.alessandro.tedesco.data.remote.TipoEsercizio
+import com.alessandro.tedesco.data.local.EsercizioGenEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -540,6 +543,90 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         return runCatching {
             app.tutorServiceInstance.roleplay(chiave, scenario, cronologia, livello, lezione, _modelloTutor.value)
         }
+    }
+
+    // ---- Esercizi generati dall'AI (infiniti) ----
+
+    private val _eserciziGenComprensione = MutableStateFlow<List<EsercizioGenEntity>>(emptyList())
+    val eserciziGenComprensione: StateFlow<List<EsercizioGenEntity>> = _eserciziGenComprensione.asStateFlow()
+    private val _eserciziGenProduzione = MutableStateFlow<List<EsercizioGenEntity>>(emptyList())
+    val eserciziGenProduzione: StateFlow<List<EsercizioGenEntity>> = _eserciziGenProduzione.asStateFlow()
+    private val _eserciziGenAscolto = MutableStateFlow<List<EsercizioGenEntity>>(emptyList())
+    val eserciziGenAscolto: StateFlow<List<EsercizioGenEntity>> = _eserciziGenAscolto.asStateFlow()
+    private val _eserciziGenGrammatica = MutableStateFlow<List<EsercizioGenEntity>>(emptyList())
+    val eserciziGenGrammatica: StateFlow<List<EsercizioGenEntity>> = _eserciziGenGrammatica.asStateFlow()
+
+    private fun statoGenerati(tipo: TipoEsercizio, stato: ProfiloStato): List<EsercizioGenEntity> =
+        when (tipo) {
+            TipoEsercizio.COMPRENSIONE -> stato.eserciziGeneratiComprensione
+            TipoEsercizio.PRODUZIONE -> stato.eserciziGeneratiProduzione
+            TipoEsercizio.ASCOLTO -> stato.eserciziGeneratiAscolto
+            TipoEsercizio.GRAMMATICA -> stato.eserciziGeneratiGrammatica
+        }
+
+    private fun setGenFlow(tipo: TipoEsercizio, lista: List<EsercizioGenEntity>) {
+        when (tipo) {
+            TipoEsercizio.COMPRENSIONE -> _eserciziGenComprensione.value = lista
+            TipoEsercizio.PRODUZIONE -> _eserciziGenProduzione.value = lista
+            TipoEsercizio.ASCOLTO -> _eserciziGenAscolto.value = lista
+            TipoEsercizio.GRAMMATICA -> _eserciziGenGrammatica.value = lista
+        }
+    }
+
+    private fun copiaStatoConNuovi(tipo: TipoEsercizio, stato: ProfiloStato, nuovi: List<EsercizioGenEntity>): ProfiloStato =
+        when (tipo) {
+            TipoEsercizio.COMPRENSIONE -> stato.copy(eserciziGeneratiComprensione = stato.eserciziGeneratiComprensione + nuovi)
+            TipoEsercizio.PRODUZIONE -> stato.copy(eserciziGeneratiProduzione = stato.eserciziGeneratiProduzione + nuovi)
+            TipoEsercizio.ASCOLTO -> stato.copy(eserciziGeneratiAscolto = stato.eserciziGeneratiAscolto + nuovi)
+            TipoEsercizio.GRAMMATICA -> stato.copy(eserciziGeneratiGrammatica = stato.eserciziGeneratiGrammatica + nuovi)
+        }
+
+    /** Carica gli esercizi generati salvati nel profilo attivo (onEnter). */
+    fun caricaEserciziGenerati() {
+        viewModelScope.launch {
+            val p = profileManager.profiloAttivo() ?: return@launch
+            setGenFlow(TipoEsercizio.COMPRENSIONE, p.stato.eserciziGeneratiComprensione)
+            setGenFlow(TipoEsercizio.PRODUZIONE, p.stato.eserciziGeneratiProduzione)
+            setGenFlow(TipoEsercizio.ASCOLTO, p.stato.eserciziGeneratiAscolto)
+            setGenFlow(TipoEsercizio.GRAMMATICA, p.stato.eserciziGeneratiGrammatica)
+        }
+    }
+
+    /**
+     * Genera nuovi esercizi via AI (OpenRouter free) e li salva nel profilo attivo.
+     * Ritorna la lista di esercizi generati (validi).
+     */
+    suspend fun generaEsercizi(
+        tipo: TipoEsercizio,
+        quanti: Int = 5,
+        modello: String? = null
+    ): List<EsercizioGenerato> {
+        val chiave = tutorApiKey.value
+        val livello = profiloAttivo.value?.stato?.progresso?.livelloCorrente?.label ?: "A0"
+        val medico = profiloAttivo.value?.config?.mostraContestoMedico == true
+        // evita duplicati: passa le domande già generate
+        val esistenti = statoGenerati(tipo, profileManager.profiloAttivo()?.stato ?: ProfiloStato())
+        val evita = esistenti.mapNotNull { it.domanda }
+        val risultato = app.generatoreEserciziInstance.genera(
+            apiKey = chiave, tipo = tipo, livello = livello,
+            quanti = quanti, contestoMedico = medico, evita = evita, modello = modello
+        )
+        // converte in entità e persisti
+        val nuovi = risultato.map { e ->
+            EsercizioGenEntity(
+                id = e.id, tipo = tipo.jsonTipo, domanda = e.domanda,
+                opzioni = e.opzioni, rispostaCorretta = e.rispostaCorretta,
+                spiegazione = e.spiegazione, livello = e.livello,
+                fraseTedesca = e.fraseTedesca, traduzioneItaliana = e.traduzioneItaliana
+            )
+        }
+        val profilo = profileManager.profiloAttivo()
+        if (profilo != null) {
+            val nuovoStato = copiaStatoConNuovi(tipo, profilo.stato, nuovi)
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+            setGenFlow(tipo, statoGenerati(tipo, nuovoStato))
+        }
+        return risultato
     }
 
     // ---- Test di grammatica ----

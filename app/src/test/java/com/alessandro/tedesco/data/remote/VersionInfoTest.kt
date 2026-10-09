@@ -84,4 +84,24 @@ class VersionInfoTest {
 
         assertFalse(VerificaApk.isApkValido(headerValido, sizePiccola))
     }
+
+    @Test
+    fun `version json minimale senza changelog ne minVersionCode`() {
+        // Regressione: il version.json pubblicato conteneva solo 3 campi,
+        // la deserializzazione falliva e l'auto-updater non vedeva mai l'update.
+        val jsonMinimale = """
+            {
+                "versionCode": 109,
+                "versionName": "1.35.1",
+                "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.35.1/Tedesco-v1.35.1.apk"
+            }
+        """.trimIndent()
+
+        val info = json.decodeFromString<VersionInfo>(jsonMinimale)
+
+        assertEquals(109, info.versionCode)
+        assertEquals("1.35.1", info.versionName)
+        assertEquals("", info.changelog)
+        assertEquals(0, info.minVersionCode)
+    }
 }

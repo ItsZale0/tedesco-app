@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -34,16 +35,37 @@ import com.alessandro.tedesco.data.QuizData
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.remote.TipoEsercizio
+import com.alessandro.tedesco.data.local.toDomandaTest
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.alessandro.tedesco.data.local.DomandaTest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProduzioneScreen(vm: TedescoViewModel) {
-    val domande = remember { QuizData.domandeProduzione }
+    val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
+    val statiche = remember { QuizData.domandeProduzione }
+    var elenco by remember { mutableStateOf<List<DomandaTest>>(statiche + eserciziGen.map { it.toDomandaTest() }) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableIntStateOf(0) }
     var completato by remember { mutableStateOf(false) }
+    var generaInCorso by remember { mutableStateOf(false) }
+    var erroreGen by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+    LaunchedEffect(eserciziGen, completato) {
+        if (completato) {
+            elenco = statiche + eserciziGen.map { it.toDomandaTest() }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -68,11 +90,12 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
                 if (!completato) {
-                    val domanda = domande[indice]
+                    val domanda = elenco[indice]
 
                     // Progress
+                    val totaleGen = eserciziGen.size
                     Text(
-                        text = "Domanda ${indice + 1}/${domande.size}",
+                        text = "Domanda ${indice + 1}/${elenco.size} · ${statiche.size} base + $totaleGen generati",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -141,7 +164,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
 
                         Button(
                             onClick = {
-                                if (indice < domande.size - 1) {
+                                if (indice < elenco.size - 1) {
                                     indice++
                                     rispostaSelezionata = null
                                     risultato = null
@@ -151,13 +174,13 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (indice < domande.size - 1) "Prossimo" else "Vedi risultato")
+                            Text(if (indice < elenco.size - 1) "Prossimo" else "Vedi risultato")
                         }
                     }
                 } else {
                     // Risultato finale
-                    val punteggioPct = if (domande.isNotEmpty()) (punteggio * 100 / domande.size) else 0
-                    val errori = domande.size - punteggio
+                    val punteggioPct = if (elenco.isNotEmpty()) (punteggio * 100 / elenco.size) else 0
+                    val errori = elenco.size - punteggio
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -170,7 +193,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Punteggio: $punteggio/${domande.size}",
+                                text = "Punteggio: $punteggio/${elenco.size}",
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             Text(
@@ -192,13 +215,57 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                             vm.salvaTestProduzione(
                                 punteggio = punteggioPct.toFloat(),
                                 errori = errori,
-                                totale = domande.size
+                                totale = elenco.size
                             )
                         }
                     }
 
                     Spacer(Modifier.height(12.dp))
 
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                generaInCorso = true
+                                erroreGen = null
+                                runCatching {
+                                    vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 5)
+                                }.onSuccess {
+                                    generaInCorso = false
+                                    indice = 0
+                                    rispostaSelezionata = null
+                                    risultato = null
+                                    punteggio = 0
+                                    completato = false
+                                }.onFailure { e ->
+                                    generaInCorso = false
+                                    erroreGen = e.message ?: "Errore generazione"
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !generaInCorso
+                    ) {
+                        if (generaInCorso) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(20.dp).width(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Generazione...")
+                        } else {
+                            Text("Genera altri 5")
+                        }
+                    }
+                    if (erroreGen != null) {
+                        Text(
+                            text = erroreGen!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = {
                             indice = 0
@@ -214,5 +281,15 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                 }
             }
         }
+    }
+
+    // Dialogo errore chiave API per generazione esercizi infiniti
+    if (erroreGen?.contains("Chiave API") == true) {
+        AlertDialog(
+            onDismissRequest = { erroreGen = null },
+            title = { Text("Chiave API necessaria") },
+            text = { Text("Per generare esercizi infiniti inserisci una chiave OpenRouter gratuita in Profilo → Tutor AI.") },
+            confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
+        )
     }
 }

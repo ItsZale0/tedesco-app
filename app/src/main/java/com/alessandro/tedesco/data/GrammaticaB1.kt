@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.data
 
+import com.alessandro.tedesco.data.local.EsercizioGenEntity
+
 data class EsercizioGrammatica(
     val id: String,
     val categoria: CategoriaGrammatica,
@@ -32,6 +34,32 @@ enum class CategoriaGrammatica {
             else -> entries
         }
     }
+}
+
+/**
+ * Converte un esercizio generato dall'AI in EsercizioGrammatica.
+ * La categoria è stimata dal livello (i dettagli specifici del modello
+ * non sono disponibili nel JSON generato).
+ */
+fun EsercizioGenEntity.toEsercizioGrammatica(lezione: Int, livello: String): EsercizioGrammatica {
+    val categoria = when (livello.uppercase()) {
+        "A0" -> CategoriaGrammatica.ARTICOLI
+        "A1" -> CategoriaGrammatica.VERBI_TEMPI
+        "A2" -> CategoriaGrammatica.PRAEPOSITIONEN
+        "B1" -> CategoriaGrammatica.KONJUNKTIV_II
+        "B2" -> CategoriaGrammatica.RELATIVSATZ
+        else -> CategoriaGrammatica.ARTICOLI
+    }
+    return EsercizioGrammatica(
+        id = id,
+        categoria = categoria,
+        lezione = lezione,
+        domanda = domanda,
+        opzioni = opzioni,
+        rispostaCorretta = rispostaCorretta.coerceIn(0, opzioni.lastIndex.coerceAtLeast(0)),
+        spiegazione = spiegazione,
+        esempio = fraseTedesca ?: ""
+    )
 }
 
 object GrammaticaB1 {

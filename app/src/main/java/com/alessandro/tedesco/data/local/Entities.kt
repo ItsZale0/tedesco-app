@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data.local
 
+import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.data.TestB1
 import kotlinx.serialization.Serializable
 
@@ -278,8 +279,11 @@ data class ProfiloStato(
     val streakRecord: Int = 0,
     val ultimoGiornoStudio: String? = null,
     val badgeSbloccati: List<String> = emptyList(),
-    val puntiTotali: Int = 0
-
+    val puntiTotali: Int = 0,
+    val eserciziGeneratiComprensione: List<EsercizioGenEntity> = emptyList(),
+    val eserciziGeneratiProduzione: List<EsercizioGenEntity> = emptyList(),
+    val eserciziGeneratiAscolto: List<EsercizioGenEntity> = emptyList(),
+    val eserciziGeneratiGrammatica: List<EsercizioGenEntity> = emptyList()
 )
 
 /** Piano di studio verso il B2. */
@@ -346,6 +350,23 @@ data class ConversazioneEntry(
     val correzione: String? = null
 )
 
+/**
+ * Esercizio generato dall'AI e salvato localmente (cache persistita nel profilo).
+ * Equivalente serializzabile di EsercizioGenerato (data.remote).
+ */
+@Serializable
+data class EsercizioGenEntity(
+    val id: String,
+    val tipo: String, // "comprensione" | "produzione" | "ascolto" | "grammatica"
+    val domanda: String,
+    val opzioni: List<String> = emptyList(),
+    val rispostaCorretta: Int = 0,
+    val spiegazione: String = "",
+    val livello: String = "A1",
+    val fraseTedesca: String? = null,
+    val traduzioneItaliana: String? = null
+)
+
 /** Progresso corrente pubblicato dal tutor nel feed. */
 @Serializable
 data class ProgressoFeedEntity(
@@ -381,3 +402,42 @@ enum class StileDesign {
     MATERIAL,   // Material You: tonalità dinamiche
     UBER        // Uber: dark minimal, alto contrasto
 }
+
+/** Conversione di un esercizio generato (salvato come entità) in DomandaTest. */
+fun EsercizioGenEntity.toDomandaTest(
+    tipoDefault: TipoDomanda = TipoDomanda.VOCAB_TED_ITA
+): DomandaTest = DomandaTest(
+    id = id,
+    tipo = when (tipo) {
+        "comprensione" -> TipoDomanda.VOCAB_TED_ITA
+        "produzione" -> TipoDomanda.COMPLETAMENTO
+        "ascolto" -> TipoDomanda.VOCAB_ITA_TED
+        "grammatica" -> TipoDomanda.GRAMMATICA
+        else -> tipoDefault
+    },
+    domanda = domanda,
+    opzioni = opzioni,
+    rispostaCorretta = rispostaCorretta.coerceIn(0, opzioni.lastIndex.coerceAtLeast(0)),
+    spiegazione = spiegazione,
+    livelloRichiesto = when (livello.uppercase()) {
+        "A0" -> LivelloCEFR.A0
+        "A1" -> LivelloCEFR.A1
+        "A2" -> LivelloCEFR.A2
+        "B1" -> LivelloCEFR.B1
+        "B2" -> LivelloCEFR.B2
+        else -> LivelloCEFR.A1
+    },
+    tagGrammatica = null
+)
+
+/** Conversione in EsercizioAscolto (per la sezione Ascolto). */
+fun EsercizioGenEntity.toEsercizioAscolto(): EsercizioAscolto = EsercizioAscolto(
+    id = id,
+    fraseTedesca = fraseTedesca ?: "",
+    traduzioneItaliana = traduzioneItaliana ?: "",
+    domanda = domanda,
+    opzioni = opzioni,
+    rispostaCorretta = rispostaCorretta.coerceIn(0, opzioni.lastIndex.coerceAtLeast(0)),
+    spiegazione = spiegazione,
+    livello = livello
+)

@@ -24,6 +24,12 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import java.net.URLEncoder
 import com.alessandro.tedesco.data.GrammaticaB1
+import com.alessandro.tedesco.data.toEsercizioGrammatica
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.remote.TipoEsercizio
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import com.alessandro.tedesco.data.CategoriaGrammatica
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -51,8 +57,20 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label ?: "A0"
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
-    var esercizi by remember(lezioneCorrente) { mutableStateOf(GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)) }
+    val eserciziGen by vm.eserciziGenGrammatica.collectAsStateWithLifecycle()
+    var generaInCorso by remember { mutableStateOf(false) }
+    var erroreGen by remember { mutableStateOf<String?>(null) }
+    var esercizi by remember { mutableStateOf(GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)) }
     var indice by remember { mutableStateOf(0) }
+
+    // Carica e ricostruisce la lista quando arrivano nuovi esercizi generati
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+    LaunchedEffect(lezioneCorrente, eserciziGen, livello) {
+        esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5) +
+            eserciziGen.filter { it.livello == livello }
+                .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
+        if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
+    }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableStateOf(0) }
@@ -349,9 +367,64 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                     ) {
                         Text("Nuovi esercizi")
                     }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                generaInCorso = true
+                                erroreGen = null
+                                runCatching {
+                                    vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5)
+                                }.onSuccess {
+                                    generaInCorso = false
+                                    indice = 0
+                                    rispostaSelezionata = null
+                                    risultato = null
+                                    punteggio = 0
+                                    completato = false
+                                    erroriRef.clear()
+                                }.onFailure { e ->
+                                    generaInCorso = false
+                                    erroreGen = e.message ?: "Errore generazione"
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !generaInCorso
+                    ) {
+                        if (generaInCorso) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(20.dp).width(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Generazione...")
+                        } else {
+                            Text("Genera altri 5")
+                        }
+                    }
+                    if (erroreGen != null) {
+                        Text(
+                            text = erroreGen!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }
+    }
+
+    // Dialogo errore chiave API per generazione esercizi infiniti
+    if (erroreGen?.contains("Chiave API") == true) {
+        AlertDialog(
+            onDismissRequest = { erroreGen = null },
+            title = { Text("Chiave API necessaria") },
+            text = { Text("Per generare esercizi infiniti inserisci una chiave OpenRouter gratuita in Profilo → Tutor AI.") },
+            confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
+        )
     }
 }
 
