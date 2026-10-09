@@ -29,6 +29,12 @@ import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
+import com.alessandro.tedesco.data.local.ConversazioneEntry
+import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.ProfileManager
+import com.alessandro.tedesco.data.remote.TutorService
+import com.alessandro.tedesco.TedescoApp
+import android.app.Application
 
 data class MessaggioTutor(
     val testo: String,
@@ -47,14 +53,19 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
+    // Carica conversazione persistente dal profilo
     var messaggi by remember {
+        val p = profilo
         mutableStateOf(
-            listOf(
-                MessaggioTutor(
-                    testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi quello che vuoi: grammatica, esempi, esercizi, dubbi. Rispondo in italiano.",
-                    daUtente = false
+            p?.stato?.conversazioni
+                ?.filter { it.tipo == "tutor" }
+                ?.map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
+                ?: listOf(
+                    MessaggioTutor(
+                        testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi quello che vuoi: grammatica, esempi, esercizi, dubbi. Rispondo in italiano.",
+                        daUtente = false
+                    )
                 )
-            )
         )
     }
     var input by remember { mutableStateOf("") }
@@ -62,6 +73,24 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     var rispostaAnimata by remember { mutableStateOf("") }
     var animazioneAttiva by remember { mutableStateOf(false) }
     var rispostaDaAnimare by remember { mutableStateOf("") }
+
+    // Salva conversazione nel profilo quando cambiano i messaggi
+    LaunchedEffect(messaggi, profilo) {
+        val p = profilo
+        if (p != null) {
+            val conversazioni = messaggi.mapIndexed { index, msg ->
+                ConversazioneEntry(
+                    id = "tutor_${System.currentTimeMillis()}_$index",
+                    tipo = "tutor",
+                    ruolo = if (msg.daUtente) "utente" else "tutor",
+                    testo = msg.testo,
+                    timestamp = System.currentTimeMillis() - (messaggi.size - index) * 1000,
+                    correzione = if (msg.errore) msg.testo else null
+                )
+            }
+            vm.saveConversazioni(p.id, "tutor", conversazioni)
+        }
+    }
 
     fun invia(testo: String) {
         val t = testo.trim()

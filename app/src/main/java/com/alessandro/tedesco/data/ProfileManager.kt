@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.alessandro.tedesco.data.local.ProfiliRepository
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.LivelloIniziale
+import com.alessandro.tedesco.data.local.ProfiliRepository
 import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -33,16 +35,22 @@ private object ProfiliKeys {
     val PROFILI_JSON = stringPreferencesKey("profili_json")
 }
 
-/**
- * Helper usati dai test d'integrazione per pilotare direttamente il DataStore
- * dei profili (che è privato altrimenti).
- */
+/** Helper usati dai test d'integrazione per pilotare direttamente il DataStore dei profili. */
 internal suspend fun Context.scriviProfiliJson(json: String) {
     profiliDataStore.edit { it[ProfiliKeys.PROFILI_JSON] = json }
 }
 
 internal suspend fun Context.profiliDataStorePulito() {
     profiliDataStore.edit { it.clear() }
+}
+
+/** Estensione per convertire LivelloIniziale in LivelloCEFR. */
+fun LivelloIniziale.toLivelloCEFR(): LivelloCEFR = when (this) {
+    LivelloIniziale.A0 -> LivelloCEFR.A0
+    LivelloIniziale.A1 -> LivelloCEFR.A1
+    LivelloIniziale.A2 -> LivelloCEFR.A2
+    LivelloIniziale.B1 -> LivelloCEFR.B1
+    LivelloIniziale.B2 -> LivelloCEFR.B2
 }
 
 /**
@@ -149,21 +157,26 @@ class ProfileManager(
     suspend fun creaProfilo(nome: String, tipo: TipoProfilo = TipoProfilo.PERSONALIZZATO) {
         val repo = _repository.value
         val id = "profilo_${System.currentTimeMillis()}"
+        val config = ProfiloConfig(
+            tipo = tipo,
+            nomeVisualizzato = nome,
+            enableCustomWords = true,
+            enableGoogleSheets = false,
+            googleSheetId = null,
+            feedUrl = ProfiliPreset.FEED_URL,
+            guidaDocId = null,
+            tutorApiKey = ProfiliPreset.DEFAULT_TUTOR_API_KEY,
+            livelloIniziale = LivelloIniziale.A0,
+            mostraContestoMedico = false
+        )
         val nuovo = ProfiloUtente(
             id = id,
-            config = ProfiloConfig(
-                tipo = tipo,
-                nomeVisualizzato = nome,
-                enableCustomWords = true,
-                enableGoogleSheets = false,
-                googleSheetId = null,
-                feedUrl = ProfiliPreset.FEED_URL,
-                guidaDocId = null,
-                tutorApiKey = ProfiliPreset.DEFAULT_TUTOR_API_KEY,
-                livelloIniziale = LivelloIniziale.A0,
-                mostraContestoMedico = false
+            config = config,
+            stato = ProfiloStato(
+                progresso = ProgressoUtente(
+                    livelloCorrente = config.livelloIniziale.toLivelloCEFR()
+                )
             ),
-            stato = ProfiloStato(),
             creatoIl = System.currentTimeMillis(),
             ultimoAccesso = System.currentTimeMillis()
         )

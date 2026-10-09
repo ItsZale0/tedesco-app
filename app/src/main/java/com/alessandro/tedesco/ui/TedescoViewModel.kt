@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.alessandro.tedesco.data.local.ConversazioneEntry
 import com.alessandro.tedesco.data.local.FeedbackEntry
 import com.alessandro.tedesco.data.local.PianoEntity
 import com.alessandro.tedesco.data.local.ProgressoFeedEntity
@@ -672,6 +673,19 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             } finally {
                 _correzioneInCorso.value = false
             }
+        }
+    }
+
+    /** Salva le conversazioni (tutor/speaking) nel profilo. */
+    fun saveConversazioni(profiloId: String, tipo: String, conversazioni: List<ConversazioneEntry>) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            if (profilo.id != profiloId) return@launch
+            val nuovoStato = profilo.stato.copy(
+                conversazioni = profilo.stato.conversazioni
+                    .filter { it.tipo != tipo } + conversazioni
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
         }
     }
 

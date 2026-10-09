@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data
 
 import com.alessandro.tedesco.data.local.ProfiloConfig
 import com.alessandro.tedesco.data.local.ProfiliRepository
+import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
@@ -51,9 +52,15 @@ object ProfiliPreset {
                 googleSheetId = sheetId,
                 feedUrl = feedUrl,
                 guidaDocId = guidaDocId,
-                tutorApiKey = DEFAULT_TUTOR_API_KEY
+                tutorApiKey = DEFAULT_TUTOR_API_KEY,
+                livelloIniziale = tipo.livelloIniziale,
+                mostraContestoMedico = tipo.mostraContestoMedico
             ),
-            stato = ProfiloStato(),
+            stato = ProfiloStato(
+                progresso = ProgressoUtente(
+                    livelloCorrente = tipo.livelloIniziale.toLivelloCEFR()
+                )
+            ),
             creatoIl = now,
             ultimoAccesso = now
         )

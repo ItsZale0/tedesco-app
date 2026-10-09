@@ -1,1 +1,7 @@
-{"versionCode": 108, "versionName": "1.35.0", "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.35.0/Tedesco-v1.35.0.apk", "changelog": "Memoria conversazioni persistente (tutor/speaking). Articolo mostrato prima parola. Livello iniziale visibile per Emma (B1). Progresso inizializzato col livello del profilo.", "minVersionCode": 1}
+{
+  "versionCode": 108,
+  "versionName": "1.35.0",
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.35.0/Tedesco-v1.35.0.apk",
+  "changelog": "Memoria conversazioni persistente (tutor/speaking). Articolo mostrato prima parola. Livello iniziale visibile per Emma (B1). Progresso inizializzato col livello del profilo.",
+  "minVersionCode": 1
+}

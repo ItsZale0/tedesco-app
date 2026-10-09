@@ -326,7 +326,7 @@ private fun ContenutoApp(
             composable("roleplay") { RoleplayScreen(vm) }
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
-            composable("competenze") { CompetenzeScreen(vm) }
+            composable("competenze") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); CompetenzeScreen(vm, profilo = profilo) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }
             composable("quiz-produzione") { ProduzioneScreen(vm) }
             composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo) }

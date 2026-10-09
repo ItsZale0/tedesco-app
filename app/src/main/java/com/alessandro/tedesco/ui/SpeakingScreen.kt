@@ -22,7 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.local.ConversazioneEntry
 import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -53,14 +55,19 @@ fun SpeakingScreen(
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
 
+    // Carica conversazione persistente dal profilo
     var messaggi by remember {
+        val p = profilo
         mutableStateOf(
-            listOf(
-                MessaggioSpeaking(
-                    text = "Ciao! Sono il tuo tutor di tedesco. Parla con me in tedesco: ti ascolto, trascrivo e correggo. Prova a presentarti o a dire cosa fai oggi.",
-                    daUtente = false
+            p?.stato?.conversazioni
+                ?.filter { it.tipo == "speaking" }
+                ?.map { MessaggioSpeaking(it.testo, it.ruolo == "utente", it.correzione) }
+                ?: listOf(
+                    MessaggioSpeaking(
+                        text = "Ciao! Sono il tuo tutor di tedesco. Parla con me in tedesco: ti ascolto, trascrivo e correggio. Prova a presentarti o a dire cosa fai oggi.",
+                        daUtente = false
+                    )
                 )
-            )
         )
     }
     var inputTesto by remember { mutableStateOf("") }
@@ -76,6 +83,24 @@ fun SpeakingScreen(
     DisposableEffect(Unit) {
         onDispose {
             speechRecognizer.destroy()
+        }
+    }
+
+    // Salva conversazione nel profilo quando cambiano i messaggi
+    LaunchedEffect(messaggi, profilo) {
+        val p = profilo
+        if (p != null) {
+            val conversazioni = messaggi.mapIndexed { index, msg ->
+                ConversazioneEntry(
+                    id = "speaking_${System.currentTimeMillis()}_$index",
+                    tipo = "speaking",
+                    ruolo = if (msg.daUtente) "utente" else "tutor",
+                    testo = msg.text,
+                    timestamp = System.currentTimeMillis() - (messaggi.size - index) * 1000,
+                    correzione = msg.correzione
+                )
+            }
+            vm.saveConversazioni(p.id, "speaking", conversazioni)
         }
     }
 

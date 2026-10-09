@@ -244,7 +244,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = w.german,
+                    text = w.article?.let { "$it ${w.german}" } ?: w.german,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -273,6 +273,7 @@ data class ProfiloStato(
     val piano: PianoEntity? = null,
     val progressoFeed: ProgressoFeedEntity? = null,
     val sessioni: List<SessioneEntity> = emptyList(),
+    val conversazioni: List<ConversazioneEntry> = emptyList(),
     val streakGiorni: Int = 0,
     val streakRecord: Int = 0,
     val ultimoGiornoStudio: String? = null,
@@ -331,6 +332,17 @@ data class FeedbackEntry(
     val testo: String,
     val timestamp: Long,
     val corretto: Boolean = false,
+    val correzione: String? = null
+)
+
+/** Conversazione persistente con il tutor AI o speaking */
+@Serializable
+data class ConversazioneEntry(
+    val id: String,
+    val tipo: String, // "tutor" o "speaking"
+    val ruolo: String, // "utente" o "tutor"
+    val testo: String,
+    val timestamp: Long,
     val correzione: String? = null
 )
 

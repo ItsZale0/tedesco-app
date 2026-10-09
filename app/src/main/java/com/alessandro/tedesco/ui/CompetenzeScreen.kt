@@ -36,13 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloCompetenze
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompetenzeScreen(vm: TedescoViewModel) {
+fun CompetenzeScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
     val stats by vm.statistiche.collectAsStateWithLifecycle(null)
 
     Scaffold(
@@ -84,7 +85,7 @@ fun CompetenzeScreen(vm: TedescoViewModel) {
 
                     // Header: CEFR level badge
                     if (punteggi != null) {
-                        HeaderLivello(punteggi)
+                        HeaderLivello(punteggi, profilo)
                         Spacer(Modifier.height(20.dp))
                     }
 
@@ -154,7 +155,11 @@ fun CompetenzeScreen(vm: TedescoViewModel) {
 }
 
 @Composable
-private fun HeaderLivello(punteggi: CalcoloCompetenze.PunteggiCompetenze) {
+private fun HeaderLivello(punteggi: CalcoloCompetenze.PunteggiCompetenze, profilo: ProfiloUtente? = null) {
+    val livelloIniziale = profilo?.config?.livelloIniziale?.label
+    val livelloAttuale = punteggi.livelloComplessivo.label
+    val mostraIniziale = livelloIniziale != null && livelloIniziale != "A0"
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -175,7 +180,7 @@ private fun HeaderLivello(punteggi: CalcoloCompetenze.PunteggiCompetenze) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = punteggi.livelloComplessivo.label,
+                text = livelloAttuale,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -187,6 +192,15 @@ private fun HeaderLivello(punteggi: CalcoloCompetenze.PunteggiCompetenze) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+            if (mostraIniziale) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Livello iniziale: $livelloIniziale",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
         }
     }
 }
