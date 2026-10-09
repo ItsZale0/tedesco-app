@@ -1,7 +1,1 @@
-{
-  "versionCode": 106,
-  "versionName": "1.34.0",
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.0/Tedesco-v1.34.0.apk",
-  "changelog": "Speaking con AI: parla in tedesco con il microfono, l'AI trascrive e corregge. Funziona gratis senza chiave API.",
-  "minVersionCode": 1
-}
+{"versionCode": 107, "versionName": "1.34.1", "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.34.1/Tedesco-v1.34.1.apk", "changelog": "Solo modelli free su OpenRouter. Microfono pi\u00f9 grande. Bordi arrotondati pi\u00f9 ampi su tutte le interfacce.", "minVersionCode": 1}
