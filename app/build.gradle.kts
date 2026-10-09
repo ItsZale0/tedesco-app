@@ -83,3 +83,28 @@ dependencies {
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+
+// ── Genera version.json da build.gradle.kts (single source of truth) ──
+// Elimina il bug ricorrente: version.json e versionCode divergevano.
+// Dopo aver cambiato versionCode/versionName qui, lancia:
+//   ./gradlew generateVersionJson
+// Poi builda e committa: version.json è sempre allineato.
+tasks.register("generateVersionJson") {
+    doLast {
+        val vc = android.defaultConfig.versionCode ?: 0
+        val vn = android.defaultConfig.versionName ?: "0.0.0"
+        val apkUrl = "https://github.com/ItsZale0/tedesco-app/releases/download/v$vn/Tedesco-v$vn.apk"
+        val json = """
+    {
+      "versionCode": $vc,
+      "versionName": "$vn",
+      "changelog": "",
+      "minVersionCode": 0,
+      "apkUrl": "$apkUrl"
+    }
+    """.trimIndent()
+        val out = rootProject.layout.projectDirectory.file("version.json").asFile
+        out.writeText(json)
+        println("generateVersionJson: wrote versionCode=$vc versionName=$vn to version.json")
+    }
+}
