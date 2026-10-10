@@ -226,7 +226,7 @@ private fun ContenutoApp(
         NavHost(
             navController = nav,
             startDestination = Dest.Home.route,
-            modifier = Modifier.padding(inner)
+            modifier = Modifier.padding(bottom = inner.calculateBottomPadding())
         ) {
             composable(Dest.Home.route) {
                 HomeScreen(
