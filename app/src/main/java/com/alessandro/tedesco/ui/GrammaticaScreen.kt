@@ -416,7 +416,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
         AlertDialog(
             onDismissRequest = { erroreGen = null },
             title = { Text("Chiave API necessaria") },
-            text = { Text("Per generare esercizi infiniti inserisci una chiave OpenRouter gratuita in Profilo → Tutor AI.") },
+            text = { Text("Per generare esercizi infiniti inserisci una chiave Groq gratuita in Profilo → Tutor AI.") },
             confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
         )
     }

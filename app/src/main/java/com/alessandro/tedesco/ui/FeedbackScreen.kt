@@ -51,7 +51,7 @@ fun FeedbackScreen(
                     )
                 ) {
                     Text(
-                        "Per correggere le risposte serve una chiave API OpenRouter. " +
+                        "Per correggere le risposte serve una chiave API Groq. " +
                             "Vai in Profilo → Tutor AI e inseriscila.",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,

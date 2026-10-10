@@ -389,13 +389,13 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                 // --- TUTOR AI ---
                 SettingsExpandableSection(
                     title = "Tutor AI",
-                    description = "Il tutor risponde alle tue domande usando modelli gratuiti OpenRouter."
+                    description = "Il tutor AI usa Groq ed è già configurato: funziona subito, senza inserire chiavi."
                 ) {
                     OutlinedTextField(
                         value = chiaveTutor, onValueChange = { chiaveTutor = it },
-                        label = { Text("Chiave OpenRouter") },
+                        label = { Text("Chiave Groq") },
                         modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        placeholder = { Text("sk-or-v1-...") },
+                        placeholder = { Text("gsk_...") },
                         shape = GlassShape,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -403,11 +403,11 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         )
                     )
                     TutorialGrigio(
-                        testo = "L'app include una chiave OpenRouter di default per il tutor AI.\n\n" +
-                            "Puoi usarla così com'è oppure inserire la tua chiave personale:\n\n" +
-                            "1. Vai su openrouter.ai e accedi\n" +
+                        testo = "Il tutor è già configurato con una chiave Groq integrata: funziona subito.\n\n" +
+                            "Se vuoi usare la tua chiave personale (opzionale):\n\n" +
+                            "1. Vai su console.groq.com e accedi\n" +
                             "2. Profile → Keys → Create Key\n" +
-                            "3. Copia la chiave (sk-or-v1-...) e incollala qui\n\n" +
+                            "3. Copia la chiave (gsk_...) e incollala qui\n\n" +
                             "L'app usa solo modelli gratuiti: non spenderai nulla."
                     )
                     Spacer(Modifier.height(12.dp))

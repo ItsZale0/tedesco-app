@@ -28,7 +28,7 @@ object ProfiliPreset {
     const val NTFY_TOPIC_EMMA = "tedesco-emma-vocab-c7f3a91b"
 
     /**
-     * Chiave OpenRouter di default per il tutor AI.
+     * Chiave Groq di default per il tutor AI.
      * Sostituire con una chiave reale prima di pubblicare l'app.
      * L'utente può sovrascriverla in Profilo → Tutor AI.
      */

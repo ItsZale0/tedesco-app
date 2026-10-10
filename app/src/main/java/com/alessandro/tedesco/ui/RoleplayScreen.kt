@@ -164,7 +164,7 @@ fun RoleplayScreen(vm: TedescoViewModel) {
                     )
                 ) {
                     Text(
-                        "Per il gioco di ruolo serve una chiave API OpenRouter. " +
+                        "Per il gioco di ruolo serve una chiave API Groq. " +
                             "Vai in Profilo → Tutor AI e inseriscila.",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,

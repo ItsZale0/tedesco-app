@@ -188,7 +188,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                     )
                 ) {
                     Text(
-                        "Inserisci una chiave API OpenRouter gratuita in Profilo → Tutor AI per usare il tutor.",
+                        "Inserisci una chiave API Groq gratuita in Profilo → Tutor AI per usare il tutor.",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer

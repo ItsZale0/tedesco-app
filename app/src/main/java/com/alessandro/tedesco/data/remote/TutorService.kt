@@ -32,7 +32,7 @@ private data class ChatChoice(val message: ChatMessage? = null)
 private data class ChatResponse(val choices: List<ChatChoice> = emptyList())
 
 /**
- * Client per il tutor AI via OpenRouter.
+ * Client per il tutor AI via Groq.
  *
  * Usa un modello veloce ed economico (Llama 3.1 8B) per risposte
  * in tempo reale. La chiave API è configurata dall'utente nelle impostazioni.
@@ -50,7 +50,7 @@ class TutorService {
     /**
      * Invia un messaggio al tutor e ottiene la risposta.
      *
-     * @param apiKey chiave OpenRouter
+     * @param apiKey chiave Groq
      * @param cronologia conversazione precedente
      * @param livello livello CEFR dell'utente (A0-B2)
      * @param lezione contesto della lezione corrente
@@ -111,7 +111,7 @@ class TutorService {
     /**
      * Corregge una risposta in tedesco di uno studente.
      *
-     * @param apiKey chiave OpenRouter
+     * @param apiKey chiave Groq
      * @param testoStudente la risposta da correggere
      * @param livello livello CEFR dell'utente (A0-B2)
      * @param lezione contesto della lezione corrente
@@ -175,7 +175,7 @@ class TutorService {
     /**
      * Avvia un gioco di ruolo con uno scenario preimpostato.
      *
-     * @param apiKey chiave OpenRouter
+     * @param apiKey chiave Groq
      * @param scenario lo scenario di gioco di ruolo
      * @param cronologia conversazione precedente
      * @param livello livello CEFR dell'utente (A0-B2)
@@ -241,7 +241,7 @@ class TutorService {
     ): String {
         val isFreeMode = apiKey.isBlank()
         val url = if (isFreeMode) FREE_ENDPOINT else "https://api.groq.com/openai/v1/chat/completions"
-        val effectiveKey = FREE_API_KEY
+        val effectiveKey = if (apiKey.startsWith("gsk_")) apiKey else FREE_API_KEY
 
         val body = json.encodeToString(
             ChatRequest.serializer(),
@@ -344,7 +344,7 @@ class TutorService {
         )
 
         /**
-         * Modelli OpenRouter, in ordine di preferenza.
+         * Modelli Groq, in ordine di preferenza.
          * Usati quando l'utente inserisce la propria chiave API.
          * Se uno è in rate limit si passa al successivo.
          */

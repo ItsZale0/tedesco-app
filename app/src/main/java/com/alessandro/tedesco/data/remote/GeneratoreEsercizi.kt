@@ -59,7 +59,7 @@ data class EsercizioGenerato(
 )
 
 /**
- * Generatore di esercizi infiniti via OpenRouter (solo modelli free).
+ * Generatore di esercizi infiniti via Groq (solo modelli free).
  *
  * Gli esercizi statici delle schermate (QuizData, AscoltoData, TestB1) sono un
  * pool iniziale: quando lo studente li esaurisce, l'app ne genera di nuovi con
@@ -82,7 +82,7 @@ class GeneratoreEsercizi {
     /**
      * Genera [quanti] esercizi nuovi del tipo richiesto.
      *
-     * @param apiKey chiave OpenRouter dell'utente
+     * @param apiKey chiave Groq dell'utente
      * @param tipo quale sezione deve generare
      * @param livello livello CEFR (A0-B2)
      * @param quanti quanti esercizi (consigliato 5-10)
@@ -196,7 +196,7 @@ class GeneratoreEsercizi {
     ): String {
         val isFreeMode = apiKey.isBlank()
         val url = if (isFreeMode) TutorService.FREE_ENDPOINT else "https://api.groq.com/openai/v1/chat/completions"
-        val effectiveKey = TutorService.FREE_API_KEY
+        val effectiveKey = if (apiKey.startsWith("gsk_")) apiKey else TutorService.FREE_API_KEY
 
         val body = json.encodeToString(
             ChatRequestCompat.serializer(),

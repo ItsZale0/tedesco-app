@@ -498,7 +498,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         .map { r -> r.profiloAttivoId?.let { r.profili[it]?.config?.tutorApiKey } ?: "" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
-    /** Modello OpenRouter scelto dall'utente (null = automatico tra i free). */
+    /** Modello Groq scelto dall'utente (null = automatico tra i free). */
     private val _modelloTutor = MutableStateFlow<String?>(null)
     val modelloTutor: StateFlow<String?> = _modelloTutor
 
@@ -593,7 +593,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Genera nuovi esercizi via AI (OpenRouter free) e li salva nel profilo attivo.
+     * Genera nuovi esercizi via AI (Groq free) e li salva nel profilo attivo.
      * Ritorna la lista di esercizi generati (validi).
      */
     suspend fun generaEsercizi(
@@ -783,7 +783,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val chiave = tutorApiKey.value
             if (chiave.isBlank()) {
-                _messaggio.value = "Inserisci una chiave API OpenRouter gratuita in Profilo → Tutor AI."
+                _messaggio.value = "Inserisci una chiave API Groq gratuita in Profilo → Tutor AI."
             }
             _correzioneInCorso.value = true
             try {
