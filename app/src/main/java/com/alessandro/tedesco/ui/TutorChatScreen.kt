@@ -52,6 +52,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     val apiKey by vm.tutorApiKey.collectAsStateWithLifecycle("")
     val modelloTutor by vm.modelloTutor.collectAsStateWithLifecycle(null)
     val modelli by vm.modelliDisponibili.collectAsStateWithLifecycle()
+    val ragionamento by vm.ragionamento.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.caricaModelli() }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -206,6 +207,11 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 onModelloCambiato = { vm.cambiaModelloTutor(it) }
             )
 
+            RagionamentoSelector(
+                ragionamento = ragionamento,
+                onCambia = { vm.cambiaRagionamento(it) }
+            )
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -300,6 +306,36 @@ private fun ModelloSelector(
                         espanso = false
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RagionamentoSelector(ragionamento: String?, onCambia: (String?) -> Unit) {
+    val opzioni = listOf(
+        null to "Ragionamento: Auto",
+        "low" to "Ragionamento: Basso",
+        "medium" to "Ragionamento: Medio",
+        "high" to "Ragionamento: Alto"
+    )
+    var espanso by remember { mutableStateOf(false) }
+    val etichetta = opzioni.firstOrNull { it.first == ragionamento }?.second ?: "Ragionamento: Auto"
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spaziaturaSchermo(), vertical = 4.dp)
+    ) {
+        AssistChip(
+            onClick = { espanso = true },
+            label = { Text(etichetta, style = MaterialTheme.typography.bodySmall) },
+            trailingIcon = {
+                Icon(Icons.Filled.ExpandMore, contentDescription = null, modifier = Modifier.size(16.dp))
+            }
+        )
+        DropdownMenu(expanded = espanso, onDismissRequest = { espanso = false }) {
+            opzioni.forEach { (id, nome) ->
+                DropdownMenuItem(text = { Text(nome) }, onClick = { onCambia(id); espanso = false })
             }
         }
     }

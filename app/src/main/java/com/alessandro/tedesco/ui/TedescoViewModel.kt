@@ -504,6 +504,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     // Lista modelli Groq disponibili (fetchata in tempo reale)
     private val _modelliDisponibili = MutableStateFlow<List<Pair<String?, String>>>(listOf(null to "Automatico (consigliato)"))
     val modelliDisponibili: StateFlow<List<Pair<String?, String>>> = _modelliDisponibili
+    // Livello di ragionamento (null = default/none)
+    private val _ragionamento = MutableStateFlow<String?>(null)
+    val ragionamento: StateFlow<String?> = _ragionamento
+
+    fun cambiaRagionamento(v: String?) {
+        _ragionamento.value = v
+        app.tutorServiceInstance.reasoningEffort = v
+    }
     private var modelliCaricati = false
 
     fun caricaModelli() {

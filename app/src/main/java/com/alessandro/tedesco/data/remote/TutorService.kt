@@ -28,7 +28,8 @@ private data class ChatRequest(
     val model: String,
     val messages: List<ChatMessage>,
     @SerialName("max_tokens") val maxTokens: Int = 2048,
-    val temperature: Double = 0.7
+    val temperature: Double = 0.7,
+    @SerialName("reasoning_effort") val reasoningEffort: String? = null
 )
 
 @Serializable
@@ -61,6 +62,10 @@ class TutorService {
      * @param livello livello CEFR dell'utente (A0-B2)
      * @param lezione contesto della lezione corrente
      */
+    // Livello di ragionamento Groq (null = default). Usato solo dai modelli che lo supportano (gpt-oss).
+    @Volatile
+    var reasoningEffort: String? = null
+
     suspend fun rispondi(
         apiKey: String,
         cronologia: List<Pair<String, String>>,
@@ -240,6 +245,15 @@ class TutorService {
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
     }
 
+    /** Rimuove il ragionamento/thinking del modello, lasciando solo la risposta finale. */
+    private fun pulisciRagionamento(text: String): String {
+        var t = text
+        t = Regex("(?s)\u003cthink\u003e.*?\u003c/think\u003e").replace(t, "")
+        t = Regex("(?s)\u003creasoning\u003e.*?\u003c/reasoning\u003e").replace(t, "")
+        t = Regex("(?si)\u005bthinking\u005d.*?\u005b/thinking\u005d").replace(t, "")
+        return t.trim()
+    }
+
     private fun chiamaModello(
         apiKey: String,
         modello: String,
@@ -251,7 +265,7 @@ class TutorService {
 
         val body = json.encodeToString(
             ChatRequest.serializer(),
-            ChatRequest(model = modello, messages = messaggi)
+            ChatRequest(model = modello, messages = messaggi, reasoningEffort = if (modello.contains("oss", ignoreCase = true)) reasoningEffort else null)
         )
 
         val builder = Request.Builder()
@@ -284,8 +298,9 @@ class TutorService {
                 )
             }
             val parsed = json.decodeFromString(ChatResponse.serializer(), testo)
-            return parsed.choices.firstOrNull()?.message?.content
+            val contenuto = parsed.choices.firstOrNull()?.message?.content
                 ?: throw IOException("Risposta vuota dal tutor")
+            return pulisciRagionamento(contenuto)
         }
     }
 
