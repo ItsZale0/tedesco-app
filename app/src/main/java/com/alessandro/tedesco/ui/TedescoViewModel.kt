@@ -629,6 +629,60 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         return risultato
     }
 
+    // ---- Memoria esercizi fatti + pre-generazione passiva in background ----
+
+    private val _generazioneInCorso = MutableStateFlow<Set<TipoEsercizio>>(emptySet())
+    val generazioneInCorso: StateFlow<Set<TipoEsercizio>> = _generazioneInCorso.asStateFlow()
+
+    private fun copiaStatoCon(tipo: TipoEsercizio, stato: ProfiloStato, lista: List<EsercizioGenEntity>): ProfiloStato =
+        when (tipo) {
+            TipoEsercizio.COMPRENSIONE -> stato.copy(eserciziGeneratiComprensione = lista)
+            TipoEsercizio.PRODUZIONE -> stato.copy(eserciziGeneratiProduzione = lista)
+            TipoEsercizio.ASCOLTO -> stato.copy(eserciziGeneratiAscolto = lista)
+            TipoEsercizio.GRAMMATICA -> stato.copy(eserciziGeneratiGrammatica = lista)
+        }
+
+    /**
+     * Marca un esercizio generato come completato: non verra piu riproposto
+     * (resta fuori dalla lista finche non scade il cooldown / ci sono pochi nuovi).
+     */
+    fun segnaEsercizioCompletato(tipo: TipoEsercizio, id: String) {
+        if (id.isBlank()) return
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val esistenti = statoGenerati(tipo, profilo.stato)
+            if (esistenti.none { it.id == id }) return@launch
+            val aggiornati = esistenti.map {
+                if (it.id == id) it.copy(completato = true, dataCompletamento = System.currentTimeMillis()) else it
+            }
+            profileManager.aggiornaStatoAttivo(copiaStatoCon(tipo, profilo.stato, aggiornati))
+            setGenFlow(tipo, aggiornati)
+        }
+    }
+
+    /**
+     * Pre-genera esercizi in background (passivo) se il buffer di NON completati
+     * scende sotto la soglia. Da chiamare all'ingresso della schermata e dopo
+     * aver completato un esercizio: cosi lo studente trova sempre quiz freschi
+     * senza premere "Genera altri".
+     */
+    fun preGeneraInBackground(tipo: TipoEsercizio, soglia: Int = 3, quanti: Int = 5) {
+        if (tipo in _generazioneInCorso.value) return
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val nonCompletati = statoGenerati(tipo, profilo.stato).count { !it.completato }
+            if (nonCompletati >= soglia) return@launch
+            _generazioneInCorso.value = _generazioneInCorso.value + tipo
+            try {
+                generaEsercizi(tipo, quanti = quanti)
+            } catch (e: Exception) {
+                // silenzioso: riprovera al prossimo ingresso schermata
+            } finally {
+                _generazioneInCorso.value = _generazioneInCorso.value - tipo
+            }
+        }
+    }
+
     // ---- Test di grammatica ----
 
     fun salvaTestGrammatica(punteggio: Float, errori: Int, totale: Int, domandeErrate: List<String> = emptyList()) {

@@ -60,7 +60,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.PRODUZIONE) }
     LaunchedEffect(eserciziGen, completato) {
         if (completato) {
             elenco = statiche + eserciziGen.map { it.toDomandaTest() }
@@ -130,6 +130,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                                     if (risultato == true) {
                                         punteggio++
                                     }
+                                    vm.segnaEsercizioCompletato(TipoEsercizio.PRODUZIONE, domanda.id)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -164,8 +165,11 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
 
                         Button(
                             onClick = {
-                                if (indice < elenco.size - 1) {
-                                    indice++
+                                val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
+                                var next = indice + 1
+                                while (next < elenco.size && elenco[next].id in idsCompletati) next++
+                                if (next < elenco.size) {
+                                    indice = next
                                     rispostaSelezionata = null
                                     risultato = null
                                 } else {
@@ -174,7 +178,10 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (indice < elenco.size - 1) "Prossimo" else "Vedi risultato")
+                            val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
+                            var next = indice + 1
+                            while (next < elenco.size && elenco[next].id in idsCompletati) next++
+                            Text(if (next < elenco.size) "Prossimo" else "Vedi risultato")
                         }
                     }
                 } else {

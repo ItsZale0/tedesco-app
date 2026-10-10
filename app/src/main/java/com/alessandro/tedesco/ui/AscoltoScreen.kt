@@ -76,7 +76,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
     val ttsHelper = rememberTtsHelper(context)
 
     // Carica esercizi generati al primo entrata
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.ASCOLTO) }
 
     // Ricostruisce la lista quando cambia livello o arrivano nuovi generati
     LaunchedEffect(livelloSelezionato, eserciziGen) {
@@ -226,6 +226,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                                     if (risultato == true) {
                                         punteggio++
                                     }
+                                    vm.segnaEsercizioCompletato(TipoEsercizio.ASCOLTO, esercizio.id)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -259,10 +260,13 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                             }
                         }
 
+                        val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + esercizio.id
+                        var prossimoIdx = indice + 1
+                        while (prossimoIdx < esercizi.size && esercizi[prossimoIdx].id in idsCompletati) prossimoIdx++
                         Button(
                             onClick = {
-                                if (indice < esercizi.size - 1) {
-                                    indice++
+                                if (prossimoIdx < esercizi.size) {
+                                    indice = prossimoIdx
                                     rispostaSelezionata = null
                                     risultato = null
                                     mostraTraduzione = false
@@ -272,7 +276,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (indice < esercizi.size - 1) "Prossimo" else "Vedi risultato")
+                            Text(if (prossimoIdx < esercizi.size) "Prossimo" else "Vedi risultato")
                         }
                     }
                 } else if (completato) {

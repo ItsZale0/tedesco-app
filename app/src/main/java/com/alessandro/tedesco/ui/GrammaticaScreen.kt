@@ -64,7 +64,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     var indice by remember { mutableStateOf(0) }
 
     // Carica e ricostruisce la lista quando arrivano nuovi esercizi generati
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.GRAMMATICA) }
     LaunchedEffect(lezioneCorrente, eserciziGen, livello) {
         esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5) +
             eserciziGen.filter { it.livello == livello }
@@ -190,6 +190,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                     } else {
                                         erroriRef.add(esercizio.domanda)
                                     }
+                                    vm.segnaEsercizioCompletato(TipoEsercizio.GRAMMATICA, esercizio.id)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -296,8 +297,11 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
 
                         Button(
                             onClick = {
-                                if (indice < esercizi.size - 1) {
-                                    indice++
+                                val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + esercizio.id
+                                var next = indice + 1
+                                while (next < esercizi.size && esercizi[next].id in idsCompletati) next++
+                                if (next < esercizi.size) {
+                                    indice = next
                                     rispostaSelezionata = null
                                     risultato = null
                                 } else {
@@ -306,7 +310,10 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (indice < esercizi.size - 1) "Prossimo" else "Vedi risultato")
+                            val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + esercizio.id
+                            var next = indice + 1
+                            while (next < esercizi.size && esercizi[next].id in idsCompletati) next++
+                            Text(if (next < esercizi.size) "Prossimo" else "Vedi risultato")
                         }
                     }
                 } else {

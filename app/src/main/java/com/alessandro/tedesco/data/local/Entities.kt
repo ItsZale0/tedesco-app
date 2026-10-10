@@ -364,7 +364,11 @@ data class EsercizioGenEntity(
     val spiegazione: String = "",
     val livello: String = "A1",
     val fraseTedesca: String? = null,
-    val traduzioneItaliana: String? = null
+    val traduzioneItaliana: String? = null,
+    /** true = lo studente ha già completato questo esercizio (non riproporlo a breve). */
+    val completato: Boolean = false,
+    /** timestamp completamento (per futuro cooldown/riproposta). */
+    val dataCompletamento: Long = 0L
 )
 
 /** Progresso corrente pubblicato dal tutor nel feed. */
