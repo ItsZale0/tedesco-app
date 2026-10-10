@@ -149,8 +149,10 @@ private fun SettingsExpandableSection(
                 )
             }
             AnimatedVisibility(visible = expanded) {
-                Spacer(Modifier.height(12.dp))
-                content()
+                Column(Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(12.dp))
+                    content()
+                }
             }
         }
     }

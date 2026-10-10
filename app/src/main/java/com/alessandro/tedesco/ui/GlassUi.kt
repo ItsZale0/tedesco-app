@@ -188,8 +188,10 @@ fun GlassExpandableSection(
                 )
             }
             AnimatedVisibility(visible = expanded) {
-                Spacer(Modifier.height(10.dp))
-                content()
+                Column(Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(10.dp))
+                    content()
+                }
             }
         }
     }
