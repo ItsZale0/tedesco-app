@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -208,20 +209,10 @@ fun AltroScreen(
 
 @Composable
 private fun VoceAltro(elemento: ElementoAltro) {
-    val containerColor = if (elemento.usaTertiary) {
-        MaterialTheme.colorScheme.tertiaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-    val contentColor = if (elemento.usaTertiary) {
-        MaterialTheme.colorScheme.onTertiaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
+    // Riga trasparente dentro GlassCard: coerente col tema glass, niente blocchi verde
     Surface(
         onClick = elemento.onClick,
-        color = containerColor,
+        color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -231,11 +222,7 @@ private fun VoceAltro(elemento: ElementoAltro) {
             Icon(
                 elemento.icona,
                 contentDescription = null,
-                tint = if (elemento.usaTertiary) {
-                    MaterialTheme.colorScheme.onTertiaryContainer
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)
             )
             Spacer(Modifier.width(16.dp))
@@ -244,22 +231,18 @@ private fun VoceAltro(elemento: ElementoAltro) {
                     elemento.titolo,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (elemento.usaTertiary) {
-                        MaterialTheme.colorScheme.onTertiaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     elemento.descrizione,
                     style = MaterialTheme.typography.bodySmall,
-                    color = contentColor
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 text = "›",
                 style = MaterialTheme.typography.titleMedium,
-                color = contentColor
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
