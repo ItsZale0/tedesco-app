@@ -73,7 +73,7 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val version = withContext(Dispatchers.IO) {
                     val request = Request.Builder()
-                        .url("https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json")
+                        .url("https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json?t=" + System.currentTimeMillis())
                         .build()
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) {
