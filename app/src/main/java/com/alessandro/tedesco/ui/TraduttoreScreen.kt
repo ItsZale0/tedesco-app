@@ -42,21 +42,8 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
     val ttsHelperTedesco = rememberTtsHelper(context, Locale.GERMAN)
     val ttsHelperItaliano = rememberTtsHelper(context, Locale.ITALIAN)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Traduttore", style = MaterialTheme.typography.titleLarge) }
-            )
-        }
-    ) { inner ->
-        Column(
-            modifier = Modifier
-                .padding(inner)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Traduttore") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -180,7 +167,7 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
 
                 Spacer(Modifier.height(32.dp))
             }
-        }
+
     }
 }
 

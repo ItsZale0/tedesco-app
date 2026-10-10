@@ -84,21 +84,8 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Grammatica", style = MaterialTheme.typography.titleLarge) }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = spaziaturaSchermo())
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Grammatica") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -421,7 +408,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                     }
                 }
             }
-        }
+
     }
 
     // Dialogo errore chiave API per generazione esercizi infiniti

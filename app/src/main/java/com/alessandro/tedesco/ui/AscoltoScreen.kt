@@ -86,24 +86,8 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
         if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Ascolto (Hörverstehen)", style = MaterialTheme.typography.titleLarge) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = spaziaturaSchermo())
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Ascolto (Hörverstehen)") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -396,7 +380,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
 
                 Spacer(Modifier.height(16.dp))
             }
-        }
+
     }
 
     // Dialogo errore chiave API per generazione esercizi infiniti

@@ -30,24 +30,8 @@ fun ContestoMedicoScreen(
     var tab by remember { mutableStateOf(0) }
     val tabs = listOf("Lessico", "Scenari", "Frasi")
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Contesto Medico") },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = Spaziature.md)
-        ) {
+    ScreenScaffold("Contesto Medico", onBack = onIndietro) {
+
             // Tab bar
             TabRow(selectedTabIndex = tab) {
                 tabs.forEachIndexed { index, title ->
@@ -76,7 +60,7 @@ fun ContestoMedicoScreen(
                     2 -> TabFrasi()
                 }
             }
-        }
+
     }
 }
 

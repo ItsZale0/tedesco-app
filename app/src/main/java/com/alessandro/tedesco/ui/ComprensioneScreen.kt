@@ -82,24 +82,8 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Comprensione", style = MaterialTheme.typography.titleLarge) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = spaziaturaSchermo())
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Comprensione") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -326,7 +310,7 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
                     }
                 }
             }
-        }
+
     }
 
     // Dialogo errore chiave API

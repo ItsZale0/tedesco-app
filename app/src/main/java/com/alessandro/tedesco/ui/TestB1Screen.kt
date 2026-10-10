@@ -46,21 +46,8 @@ fun TestB1Screen(vm: TedescoViewModel) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Test - ${etichettaSezione(sezione)}", style = MaterialTheme.typography.titleLarge) }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = spaziaturaSchermo())
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Test - ${etichettaSezione(sezione)}") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -221,6 +208,6 @@ fun TestB1Screen(vm: TedescoViewModel) {
                     }
                 }
             }
-        }
+
     }
 }

@@ -53,26 +53,8 @@ fun PianoScreen(
         )
     } else emptyList()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Piano di studio") },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Piano di studio", onBack = onIndietro) {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -229,7 +211,7 @@ fun PianoScreen(
 
                 Spacer(Modifier.height(24.dp))
             }
-        }
+
     }
 }
 

@@ -40,24 +40,8 @@ fun FeedbackScreen(
         GrammaticaB1.eserciziPerLezione(lezioneCorrente)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Correzione risposte") },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
+    ScreenScaffold("Correzione risposte", onBack = onIndietro) {
+
             // Avviso se manca la chiave API
             if (apiKey.isBlank()) {
                 Card(
@@ -248,7 +232,7 @@ fun FeedbackScreen(
                     }
                 }
             }
-        }
+
     }
 }
 

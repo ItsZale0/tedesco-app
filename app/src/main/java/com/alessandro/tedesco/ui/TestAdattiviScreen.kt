@@ -80,21 +80,8 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Test adattivi", style = MaterialTheme.typography.titleLarge) }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Test adattivi") {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -314,7 +301,7 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
 
                 Spacer(Modifier.height(16.dp))
             }
-        }
+
     }
 }
 

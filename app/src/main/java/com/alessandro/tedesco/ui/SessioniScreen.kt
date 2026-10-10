@@ -67,26 +67,8 @@ fun SessioniScreen(
     sessioniAdattive: AdaptiveSessionEngine.RisultatoGenerazione?,
     onAvvia: (String) -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Sessioni") },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Sessioni", onBack = onIndietro) {
+
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -251,6 +233,6 @@ fun SessioniScreen(
 
                 Spacer(Modifier.height(24.dp))
             }
-        }
+
     }
 }

@@ -64,30 +64,8 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                },
-                title = {
-                    Text(
-                        text = "${sessionState.indice.coerceAtMost(sessionState.totale)} / ${sessionState.totale}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            )
-        }
-    ) { inner ->
-        Column(
-            modifier = Modifier
-                .padding(inner)
-                .fillMaxSize()
-                .padding(horizontal = spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Ripasso", onBack = onIndietro) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -281,6 +259,6 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                 }
             }
             }
-        }
+
     }
 }

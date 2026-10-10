@@ -184,23 +184,8 @@ fun SpeakingScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Speaking con AI", style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+    ScreenScaffold("Speaking con AI", onBack = onIndietro) {
+
             // Info card
             Card(
                 modifier = Modifier
@@ -346,7 +331,7 @@ fun SpeakingScreen(
                     }
                 }
             }
-        }
+
     }
 }
 

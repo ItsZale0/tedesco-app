@@ -76,73 +76,8 @@ fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Conversazione vocale", style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                },
-                actions = {
-                    // Stop TTS button
-                    if (ttsHelper.isSpeaking) {
-                        IconButton(onClick = { ttsHelper.stop() }) {
-                            Icon(Icons.Filled.Stop, contentDescription = "Ferma audio")
-                        }
-                    }
-                    // Fine conversazione
-                    if (messaggi.size > 1) {
-                        TextButton(onClick = {
-                            scope.launch {
-                                elaborazione = true
-                                correzione = null
-                                mostrandoCorrezione = false
-                                val conversazione = messaggi.joinToString("\n") { m ->
-                                    if (m.daUtente) "Studente: ${m.testo}" else "Tutor: ${m.testo}"
-                                }
-                                val prompt = """Analizza questa conversazione in tedesco tra un studente di livello $livello e un tutor.
-                                    |Identifica gli errori grammaticali, di vocabolario e di pronuncia.
-                                    |Per ogni errore: indica l'errore, la correzione e una spiegazione breve in italiano.
-                                    |Alla fine, dai un punteggio da 1 a 10 e un consiglio per migliorare.
-                                    |Rispondi in italiano.
-                                    |
-                                    |Conversazione:
-                                    |$conversazione""".trimMargin()
-                                try {
-                                    val tutorService = TutorService()
-                                    val risposta = tutorService.rispondi(
-                                        apiKey = apiKey,
-                                        cronologia = listOf("system" to prompt),
-                                        livello = livello,
-                                        lezione = lezioneCorrente,
-                                        modello = modelloTutor
-                                    )
-                                    correzione = risposta
-                                    mostrandoCorrezione = true
-                                } catch (e: Exception) {
-                                    correzione = "Errore durante la correzione: ${e.message}"
-                                    mostrandoCorrezione = true
-                                } finally {
-                                    elaborazione = false
-                                }
-                            }
-                        }) {
-                            Text("Fine")
-                        }
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(spaziaturaSchermo()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ScreenScaffold("Conversazione vocale", onBack = onIndietro) {
+
             // Livello
             AssistChip(
                 onClick = {},
@@ -237,7 +172,7 @@ fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
             )
 
             Spacer(Modifier.height(8.dp))
-        }
+
     }
 }
 
