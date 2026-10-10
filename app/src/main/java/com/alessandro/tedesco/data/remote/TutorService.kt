@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data.remote
 
+import com.alessandro.tedesco.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -60,9 +61,7 @@ class TutorService {
         lezione: Int,
         modello: String? = null
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
-        }
+        // Free mode (no API key): uses Gemini endpoint automatically
 
         val systemPrompt = """
             Sei un tutor di tedesco per uno studente italiano di livello $livello.
@@ -85,7 +84,8 @@ class TutorService {
         }
 
         // Se l'utente ha scelto un modello, usa quello; altrimenti prova i free in cascata
-        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello)
+            else if (apiKey.isBlank()) MODELLI_NO_KEY else MODELLI_FREE
 
         var ultimoErrore: String? = null
         for (m in modelli) {
@@ -118,9 +118,7 @@ class TutorService {
         lezione: Int,
         modello: String? = null
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
-        }
+        // Free mode (no API key): uses Gemini endpoint automatically
 
         val systemPrompt = """
             Sei un correttore di tedesco per uno studente italiano di livello $livello.
@@ -139,7 +137,8 @@ class TutorService {
             ChatMessage("user", testoStudente)
         )
 
-        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello)
+            else if (apiKey.isBlank()) MODELLI_NO_KEY else MODELLI_FREE
 
         var ultimoErrore: String? = null
         for (m in modelli) {
@@ -184,9 +183,7 @@ class TutorService {
         lezione: Int,
         modello: String? = null
     ): String = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
-        }
+        // Free mode (no API key): uses Gemini endpoint automatically
 
         val systemPrompt = """
             Sei un ${scenario.ruoloAI} in un gioco di ruolo per uno studente italiano di tedesco di livello $livello.
@@ -215,7 +212,8 @@ class TutorService {
             }
         }
 
-        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else MODELLI_FREE
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello)
+            else if (apiKey.isBlank()) MODELLI_NO_KEY else MODELLI_FREE
 
         var ultimoErrore: String? = null
         for (m in modelli) {
@@ -234,19 +232,26 @@ class TutorService {
         modello: String,
         messaggi: List<ChatMessage>
     ): String {
+        val isFreeMode = apiKey.isBlank()
+        val url = if (isFreeMode) FREE_ENDPOINT else "https://openrouter.ai/api/v1/chat/completions"
+        val effectiveKey = if (isFreeMode) FREE_API_KEY else apiKey
+
         val body = json.encodeToString(
             ChatRequest.serializer(),
             ChatRequest(model = modello, messages = messaggi)
         )
 
-        val request = Request.Builder()
-            .url("https://openrouter.ai/api/v1/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+        val builder = Request.Builder()
+            .url(url)
+            .header("Authorization", "Bearer $effectiveKey")
             .header("Content-Type", "application/json")
-            .header("HTTP-Referer", "https://github.com/ItsZale0/tedesco-app")
-            .header("X-Title", "Tedesco App")
-            .post(body.toRequestBody("application/json".toMediaType()))
-            .build()
+
+        if (!isFreeMode) {
+            builder.header("HTTP-Referer", "https://github.com/ItsZale0/tedesco-app")
+            builder.header("X-Title", "Tedesco App")
+        }
+
+        val request = builder.post(body.toRequestBody("application/json".toMediaType())).build()
 
         client.newCall(request).execute().use { response ->
             val testo = response.body?.string().orEmpty()
@@ -318,19 +323,34 @@ class TutorService {
             )
         )
 
+        // Endpoint gratuito senza chiave API (Google Gemini free tier)
+        const val FREE_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        val FREE_API_KEY = BuildConfig.FREE_API_KEY
+
         /**
-         * Modelli free, in ordine di preferenza.
-         * Se uno è in rate limit si passa al successivo: così il tutor
-         * resta utilizzabile senza spendere credito.
+         * Modelli gratuiti senza chiave API (Gemini), in ordine di preferenza.
+         */
+        val MODELLI_NO_KEY = listOf(
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash"
+        )
+
+        /**
+         * Modelli OpenRouter, in ordine di preferenza.
+         * Usati quando l'utente inserisce la propria chiave API.
+         * Se uno è in rate limit si passa al successivo.
          */
         val MODELLI_FREE = listOf(
+            "poolside/laguna-s-2.1:free",
+            "poolside/laguna-xs-2.1:free",
+            "thinkingmachines/inkling:free",
+            "thinkingmachines/inkling-small:free",
+            "stepfun/step-5-preview:free",
             "nvidia/nemotron-3.5-lightning:free",
-            "liquid/lfm-2.5-2.6b:free",
-            "inclusionai/ling-3.0-flash-sante:free",
             "google/gemma-4-31b-it:free",
-            "google/gemma-4-26b-a4b-it:free",
-            "nvidia/nemotron-3-super-120b-a12b:free"
+            "google/gemma-4-26b-a4b-it:free"
         )
-        const val MODELLO = "nvidia/nemotron-3.5-lightning:free"
+        const val MODELLO = "gemini-2.5-flash"
     }
 }

@@ -100,9 +100,7 @@ class GeneratoreEsercizi {
         evita: List<String> = emptyList(),
         modello: String? = null
     ): List<EsercizioGenerato> = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
-            throw IOException("Chiave API non configurata. Vai in Profilo → Tutor AI per inserirla.")
-        }
+        // Free mode (no API key): uses Gemini endpoint automatically
         if (quanti <= 0) return@withContext emptyList()
 
         val systemPrompt = costruisciPrompt(tipo, livello, quanti, contestoMedico, evita)
@@ -111,7 +109,8 @@ class GeneratoreEsercizi {
             ChatMessageCompat("user", "Genera gli esercizi in JSON.")
         )
 
-        val modelli = if (!modello.isNullOrBlank()) listOf(modello) else TutorService.MODELLI_FREE
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello)
+            else if (apiKey.isBlank()) TutorService.MODELLI_NO_KEY else TutorService.MODELLI_FREE
 
         var ultimoErrore: String? = null
         for (m in modelli) {
@@ -188,18 +187,25 @@ class GeneratoreEsercizi {
         modello: String,
         messaggi: List<ChatMessageCompat>
     ): String {
+        val isFreeMode = apiKey.isBlank()
+        val url = if (isFreeMode) TutorService.FREE_ENDPOINT else "https://openrouter.ai/api/v1/chat/completions"
+        val effectiveKey = if (isFreeMode) TutorService.FREE_API_KEY else apiKey
+
         val body = json.encodeToString(
             ChatRequestCompat.serializer(),
             ChatRequestCompat(model = modello, messages = messaggi)
         )
-        val request = Request.Builder()
-            .url("https://openrouter.ai/api/v1/chat/completions")
-            .header("Authorization", "Bearer $apiKey")
+        val builder = Request.Builder()
+            .url(url)
+            .header("Authorization", "Bearer $effectiveKey")
             .header("Content-Type", "application/json")
-            .header("HTTP-Referer", "https://github.com/ItsZale0/tedesco-app")
-            .header("X-Title", "Tedesco App")
-            .post(body.toRequestBody("application/json".toMediaType()))
-            .build()
+
+        if (!isFreeMode) {
+            builder.header("HTTP-Referer", "https://github.com/ItsZale0/tedesco-app")
+            builder.header("X-Title", "Tedesco App")
+        }
+
+        val request = builder.post(body.toRequestBody("application/json".toMediaType())).build()
 
         client.newCall(request).execute().use { response ->
             val testo = response.body?.string().orEmpty()

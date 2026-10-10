@@ -98,7 +98,7 @@ fun GlassCard(
         colors = CardDefaults.cardColors(containerColor = settingsGlassColor()),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, borderColor)
-    ) { Column(content = { content() }) }
+    ) { Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), content = { content() }) }
 }
 
 /** Sezione impostazioni a tendina: header cliccabile con chevron + contenuto espandibile. */
@@ -149,7 +149,7 @@ private fun SettingsExpandableSection(
                 )
             }
             AnimatedVisibility(visible = expanded) {
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
                 content()
             }
         }
@@ -217,14 +217,17 @@ private fun SettingsButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(
+        contentColor = MaterialTheme.colorScheme.primary
+    ),
     content: @Composable () -> Unit
 ) {
-    Button(
+    OutlinedButton(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(48.dp).clip(GlassShape),
+        modifier = modifier.fillMaxWidth().height(44.dp).clip(GlassShape),
         enabled = enabled,
         colors = colors,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) { content() }
 }
@@ -278,17 +281,17 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
 
                 // --- PROFILO ATTIVO ---
                 GlassCard {
-                    Column(Modifier.padding(vertical = 6.dp)) {
+                    Column {
                         Text("Profilo attivo", style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Text(
                             profilo?.config?.nomeVisualizzato ?: "—",
                             style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         profilo?.config?.tipo?.descrizione?.let {
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(6.dp))
                             Text(it, style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -298,7 +301,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                 SettingsButton(onClick = { cambiaProfilo = true }) { Text("Cambia profilo") }
                 Spacer(Modifier.height(8.dp))
                 SettingsButton(onClick = { esciSelezione = true }) { Text("Torna alla scelta del profilo") }
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- LIVELLO (menu a tendina) ---
                 SettingsExpandableSection(
@@ -318,7 +321,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         onSelect = { vm.cambiaLivello(it) }
                     )
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- VOCABOLARIO PERSONALIZZATO (solo profili custom) ---
                 if (customWords) {
@@ -330,7 +333,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     ) {
                         SettingsButton(onClick = { aggiungiParola = true }) { Text("Aggiungi una parola") }
                     }
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     SettingsExpandableSection(
                         title = "Il tuo vocabolario",
@@ -360,7 +363,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                                 "Formato: {\"words\":[{\"id\":\"1\",\"german\":\"der Hund\",\"" +
                                 "\"italian\":\"il cane\",\"level\":\"A1\",\"lesson\":1}]}"
                         )
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(16.dp))
                         OutlinedTextField(
                             value = guidaDocId, onValueChange = { guidaDocId = it },
                             label = { Text("Documento Google della guida") },
@@ -383,13 +386,13 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                                 "3. Condividi → Chiunque abbia il link → Visualizzatore\n" +
                                 "4. Copia l'indirizzo e incollalo qui"
                         )
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(16.dp))
                         SettingsButton(onClick = {
                             vm.aggiornaFeedUrl(feedUrl)
                             vm.aggiornaGuidaDocId(guidaDocId)
                         }) { Text("Salva") }
                     }
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
                 }
 
                 // --- TUTOR AI ---
@@ -416,10 +419,10 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                             "3. Copia la chiave (sk-or-v1-...) e incollala qui\n\n" +
                             "L'app usa solo modelli gratuiti: non spenderai nulla."
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(12.dp))
                     SettingsButton(onClick = { vm.aggiornaTutorApiKey(chiaveTutor) }) { Text("Salva chiave") }
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- AGGIORNAMENTI ---
                 SettingsExpandableSection(
@@ -427,6 +430,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     description = "L'app controlla all'apertura. Puoi forzare il controllo."
                 ) {
                     SettingsButton(onClick = { updater.checkForUpdate() }) { Text("Controlla aggiornamenti ora") }
+                    Spacer(Modifier.height(8.dp))
                     val statoUpd = when (val s = updateState) {
                         is UpdateState.Checking -> "Controllo in corso…" to false
                         is UpdateState.Available -> "Disponibile v${s.version.versionName}" to false
@@ -439,7 +443,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- VOCABOLARIO ---
                 SettingsExpandableSection(
@@ -453,7 +457,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     }
                     SettingsButton(onClick = { vm.sincronizza() }) { Text("Sincronizza adesso") }
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- COLORE DELL'APP (menu a tendina) ---
                 SettingsExpandableSection(
@@ -467,7 +471,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         onSelect = { vm.cambiaPalette(it) }
                     )
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // --- RIPASSO ---
                 SettingsExpandableSection(
@@ -481,7 +485,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Spacer(Modifier.height(8.dp))
 
@@ -490,7 +494,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                     title = "Area pericolosa",
                     description = "Cancella i dati di questo profilo (gli altri profili non sono toccati)."
                 ) {
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(8.dp))
                     SettingsButton(
                         onClick = { confermaReset = true },
                         colors = ButtonDefaults.buttonColors(
@@ -582,7 +586,7 @@ private fun GlassChangeProfileDialog(
 @Composable
 private fun TutorialGrigio(testo: String) {
     var aperto by remember { mutableStateOf(false) }
-    Spacer(Modifier.height(6.dp))
+    Spacer(Modifier.height(8.dp))
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = GlassShape,

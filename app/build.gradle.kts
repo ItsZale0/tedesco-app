@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,12 +11,18 @@ android {
     namespace = "com.alessandro.tedesco"
     compileSdk = 35
 
+    val freeApiKey: String = Properties().apply {
+        val f = rootProject.file("local.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }.getProperty("FREE_API_KEY", "")
+
     defaultConfig {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 111
-        versionName = "1.35.3"
+        versionCode = 112
+        versionName = "1.35.4"
+        buildConfigField("String", "FREE_API_KEY", "\"$freeApiKey\"")
     }
 
     buildTypes {
