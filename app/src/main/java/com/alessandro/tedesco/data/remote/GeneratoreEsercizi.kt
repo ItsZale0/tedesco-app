@@ -1,6 +1,7 @@
 package com.alessandro.tedesco.data.remote
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -113,18 +114,24 @@ class GeneratoreEsercizi {
             else if (apiKey.isBlank()) TutorService.MODELLI_NO_KEY else TutorService.MODELLI_FREE
 
         var ultimoErrore: String? = null
-        for (m in modelli) {
-            try {
-                val risposta = chiamaModello(apiKey, m, messaggi)
-                val esercizi = parseEsercizi(risposta, tipo, livello)
-                if (esercizi.isNotEmpty()) return@withContext esercizi
-                // Risposta non parsabile: prova il modello successivo
-                ultimoErrore = "Risposta non valida dal modello $m"
-            } catch (e: IOException) {
-                ultimoErrore = e.message
-                // 401 = chiave non valida: inutile provare altri modelli
-                if (e.message?.contains("non valida") == true) throw e
+        var rateLimited = false
+        // 2 tentativi: se tutti i modelli danno rate limit (429), aspetta e riprova
+        for (tentativo in 1..2) {
+            for (m in modelli) {
+                try {
+                    val risposta = chiamaModello(apiKey, m, messaggi)
+                    val esercizi = parseEsercizi(risposta, tipo, livello)
+                    if (esercizi.isNotEmpty()) return@withContext esercizi
+                    ultimoErrore = "Risposta non valida dal modello $m"
+                } catch (e: IOException) {
+                    ultimoErrore = e.message
+                    // 401 = chiave non valida: inutile provare altri modelli
+                    if (e.message?.contains("non valida") == true) throw e
+                    if (e.message?.contains("Troppe richieste") == true) rateLimited = true
+                }
             }
+            if (!rateLimited) break
+            if (tentativo < 2) delay(4000)
         }
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
     }
@@ -188,8 +195,8 @@ class GeneratoreEsercizi {
         messaggi: List<ChatMessageCompat>
     ): String {
         val isFreeMode = apiKey.isBlank()
-        val url = if (isFreeMode) TutorService.FREE_ENDPOINT else "https://openrouter.ai/api/v1/chat/completions"
-        val effectiveKey = if (isFreeMode) TutorService.FREE_API_KEY else apiKey
+        val url = if (isFreeMode) TutorService.FREE_ENDPOINT else "https://api.groq.com/openai/v1/chat/completions"
+        val effectiveKey = TutorService.FREE_API_KEY
 
         val body = json.encodeToString(
             ChatRequestCompat.serializer(),

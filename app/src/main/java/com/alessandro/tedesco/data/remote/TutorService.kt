@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data.remote
 
+import kotlinx.coroutines.delay
 import com.alessandro.tedesco.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -88,15 +89,21 @@ class TutorService {
             else if (apiKey.isBlank()) MODELLI_NO_KEY else MODELLI_FREE
 
         var ultimoErrore: String? = null
-        for (m in modelli) {
-            try {
-                return@withContext chiamaModello(apiKey, m, messaggi)
-            } catch (e: IOException) {
-                ultimoErrore = e.message
-                // 401 = chiave non valida: inutile provare altri modelli
-                if (e.message?.contains("non valida") == true) throw e
-                // altrimenti prova il prossimo modello
+        var rateLimited = false
+        for (tentativo in 1..2) {
+            for (m in modelli) {
+                try {
+                    return@withContext chiamaModello(apiKey, m, messaggi)
+                } catch (e: IOException) {
+                    ultimoErrore = e.message
+                    // 401 = chiave non valida: inutile provare altri modelli
+                    if (e.message?.contains("non valida") == true) throw e
+                    if (e.message?.contains("Troppe richieste") == true) rateLimited = true
+                    // altrimenti prova il prossimo modello
+                }
             }
+            if (!rateLimited) break
+            if (tentativo < 2) delay(4000)
         }
         throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
     }
@@ -233,8 +240,8 @@ class TutorService {
         messaggi: List<ChatMessage>
     ): String {
         val isFreeMode = apiKey.isBlank()
-        val url = if (isFreeMode) FREE_ENDPOINT else "https://openrouter.ai/api/v1/chat/completions"
-        val effectiveKey = if (isFreeMode) FREE_API_KEY else apiKey
+        val url = if (isFreeMode) FREE_ENDPOINT else "https://api.groq.com/openai/v1/chat/completions"
+        val effectiveKey = FREE_API_KEY
 
         val body = json.encodeToString(
             ChatRequest.serializer(),
@@ -324,16 +331,16 @@ class TutorService {
         )
 
         // Endpoint gratuito senza chiave API (Google Gemini free tier)
-        const val FREE_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        const val FREE_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
         val FREE_API_KEY = BuildConfig.FREE_API_KEY
 
         /**
          * Modelli gratuiti senza chiave API (Gemini), in ordine di preferenza.
          */
         val MODELLI_NO_KEY = listOf(
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite",
-            "gemini-2.0-flash"
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-20b",
+            "allam-2-7b"
         )
 
         /**
@@ -342,15 +349,11 @@ class TutorService {
          * Se uno è in rate limit si passa al successivo.
          */
         val MODELLI_FREE = listOf(
-            "poolside/laguna-s-2.1:free",
-            "poolside/laguna-xs-2.1:free",
-            "thinkingmachines/inkling:free",
-            "thinkingmachines/inkling-small:free",
-            "stepfun/step-5-preview:free",
-            "nvidia/nemotron-3.5-lightning:free",
-            "google/gemma-4-31b-it:free",
-            "google/gemma-4-26b-a4b-it:free"
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "allam-2-7b"
         )
-        const val MODELLO = "gemini-2.5-flash"
+        const val MODELLO = "qwen/qwen3.8-27b"
     }
 }
