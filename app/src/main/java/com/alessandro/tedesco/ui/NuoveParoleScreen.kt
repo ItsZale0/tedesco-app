@@ -102,29 +102,18 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
     val margine = spaziaturaSchermo()
     val maxLarghezza = dimensioneContenuto()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Parole", style = MaterialTheme.typography.titleLarge) },
-                actions = {
-                    if (customWordsAbilitate) {
-                        IconButton(onClick = { mostraAggiungiParola = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = "Aggiungi parola")
-                        }
-                    }
-                    IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+    ScreenScaffold("Parole", actions = {
+        if (customWordsAbilitate) {
+            IconButton(onClick = { mostraAggiungiParola = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "Aggiungi parola")
+            }
         }
-    ) { inner ->
+        IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
+            Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
+        }
+    }, scrollable = false) {
         Column(
             modifier = Modifier
-                .padding(inner)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

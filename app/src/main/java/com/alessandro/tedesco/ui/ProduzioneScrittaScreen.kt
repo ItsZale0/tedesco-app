@@ -3,6 +3,8 @@ package com.alessandro.tedesco.ui
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -110,25 +112,12 @@ fun ProduzioneScrittaScreen(
     // Nota: la generazione avviene on-demand; carichiamo al primo entrata
     LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Produzione Scritta") },
-                navigationIcon = {
-                    IconButton(onClick = onIndietro) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Indietro")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    ScreenScaffold("Produzione Scritta", onBack = onIndietro, scrollable = false) {
         if (esercizioSelezionato == null) {
             // Lista esercizi
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = Spaziature.md),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
                 item {
@@ -210,9 +199,8 @@ fun ProduzioneScrittaScreen(
             // Schermata esercizio
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = Spaziature.md)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             ) {
                 // Header esercizio
                 Card(

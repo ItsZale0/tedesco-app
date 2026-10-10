@@ -161,7 +161,7 @@ fun AltroScreen(
         )
     )
 
-    Scaffold(topBar = { GlassTopBar("Altro") }) { inner ->
+    Scaffold(topBar = { CompactTopBar("Altro") }, contentWindowInsets = WindowInsets(0)) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)

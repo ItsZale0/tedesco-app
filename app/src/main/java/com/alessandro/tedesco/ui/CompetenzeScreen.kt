@@ -46,21 +46,11 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 fun CompetenzeScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
     val stats by vm.statistiche.collectAsStateWithLifecycle(null)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Competenze", style = MaterialTheme.typography.titleLarge) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { inner ->
+    ScreenScaffold("Competenze") {
         val statsCorrenti = stats
         if (statsCorrenti == null) {
             Box(
                 modifier = Modifier
-                    .padding(inner)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
@@ -73,12 +63,7 @@ fun CompetenzeScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
         } else {
             val punteggi = statsCorrenti.punteggiCompetenze
             Column(
-                modifier = Modifier
-                    .padding(inner)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = spaziaturaSchermo()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.widthIn(max = dimensioneContenuto())) {
                     Spacer(Modifier.height(8.dp))

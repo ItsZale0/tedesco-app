@@ -92,27 +92,16 @@ fun GuidaScreen(vm: TedescoViewModel) {
     var mostraLezione by remember { mutableStateOf(false) }
     val URL_DOC = urlDocumento(profilo?.config?.guidaDocId)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Guida") },
-                actions = {
-                    IconButton(
-                        onClick = { vm.sincronizza() },
-                        enabled = !caricamento
-                    ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+    ScreenScaffold("Guida", actions = {
+        IconButton(
+            onClick = { vm.sincronizza() },
+            enabled = !caricamento
+        ) {
+            Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna")
         }
-    ) { inner ->
+    }, scrollable = false) {
         Box(
             modifier = Modifier
-                .padding(inner)
                 .fillMaxSize()
         ) {
             val g = guida

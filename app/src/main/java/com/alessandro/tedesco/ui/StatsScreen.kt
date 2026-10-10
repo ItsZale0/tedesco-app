@@ -58,22 +58,12 @@ fun StatsScreen(vm: TedescoViewModel) {
     val stats by vm.statistiche.collectAsStateWithLifecycle(null)
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Statistiche", style = MaterialTheme.typography.titleLarge) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { inner ->
+    ScreenScaffold("Statistiche") {
         val statsCorrenti = stats
         if (statsCorrenti == null) {
             // Stato di caricamento: spinner centrato
             Box(
                 modifier = Modifier
-                    .padding(inner)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
@@ -81,12 +71,7 @@ fun StatsScreen(vm: TedescoViewModel) {
             }
         } else {
             Column(
-                modifier = Modifier
-                    .padding(inner)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = spaziaturaSchermo()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.widthIn(max = dimensioneContenuto())) {
                     Spacer(Modifier.height(8.dp))

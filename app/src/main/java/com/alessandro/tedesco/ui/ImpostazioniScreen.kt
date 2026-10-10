@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -236,19 +237,7 @@ private fun SettingsButton(
 
 @Composable
 internal fun GlassTopBar(title: String) {
-    TopAppBar(
-        title = { Text(title, fontWeight = FontWeight.SemiBold) },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            titleContentColor = MaterialTheme.colorScheme.onSurface
-        )
-    )
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-    ) {}
+    CompactTopBar(title)
 }
 
 @Composable
@@ -270,7 +259,7 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
     var guidaDocId by rememberSaveable { mutableStateOf(profilo?.config?.guidaDocId ?: "") }
     var chiaveTutor by rememberSaveable { mutableStateOf(profilo?.config?.tutorApiKey ?: "") }
 
-    Scaffold(topBar = { GlassTopBar("Impostazioni") }) { inner ->
+    Scaffold(topBar = { CompactTopBar("Impostazioni") }, contentWindowInsets = WindowInsets(0)) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
