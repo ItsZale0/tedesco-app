@@ -15,6 +15,12 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 @Serializable
+private data class GroqModel(val id: String)
+
+@Serializable
+private data class GroqModels(val data: List<GroqModel> = emptyList())
+
+@Serializable
 private data class ChatMessage(val role: String, val content: String)
 
 @Serializable
@@ -281,6 +287,22 @@ class TutorService {
             return parsed.choices.firstOrNull()?.message?.content
                 ?: throw IOException("Risposta vuota dal tutor")
         }
+    }
+
+    suspend fun modelliDisponibili(apiKey: String): List<Pair<String?, String>> = withContext(Dispatchers.IO) {
+        val key = if (apiKey.startsWith("gsk_")) apiKey else FREE_API_KEY
+        val req = Request.Builder().url("https://api.groq.com/openai/v1/models").header("Authorization", "Bearer $key").get().build()
+        val ids = try {
+            client.newCall(req).execute().use { r ->
+                if (r.isSuccessful) json.decodeFromString<GroqModels>(r.body?.string().orEmpty()).data.map { it.id } else emptyList()
+            }
+        } catch (e: Exception) { emptyList() }
+        val chat = ids.filter { id ->
+            val l = id.lowercase()
+            !l.contains("whisper") && !l.contains("orpheus") && !l.contains("guard") && !l.contains("safeguard")
+        }.sorted()
+        if (chat.isEmpty()) listOf(null to "Automatico (consigliato)") + MODELLI_FREE.map { it to it }
+        else listOf(null to "Automatico (consigliato)") + chat.map { it to it.substringAfterLast('/').replaceFirstChar { c -> c.uppercase() } }
     }
 
     companion object {

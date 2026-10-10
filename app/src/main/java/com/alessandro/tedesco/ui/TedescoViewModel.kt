@@ -500,6 +500,20 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     /** Modello Groq scelto dall'utente (null = automatico tra i free). */
     private val _modelloTutor = MutableStateFlow<String?>(null)
+
+    // Lista modelli Groq disponibili (fetchata in tempo reale)
+    private val _modelliDisponibili = MutableStateFlow<List<Pair<String?, String>>>(listOf(null to "Automatico (consigliato)"))
+    val modelliDisponibili: StateFlow<List<Pair<String?, String>>> = _modelliDisponibili
+    private var modelliCaricati = false
+
+    fun caricaModelli() {
+        if (modelliCaricati) return
+        viewModelScope.launch {
+            val chiave = tutorApiKey.value
+            val lista = app.tutorServiceInstance.modelliDisponibili(chiave)
+            if (lista.size > 1) { _modelliDisponibili.value = lista; modelliCaricati = true }
+        }
+    }
     val modelloTutor: StateFlow<String?> = _modelloTutor
 
     /** Chiede una risposta al tutor AI. */

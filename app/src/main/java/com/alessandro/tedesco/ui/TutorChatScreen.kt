@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.School
@@ -50,6 +51,8 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val apiKey by vm.tutorApiKey.collectAsStateWithLifecycle("")
     val modelloTutor by vm.modelloTutor.collectAsStateWithLifecycle(null)
+    val modelli by vm.modelliDisponibili.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { vm.caricaModelli() }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -199,6 +202,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
             // Selettore modello
             ModelloSelector(
                 modello = modelloTutor,
+                modelli = modelli,
                 onModelloCambiato = { vm.cambiaModelloTutor(it) }
             )
 
@@ -266,19 +270,13 @@ fun TutorChatScreen(vm: TedescoViewModel) {
 @Composable
 private fun ModelloSelector(
     modello: String?,
+    modelli: List<Pair<String?, String>>,
     onModelloCambiato: (String?) -> Unit
 ) {
     var espanso by remember { mutableStateOf(false) }
-    val modelli = listOf(
-        null to "Automatico (sceglie il più veloce)",
-        "nvidia/nemotron-3.5-lightning:free" to "Nemotron 3.5 Lightning (free)",
-        "liquid/lfm-2.5-2.6b:free" to "LFM 2.5 (free)",
-        "inclusionai/ling-3.0-flash-sante:free" to "Ling 3.0 Flash (free)",
-        "google/gemma-4-31b-it:free" to "Gemma 4 31B (free)",
-        "google/gemma-4-26b-a4b-it:free" to "Gemma 4 26B (free)",
-        "nvidia/nemotron-3-super-120b-a12b:free" to "Nemotron 3 Super 120B (free)"
-    )
-    val etichetta = modelli.firstOrNull { it.first == modello }?.second ?: "Automatico (free)"
+    val etichetta = modelli.firstOrNull { it.first == modello }?.second
+        ?: modello?.substringAfterLast('/')?.replaceFirstChar { it.uppercase() }
+        ?: "Automatico"
 
     Box(
         modifier = Modifier
