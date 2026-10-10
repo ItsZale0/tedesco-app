@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -86,8 +87,12 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
         if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
     }
 
-    ScreenScaffold("Ascolto (Hörverstehen)") {
+    ScreenScaffold("Ascolto (Hörverstehen)", scrollable = false) {
 
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
@@ -379,6 +384,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                 }
 
                 Spacer(Modifier.height(16.dp))
+            }
             }
 
     }
