@@ -194,12 +194,7 @@ private fun ContenutoApp(
         bottomBar = {
             if (mostraBarra) {
                 NavigationBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(24.dp)),
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.28f),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
                 ) {
                     listOf(Dest.Home, Dest.Nuove, Dest.Guida, Dest.Impostazioni, Dest.Altro)
                         .forEach { d ->
