@@ -116,33 +116,35 @@ fun HomeScreen(
 
     val oggi = remember { SimpleDateFormat("EEEE d MMMM", Locale.ITALIAN).format(Date()) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { TitoloSchermata("Oggi") },
-                actions = {
-                    IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
-    ) { inner ->
+    Scaffold { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spaziaturaSchermo()),
+                .padding(horizontal = spaziaturaSchermo())
+                .padding(bottom = 96.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto())
             ) {
-                Spacer(Modifier.height(Spaziature.md))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Oggi",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    IconButton(onClick = { vm.sincronizza() }, enabled = !caricamento) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Aggiorna ora")
+                    }
+                }
+                Spacer(Modifier.height(Spaziature.sm))
 
                 // Saluto con nome profilo e data
                 Text(
