@@ -49,7 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
@@ -198,7 +197,6 @@ private fun ContenutoApp(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .shadow(18.dp, RoundedCornerShape(24.dp), clip = false)
                         .clip(RoundedCornerShape(24.dp))
                         .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(24.dp)),
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.28f),

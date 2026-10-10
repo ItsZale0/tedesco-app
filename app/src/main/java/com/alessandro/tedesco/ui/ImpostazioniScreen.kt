@@ -601,7 +601,7 @@ private fun TutorialGrigio(testo: String) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            AnimatedVisibility(visible = aperto) {
+            if (aperto) {
                 Text(
                     text = testo,
                     style = MaterialTheme.typography.bodySmall,
