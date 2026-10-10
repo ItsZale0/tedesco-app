@@ -161,13 +161,7 @@ fun AltroScreen(
         )
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Altro", style = MaterialTheme.typography.titleLarge) }
-            )
-        }
-    ) { inner ->
+    Scaffold(topBar = { GlassTopBar("Altro") }) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)
@@ -191,12 +185,7 @@ fun AltroScreen(
                         modifier = Modifier.padding(start = 4.dp, top = 8.dp)
                     )
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
+                    GlassCard {
                         Column {
                             categoria.elementi.forEachIndexed { index, elemento ->
                                 VoceAltro(elemento = elemento)
@@ -236,7 +225,7 @@ private fun VoceAltro(elemento: ElementoAltro) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

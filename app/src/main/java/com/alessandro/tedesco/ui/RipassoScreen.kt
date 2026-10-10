@@ -144,7 +144,8 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                     }
                 }
             } else {
-                // fronte
+                // fronte — card centrata verticalmente nello spazio disponibile
+                Spacer(Modifier.weight(1f))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(

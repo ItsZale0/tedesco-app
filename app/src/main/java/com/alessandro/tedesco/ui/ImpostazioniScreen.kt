@@ -235,7 +235,7 @@ private fun SettingsButton(
 }
 
 @Composable
-private fun GlassTopBar(title: String) {
+internal fun GlassTopBar(title: String) {
     TopAppBar(
         title = { Text(title, fontWeight = FontWeight.SemiBold) },
         colors = TopAppBarDefaults.topAppBarColors(
