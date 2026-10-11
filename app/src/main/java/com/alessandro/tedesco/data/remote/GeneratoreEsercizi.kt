@@ -182,7 +182,11 @@ class GeneratoreEsercizi {
             - Ogni esercizio ha: "tipo" ("${tipo.jsonTipo}"), "domanda", "opzioni" (array di esattamente 4 stringhe),
               "rispostaCorretta" (indice 0-3 della risposta giusta), "spiegazione" (in italiano, breve),
               "livello" ("$livello").$contesto
-            - Le spiegazioni sono SEMPRE in italiano; domande e opzioni in italiano (tranne la frase tedesca).
+            - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
+            - NON usare MAI spagnolo (vietate parole come amigo, tu, el, mi, hola, senor, esta, muy, bueno, gracias), ne inglese, ne altre lingue.
+            - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
+            - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
+            - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
             - Le 4 opzioni devono essere plausibili ma con UNA sola risposta corretta.
             - I sostantivi tedeschi vanno sempre con l'articolo (der/die/das).
             - Non inventare esercizi con meno di 4 opzioni o senza rispostaCorretta.$evitaTesto
@@ -235,6 +239,17 @@ class GeneratoreEsercizi {
      * Estrae il JSON dalla risposta (il modello a volte aggiunge ```json o testo),
      * poi converte in [EsercizioGenerato] scartando gli elementi invalidi.
      */
+    private val paroleSpagnole = listOf(
+        "amigo", "amiga", "hola", "senor", "senora", "gracias", "manana", "perro", "gato",
+        "muy ", "bueno ", "esta ", "estas ", "como estas", "por favor", "de nada", "que tal"
+    )
+
+    /** true se il testo contiene parole spagnole (euristica anti-lingua-sbagliata). */
+    private fun contieneSpagnolo(testo: String): Boolean {
+        val t = testo.lowercase()
+        return paroleSpagnole.any { t.contains(it) }
+    }
+
     private fun parseEsercizi(
         risposta: String,
         tipo: TipoEsercizio,
@@ -253,6 +268,8 @@ class GeneratoreEsercizi {
             if (domanda.isEmpty() || opzioni.size != 4) return@mapIndexedNotNull null
             if (rispostaCorretta !in 0..3) return@mapIndexedNotNull null
             if (opzioni.toSet().size != opzioni.size) return@mapIndexedNotNull null // opzioni duplicate
+            // Scarta esercizi in lingua sbagliata (spagnolo/inglese) nelle domande o opzioni
+            if (contieneSpagnolo(domanda) || opzioni.any { contieneSpagnolo(it) }) return@mapIndexedNotNull null
 
             EsercizioGenerato(
                 id = e.id?.takeIf { it.isNotBlank() } ?: "${tipo.jsonTipo}_gen_${System.currentTimeMillis()}_$index",
