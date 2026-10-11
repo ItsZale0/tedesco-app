@@ -42,6 +42,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import android.media.MediaPlayer
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -322,38 +329,84 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
             }
             Spacer(Modifier.height(12.dp))
             if (audioUrl.isNotBlank()) {
+                var isPlaying by remember { mutableStateOf(false) }
+                var progress by remember { mutableFloatStateOf(0f) }
+                var prepared by remember { mutableStateOf(false) }
+                val mediaPlayer = remember { MediaPlayer() }
+                LaunchedEffect(audioUrl) {
+                    try {
+                        mediaPlayer.reset()
+                        mediaPlayer.setDataSource(audioUrl)
+                        mediaPlayer.setOnPreparedListener { prepared = true }
+                        mediaPlayer.setOnCompletionListener { isPlaying = false; progress = 0f }
+                        mediaPlayer.prepareAsync()
+                    } catch (_: Exception) {}
+                }
+                DisposableEffect(Unit) {
+                    onDispose { try { mediaPlayer.release() } catch (_: Exception) {} }
+                }
+                LaunchedEffect(isPlaying) {
+                    while (isPlaying) {
+                        try {
+                            val dur = mediaPlayer.duration
+                            if (dur > 0) progress = mediaPlayer.currentPosition.toFloat() / dur
+                        } catch (_: Exception) {}
+                        delay(400)
+                    }
+                }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     )
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Ascolta la lezione",
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
                             )
-                            Text(
-                                text = "Pronuncia lenta delle parole",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Ascolta la lezione",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = "Pronuncia lenta delle parole",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            IconButton(onClick = {
+                                try {
+                                    if (isPlaying) {
+                                        mediaPlayer.pause()
+                                        isPlaying = false
+                                    } else if (prepared) {
+                                        mediaPlayer.start()
+                                        isPlaying = true
+                                    }
+                                } catch (_: Exception) {}
+                            }) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                    contentDescription = if (isPlaying) "Pausa" else "Riproduci"
+                                )
+                            }
+                        }
+                        if (progress > 0f || isPlaying) {
+                            Spacer(Modifier.height(8.dp))
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        TextButton(onClick = {
-                            val i = Intent(Intent.ACTION_VIEW, Uri.parse(audioUrl))
-                            context.startActivity(i)
-                        }) { Text("Apri") }
                     }
                 }
                 Spacer(Modifier.height(12.dp))

@@ -504,7 +504,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val trascorsi = if (inizio <= 0L) GIORNI_PER_LEZIONE.toLong()
                 else (System.currentTimeMillis() - inizio) / MS_PER_GIORNO
             if (trascorsi < GIORNI_PER_LEZIONE) {
-                _messaggio.value = "Prossima lezione tra ${GIORNI_PER_LEZIONE - trascorsi} giorno/i. Nel frattempo ripassa!"
+                val giorniMancanti = (GIORNI_PER_LEZIONE - trascorsi).toInt()
+                val unita = if (giorniMancanti == 1) "giorno" else "giorni"
+                _messaggio.value = "Prossima lezione tra $giorniMancanti $unita. Nel frattempo ripassa!"
                 return@launch
             }
             val nuova = p.lezioneCorrente + 1
