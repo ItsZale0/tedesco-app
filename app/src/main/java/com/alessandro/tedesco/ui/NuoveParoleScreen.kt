@@ -126,7 +126,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                     onValueChange = { ricerca = it },
                     label = { Text("Cerca in tedesco o italiano") },
                     singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Raggi.card),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -219,7 +219,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
 private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Raggi.card),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

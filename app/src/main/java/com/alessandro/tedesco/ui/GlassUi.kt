@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -101,7 +102,7 @@ fun GlassButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(AltezzaBottonePrincipale())
             .clip(GlassShape),
         enabled = enabled,
         colors = colors,

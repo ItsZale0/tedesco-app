@@ -155,7 +155,7 @@ private fun CardProgressoB1(stats: Statistiche) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Raggi.card),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -247,7 +247,7 @@ private fun StatCardCompatta(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Raggi.card),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -363,6 +363,8 @@ private fun SezioneUltimi7Giorni(stats: Statistiche) {
 @Composable
 private fun GraficoBarreVerticali(dati: List<com.alessandro.tedesco.data.AttivitaGiorno>) {
     val maxVal = dati.maxOfOrNull { it.ripassi }?.coerceAtLeast(1) ?: 1
+    val colorePrimario = MaterialTheme.colorScheme.primary
+    val coloreSecondario = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
 
     Canvas(
         modifier = Modifier
@@ -379,9 +381,9 @@ private fun GraficoBarreVerticali(dati: List<com.alessandro.tedesco.data.Attivit
 
             drawRoundRect(
                 color = if (i == dati.lastIndex) {
-                    Color(0xFF1B5E9B)
+                    colorePrimario
                 } else {
-                    Color(0xFF9EC9F0)
+                    coloreSecondario
                 },
                 topLeft = Offset(x, y),
                 size = Size(larghezzaBarra.coerceAtLeast(2f), altezzaBarra.coerceAtLeast(2f)),
@@ -433,6 +435,8 @@ private fun SezioneGraficoProgresso(stats: Statistiche) {
 private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.ProgressPoint>) {
     val maxMature = dati.maxOfOrNull { it.paroleMature }?.coerceAtLeast(1) ?: 1
     val maxTotali = dati.maxOfOrNull { it.paroleTotali }?.coerceAtLeast(1) ?: 1
+    val colorePrimario = MaterialTheme.colorScheme.primary
+    val coloreSecondario = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
 
     Canvas(
         modifier = Modifier
@@ -451,7 +455,7 @@ private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.Progres
         }
         drawPath(
             path = pathTotali,
-            color = Color(0xFF9EC9F0),
+            color = coloreSecondario,
             style = Stroke(width = 2f, cap = StrokeCap.Round)
         )
 
@@ -464,7 +468,7 @@ private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.Progres
         }
         drawPath(
             path = pathMature,
-            color = Color(0xFF1B5E9B),
+            color = colorePrimario,
             style = Stroke(width = 3f, cap = StrokeCap.Round)
         )
 
@@ -473,7 +477,7 @@ private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.Progres
             val x = i * stepX
             val y = size.height - (p.paroleMature.toFloat() / maxMature) * (size.height - 20f) - 10f
             drawCircle(
-                color = Color(0xFF1B5E9B),
+                color = colorePrimario,
                 radius = 3f,
                 center = Offset(x, y)
             )
@@ -507,7 +511,7 @@ private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.Progres
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Canvas(modifier = Modifier.size(12.dp)) {
-                drawCircle(color = Color(0xFF1B5E9B), radius = 6f)
+                drawCircle(color = colorePrimario, radius = 6f)
             }
             Spacer(Modifier.width(4.dp))
             Text(
@@ -518,7 +522,7 @@ private fun GraficoLineaProgresso(dati: List<com.alessandro.tedesco.data.Progres
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Canvas(modifier = Modifier.size(12.dp)) {
-                drawCircle(color = Color(0xFF9EC9F0), radius = 6f)
+                drawCircle(color = coloreSecondario, radius = 6f)
             }
             Spacer(Modifier.width(4.dp))
             Text(

@@ -39,6 +39,7 @@ import com.alessandro.tedesco.data.CalcoloCompetenze
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +109,7 @@ fun CompetenzeScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
                     // Info card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Raggi.card),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
@@ -147,7 +148,7 @@ private fun HeaderLivello(punteggi: CalcoloCompetenze.PunteggiCompetenze, profil
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Raggi.card),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
@@ -199,7 +200,7 @@ private fun CompetenzaCard(
     val punteggioInt = punteggio.toInt().coerceIn(0, 100)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Raggi.card),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

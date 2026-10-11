@@ -38,6 +38,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -227,7 +228,7 @@ private fun SettingsButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(44.dp).clip(GlassShape),
+        modifier = modifier.fillMaxWidth().height(AltezzaBottonePrincipale()).clip(GlassShape),
         enabled = enabled,
         colors = colors,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),

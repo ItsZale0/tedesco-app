@@ -46,7 +46,8 @@ object CalcoloCompetenze {
             val r = reviews[w.id]
             r != null && r.repetitions >= 4
         }
-        val lessico = (paroleMature.toFloat() / OBIETTIVO_PAROLE_B1 * 100).coerceAtMost(100f)
+        val lessico = if (paroleAttive.isEmpty()) 0f
+            else (paroleMature.toFloat() / paroleAttive.size * 100).coerceAtMost(100f)
 
         // GRAMMATICA: accuratezza media delle review
         // Se non ci sono review, usa il progresso.accuratezzaMedia
@@ -60,13 +61,19 @@ object CalcoloCompetenze {
             else (ripassi.toFloat() / (ripassi + errori) * 100)
         }
 
-        // COMPRENSIONE: da test di comprensione (per ora usa accuratezza come proxy)
-        // TODO: implementare quiz di comprensione
-        val comprensione = progresso.accuratezzaMedia * 100
+        // COMPRENSIONE: media dei punteggi dei quiz di comprensione (ultimi 5)
+        val comprensione = if (progresso.testComprensione.isNotEmpty()) {
+            progresso.testComprensione.takeLast(5).map { it.punteggio }.average().toFloat()
+        } else {
+            progresso.accuratezzaMedia * 100
+        }
 
-        // PRODUZIONE: da frasi complete (per ora usa accuratezza come proxy)
-        // TODO: implementare esercizi di produzione
-        val produzione = progresso.accuratezzaMedia * 100
+        // PRODUZIONE: media dei punteggi degli esercizi di produzione (ultimi 5)
+        val produzione = if (progresso.testProduzione.isNotEmpty()) {
+            progresso.testProduzione.takeLast(5).map { it.punteggio }.average().toFloat()
+        } else {
+            progresso.accuratezzaMedia * 100
+        }
 
         // LIVELLO COMPLESSIVO: media ponderata
         // Lessico 30%, Grammatica 30%, Comprensione 20%, Produzione 20%

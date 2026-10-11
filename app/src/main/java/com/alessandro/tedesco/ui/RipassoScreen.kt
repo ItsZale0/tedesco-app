@@ -117,7 +117,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp)
+                                .height(AltezzaBottonePrincipale())
                         ) { Text("Chiudi") }
                     }
                 }
@@ -228,7 +228,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             onClick = { vm.rispondi(false) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(64.dp)
+                                .height(AltezzaBottonePrincipale())
                         ) {
                             Icon(
                                 Icons.Filled.Close,
@@ -242,7 +242,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             onClick = { vm.rispondi(true) },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(64.dp),
+                                .height(AltezzaBottonePrincipale()),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
