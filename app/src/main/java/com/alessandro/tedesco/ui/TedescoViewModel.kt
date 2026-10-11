@@ -471,6 +471,56 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Giorni rimanenti prima che la prossima lezione sia disponibile (0 = disponibile ora). */
+    val giorniProssimaLezione: StateFlow<Int> = profileManager.repositoryFlow
+        .map { r ->
+            val inizio = r.profiloAttivoId?.let { r.profili[it]?.stato?.progresso?.dataInizioLezione } ?: 0L
+            if (inizio <= 0L) GIORNI_PER_LEZIONE
+            else {
+                val trascorsi = (System.currentTimeMillis() - inizio) / MS_PER_GIORNO
+                (GIORNI_PER_LEZIONE - trascorsi).toInt().coerceAtLeast(0)
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    /** Inizializza la data di inizio lezione se non e' mai stata impostata (primo avvio). */
+    fun inizializzaDataLezione() {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            if (profilo.stato.progresso.dataInizioLezione == 0L) {
+                val nuovoStato = profilo.stato.copy(
+                    progresso = profilo.stato.progresso.copy(dataInizioLezione = System.currentTimeMillis())
+                )
+                profileManager.aggiornaStatoAttivo(nuovoStato)
+            }
+        }
+    }
+
+    /** Avanza alla lezione successiva, solo se sono passati >= 2 giorni dall'inizio della corrente. */
+    fun avanzaLezione() {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val p = profilo.stato.progresso
+            val inizio = p.dataInizioLezione
+            val trascorsi = if (inizio <= 0L) GIORNI_PER_LEZIONE.toLong()
+                else (System.currentTimeMillis() - inizio) / MS_PER_GIORNO
+            if (trascorsi < GIORNI_PER_LEZIONE) {
+                _messaggio.value = "Prossima lezione tra ${GIORNI_PER_LEZIONE - trascorsi} giorno/i. Nel frattempo ripassa!"
+                return@launch
+            }
+            val nuova = p.lezioneCorrente + 1
+            val nuovoStato = profilo.stato.copy(
+                progresso = p.copy(
+                    lezioneCorrente = nuova,
+                    dataInizioLezione = System.currentTimeMillis(),
+                    lezioniCompletate = p.lezioniCompletate + 1
+                )
+            )
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+            repo.aggiornaLezioneContenuto(nuova)
+            _messaggio.value = "Lezione $nuova iniziata! La prossima tra $GIORNI_PER_LEZIONE giorni."
+        }
+    }
+
     fun aggiornaFeedUrl(nuovoUrl: String) {
         viewModelScope.launch {
             profileManager.aggiornaFeedUrl(nuovoUrl)
@@ -948,6 +998,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     }
 
     companion object {
+        const val GIORNI_PER_LEZIONE = 2
+        private const val MS_PER_GIORNO = 24L * 60 * 60 * 1000
         fun formattaData(ts: Long): String {
             if (ts == 0L) return "mai"
             return SimpleDateFormat("d/M HH:mm", Locale.ITALIAN).format(Date(ts))

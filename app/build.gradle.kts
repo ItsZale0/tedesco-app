@@ -20,8 +20,8 @@ android {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 138
-        versionName = "1.35.30"
+        versionCode = 139
+        versionName = "1.35.31"
         buildConfigField("String", "FREE_API_KEY", "\"$freeApiKey\"")
     }
 

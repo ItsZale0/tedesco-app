@@ -52,6 +52,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -225,6 +226,37 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
     var mostraSelettore by remember { mutableStateOf(false) }
     val ttsHelper = rememberTtsHelper(context)
+    val giorniProssima by vm.giorniProssimaLezione.collectAsStateWithLifecycle(2)
+    LaunchedEffect(Unit) { vm.inizializzaDataLezione() }
+
+    // Banner: una lezione ogni 2 giorni
+    if (giorniProssima > 0) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(Raggi.card),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    "Prossima lezione tra $giorniProssima giorno${if (giorniProssima == 1) "" else "i"}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Ripassa le parole e fai gli esercizi nel frattempo!",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+    } else {
+        Button(
+            onClick = { vm.avanzaLezione() },
+            modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
+        ) { Text("Inizia la lezione ${lezioneCorrente + 1}") }
+        Spacer(Modifier.height(8.dp))
+    }
 
     Card(
         modifier = Modifier
