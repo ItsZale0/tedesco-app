@@ -293,18 +293,21 @@ private fun ContenutoApp(
                     onIndietro = { nav.popBackStack() },
                     sessioni = vm.sessioni.collectAsStateWithLifecycle().value,
                     sessioniAdattive = vm.sessioniAdattive.collectAsStateWithLifecycle().value,
-                    onAvvia = { tipo ->
-                        // Ogni sessione porta davvero da qualche parte
-                        when (tipo.uppercase()) {
-                            "SESSIONE", "SESSIONE_GUIDATA", "RIPASSO" -> nav.navigate("ripasso")
-                            "TEST", "TEST_LIVELLO" -> nav.navigate("testb1")
-                            "ROLEPLAY" -> nav.navigate("roleplay")
-                            "GRAMMATICA" -> nav.navigate("grammatica")
-                            "COMPRENSIONE" -> nav.navigate("quiz-comprensione")
-                            "PRODUZIONE" -> nav.navigate("quiz-produzione")
-                            "VOCABOLARIO" -> nav.navigate("nuove")
-                            else -> nav.navigate("ripasso")
+                    onAvvia = { azione ->
+                        // Ogni sessione porta davvero da qualche parte.
+                        // Gestisce sia enum (PRODUZIONE, VOCABOLARIO...) sia route dirette (quiz-produzione, nuove...)
+                        val rotta = when (azione.uppercase()) {
+                            "SESSIONE", "SESSIONE_GUIDATA" -> "sessioni"
+                            "RIPASSO" -> "ripasso"
+                            "GRAMMATICA" -> "grammatica"
+                            "COMPRENSIONE" -> "quiz-comprensione"
+                            "PRODUZIONE" -> "quiz-produzione"
+                            "VOCABOLARIO" -> "nuove"
+                            "TEST", "TEST_LIVELLO" -> "testb1"
+                            "ROLEPLAY" -> "roleplay"
+                            else -> azione.lowercase()
                         }
+                        nav.navigate(rotta)
                     }
                 )
             }
