@@ -183,7 +183,7 @@ class GeneratoreEsercizi {
               "rispostaCorretta" (indice 0-3 della risposta giusta), "spiegazione" (in italiano, breve),
               "livello" ("$livello").$contesto
             - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
-            - NON usare MAI spagnolo (vietate parole come amigo, tu, el, mi, hola, senor, esta, muy, bueno, gracias), ne inglese, ne altre lingue.
+            - NON usare MAI spagnolo (vietate parole come amigo, hola, gracias, senor, por favor, muy, bueno, manana), ne inglese, ne altre lingue.
             - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
             - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
             - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
@@ -200,11 +200,11 @@ class GeneratoreEsercizi {
     ): String {
         val isFreeMode = apiKey.isBlank()
         val url = if (isFreeMode) TutorService.FREE_ENDPOINT else "https://api.groq.com/openai/v1/chat/completions"
-        val effectiveKey = if (apiKey.startsWith("gsk_")) apiKey else TutorService.FREE_API_KEY
+        val effectiveKey = apiKey.trim().ifBlank { TutorService.FREE_API_KEY }
 
         val body = json.encodeToString(
             ChatRequestCompat.serializer(),
-            ChatRequestCompat(model = modello, messages = messaggi)
+            ChatRequestCompat(model = modello, messages = messaggi, reasoningEffort = if (modello.contains("oss", ignoreCase = true)) "low" else null)
         )
         val builder = Request.Builder()
             .url(url)
@@ -239,16 +239,15 @@ class GeneratoreEsercizi {
      * Estrae il JSON dalla risposta (il modello a volte aggiunge ```json o testo),
      * poi converte in [EsercizioGenerato] scartando gli elementi invalidi.
      */
-    private val paroleSpagnole = listOf(
-        "amigo", "amiga", "hola", "senor", "senora", "gracias", "manana", "perro", "gato",
-        "muy ", "bueno ", "esta ", "estas ", "como estas", "por favor", "de nada", "que tal"
+    // Solo parole inequivocabilmente spagnole, a parole intere (\b) per non matchare sottostringhe italiane
+    // (es. "questa" NON deve matchare "esta"). Vetate solo parole che in italiano non esistono.
+    private val regexSpagnolo = Regex(
+        "\\b(amigo|amiga|hola|senor|senora|gracias|manana|perro|gato|muy|bueno|buena|por favor|de nada|que tal|como estas)\\b",
+        RegexOption.IGNORE_CASE
     )
 
     /** true se il testo contiene parole spagnole (euristica anti-lingua-sbagliata). */
-    private fun contieneSpagnolo(testo: String): Boolean {
-        val t = testo.lowercase()
-        return paroleSpagnole.any { t.contains(it) }
-    }
+    private fun contieneSpagnolo(testo: String): Boolean = regexSpagnolo.containsMatchIn(testo)
 
     private fun parseEsercizi(
         risposta: String,
@@ -270,9 +269,11 @@ class GeneratoreEsercizi {
             if (opzioni.toSet().size != opzioni.size) return@mapIndexedNotNull null // opzioni duplicate
             // Scarta esercizi in lingua sbagliata (spagnolo/inglese) nelle domande o opzioni
             if (contieneSpagnolo(domanda) || opzioni.any { contieneSpagnolo(it) }) return@mapIndexedNotNull null
+            // ASCOLTO richiede la frase da ascoltare e la traduzione
+            if (tipo == TipoEsercizio.ASCOLTO && (e.fraseTedesca.isNullOrBlank() || e.traduzioneItaliana.isNullOrBlank())) return@mapIndexedNotNull null
 
             EsercizioGenerato(
-                id = e.id?.takeIf { it.isNotBlank() } ?: "${tipo.jsonTipo}_gen_${System.currentTimeMillis()}_$index",
+                id = "${tipo.jsonTipo}_gen_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(8)}",
                 tipo = tipo,
                 domanda = domanda,
                 opzioni = opzioni,
@@ -319,7 +320,8 @@ private data class ChatRequestCompat(
     val model: String,
     val messages: List<ChatMessageCompat>,
     @SerialName("max_tokens") val maxTokens: Int = 4096,
-    val temperature: Double = 0.8
+    val temperature: Double = 0.8,
+    @SerialName("reasoning_effort") val reasoningEffort: String? = null
 )
 
 @Serializable
