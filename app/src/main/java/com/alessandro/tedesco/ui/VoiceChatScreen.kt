@@ -76,7 +76,7 @@ fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
         }
     }
 
-    ScreenScaffold("Conversazione vocale", onBack = onIndietro) {
+    ScreenScaffold("Conversazione vocale", onBack = onIndietro, scrollable = false) {
 
             // Livello
             AssistChip(

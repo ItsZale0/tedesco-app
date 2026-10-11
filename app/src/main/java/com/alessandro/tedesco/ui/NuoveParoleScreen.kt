@@ -99,7 +99,6 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
         okTesto && okLezione
     }
 
-    val margine = spaziaturaSchermo()
     val maxLarghezza = dimensioneContenuto()
 
     ScreenScaffold("Parole", actions = {
@@ -130,11 +129,11 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = margine, vertical = 8.dp)
+                        .padding(vertical = 8.dp)
                 )
 
                 LazyRow(
-                    modifier = Modifier.padding(horizontal = margine),
+                    modifier = Modifier,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
@@ -163,7 +162,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = margine, vertical = 8.dp)
+                            .padding(vertical = 8.dp)
                     )
                     Spacer(Modifier.height(4.dp))
                 }
@@ -183,11 +182,11 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                             text = "${filtrate.size} parole",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = margine, vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                         LazyColumn(
                             contentPadding = PaddingValues(
-                                start = margine, end = margine, bottom = 24.dp
+                                bottom = 24.dp
                             ),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {

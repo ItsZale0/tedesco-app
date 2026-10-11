@@ -64,7 +64,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    ScreenScaffold("Ripasso", onBack = onIndietro) {
+    ScreenScaffold("Ripasso", onBack = onIndietro, scrollable = false) {
 
             Column(
                 modifier = Modifier

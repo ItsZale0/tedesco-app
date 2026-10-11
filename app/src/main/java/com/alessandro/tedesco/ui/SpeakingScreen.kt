@@ -184,13 +184,13 @@ fun SpeakingScreen(
         }
     }
 
-    ScreenScaffold("Speaking con AI", onBack = onIndietro) {
+    ScreenScaffold("Speaking con AI", onBack = onIndietro, scrollable = false) {
 
             // Info card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spaziaturaSchermo(), vertical = 8.dp),
+                    .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -216,7 +216,7 @@ fun SpeakingScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = spaziaturaSchermo(), vertical = 4.dp),
+                        .padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
@@ -234,8 +234,7 @@ fun SpeakingScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = spaziaturaSchermo()),
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messaggi) { messaggio ->
@@ -247,7 +246,7 @@ fun SpeakingScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(spaziaturaSchermo()),
+                    .padding(vertical = spaziaturaSchermo()),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )

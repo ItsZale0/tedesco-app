@@ -30,7 +30,7 @@ fun ContestoMedicoScreen(
     var tab by remember { mutableStateOf(0) }
     val tabs = listOf("Lessico", "Scenari", "Frasi")
 
-    ScreenScaffold("Contesto Medico", onBack = onIndietro) {
+    ScreenScaffold("Contesto Medico", onBack = onIndietro, scrollable = false) {
 
             // Tab bar
             TabRow(selectedTabIndex = tab) {

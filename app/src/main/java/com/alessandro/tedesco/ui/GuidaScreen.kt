@@ -123,7 +123,6 @@ fun GuidaScreen(vm: TedescoViewModel) {
                             .widthIn(max = dimensioneContenuto())
                             .align(Alignment.TopCenter),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            start = spaziaturaSchermo(), end = spaziaturaSchermo(),
                             top = 8.dp, bottom = 32.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)

@@ -87,7 +87,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
         if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
     }
 
-    ScreenScaffold("Ascolto (Hörverstehen)", scrollable = false) {
+    ScreenScaffold("Ascolto (Hörverstehen)", scrollable = true) {
 
             Box(
                 modifier = Modifier.fillMaxSize(),

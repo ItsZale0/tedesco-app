@@ -19,7 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -181,7 +182,7 @@ fun GlassExpandableSection(
                     }
                 }
                 Icon(
-                    imageVector = Icons.Filled.MoreVert,
+                    imageVector = Icons.Filled.ExpandMore,
                     contentDescription = if (expanded) "Chiudi" else "Apri",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(28.dp)
@@ -220,7 +221,7 @@ fun <T : Any> GlassDropdown(
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = {
-                Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null,
+                Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
             },
             shape = RoundedCornerShape(Raggi.card),

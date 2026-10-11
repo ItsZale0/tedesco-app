@@ -146,7 +146,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
         topBar = {
             Surface(
                 tonalElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().statusBarsPadding()
             ) {
                 Row(
                     modifier = Modifier
