@@ -254,7 +254,7 @@ class TutorService {
         var t = text
         t = Regex("(?s)\u003cthink\u003e.*?\u003c/think\u003e").replace(t, "")
         t = Regex("(?s)\u003creasoning\u003e.*?\u003c/reasoning\u003e").replace(t, "")
-        t = Regex("(?si)\u005bthinking\u005d.*?\u005b/thinking\u005d").replace(t, "")
+        t = Regex("(?si)\\[thinking\\].*?\\[/thinking\\]").replace(t, "")
         return t.trim()
     }
 
