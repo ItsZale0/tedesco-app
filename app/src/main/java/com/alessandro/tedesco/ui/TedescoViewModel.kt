@@ -271,6 +271,18 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         viewModelScope.launch { profileManager.inizializza() }
+        // Al cambio di profilo attivo ricarica gli esercizi generati dal nuovo profilo
+        // (evita che restino visibili quelli del profilo precedente).
+        viewModelScope.launch {
+            var ultimoProfilo: String? = "__init__"
+            profileManager.repositoryFlow.collect { repo ->
+                val id = repo.profiloAttivoId
+                if (id != ultimoProfilo) {
+                    ultimoProfilo = id
+                    if (id != null) caricaEserciziGenerati()
+                }
+            }
+        }
     }
 
     /** Ricarica i profili (usato dal pulsante "Riprova" nella selezione). */

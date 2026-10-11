@@ -115,7 +115,7 @@ private fun TabLessico() {
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${parola.article} ${parola.german}",
+                                    text = parola.article?.takeIf { !parola.german.startsWith(it, ignoreCase = true) }?.let { "$it ${parola.german}" } ?: parola.german,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )

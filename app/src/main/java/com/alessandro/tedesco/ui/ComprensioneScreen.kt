@@ -39,6 +39,7 @@ import androidx.compose.material3.TextButton
 import com.alessandro.tedesco.data.QuizData
 import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.DomandaTest
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.toDomandaTest
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
@@ -59,7 +60,9 @@ import kotlinx.coroutines.launch
 fun ComprensioneScreen(vm: TedescoViewModel) {
     // Esercizi generati dall'AI (persistiti nel profilo) — combinati con il pool statico
     val eserciziGen by vm.eserciziGenComprensione.collectAsStateWithLifecycle()
-    val statiche = remember { QuizData.domandeComprensione }
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
+    val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
+    val statiche = remember(livelloUtente) { QuizData.domandeComprensione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
     var elenco by remember { mutableStateOf<List<DomandaTest>>(statiche + eserciziGen.map { it.toDomandaTest() }) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }

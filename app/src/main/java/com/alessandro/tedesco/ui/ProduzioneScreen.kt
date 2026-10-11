@@ -38,6 +38,7 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.toDomandaTest
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -49,7 +50,9 @@ import com.alessandro.tedesco.data.local.DomandaTest
 @Composable
 fun ProduzioneScreen(vm: TedescoViewModel) {
     val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
-    val statiche = remember { QuizData.domandeProduzione }
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
+    val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
+    val statiche = remember(livelloUtente) { QuizData.domandeProduzione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
     var elenco by remember { mutableStateOf<List<DomandaTest>>(statiche + eserciziGen.map { it.toDomandaTest() }) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
