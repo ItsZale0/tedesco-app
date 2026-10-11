@@ -57,20 +57,23 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Carica conversazione persistente dal profilo
-    var messaggi by remember {
+    // Carica conversazione persistente dal profilo quando disponibile
+    var messaggi by remember { mutableStateOf<List<MessaggioTutor>>(emptyList()) }
+    var storicoCaricato by remember { mutableStateOf(false) }
+    LaunchedEffect(profilo?.id) {
         val p = profilo
-        mutableStateOf(
-            p?.stato?.conversazioni
-                ?.filter { it.tipo == "tutor" }
-                ?.map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
-                ?: listOf(
-                    MessaggioTutor(
-                        testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi quello che vuoi: grammatica, esempi, esercizi, dubbi. Rispondo in italiano.",
-                        daUtente = false
-                    )
+        if (p != null && !storicoCaricato) {
+            val storico = p.stato.conversazioni
+                .filter { it.tipo == "tutor" }
+                .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
+            messaggi = if (storico.isNotEmpty()) storico else listOf(
+                MessaggioTutor(
+                    testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi quello che vuoi: grammatica, esempi, esercizi, dubbi. Rispondo in italiano.",
+                    daUtente = false
                 )
-        )
+            )
+            storicoCaricato = true
+        }
     }
     var input by remember { mutableStateOf("") }
     var caricamento by remember { mutableStateOf(false) }
@@ -81,7 +84,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     // Salva conversazione nel profilo quando cambiano i messaggi
     LaunchedEffect(messaggi, profilo) {
         val p = profilo
-        if (p != null) {
+        if (p != null && storicoCaricato) {
             val conversazioni = messaggi.mapIndexed { index, msg ->
                 ConversazioneEntry(
                     id = "tutor_${System.currentTimeMillis()}_$index",

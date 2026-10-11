@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -196,6 +197,17 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                                     onAscolta = { ttsHelper.speak(w.german) },
                                     onAscoltaFrase = { ttsHelper.speak(w.example) }
                                 )
+                            }
+                            item {
+                                Spacer(Modifier.height(12.dp))
+                                Button(
+                                    onClick = { vm.completaPassoGiornaliero("vocabolario") },
+                                    modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
+                                ) {
+                                    Icon(Icons.Filled.Check, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Segna come studiato")
+                                }
                             }
                         }
                     }

@@ -55,20 +55,23 @@ fun SpeakingScreen(
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
 
-    // Carica conversazione persistente dal profilo
-    var messaggi by remember {
+    // Carica conversazione persistente dal profilo quando disponibile
+    var messaggi by remember { mutableStateOf<List<MessaggioSpeaking>>(emptyList()) }
+    var storicoCaricato by remember { mutableStateOf(false) }
+    LaunchedEffect(profilo?.id) {
         val p = profilo
-        mutableStateOf(
-            p?.stato?.conversazioni
-                ?.filter { it.tipo == "speaking" }
-                ?.map { MessaggioSpeaking(it.testo, it.ruolo == "utente", it.correzione) }
-                ?: listOf(
-                    MessaggioSpeaking(
-                        text = "Ciao! Sono il tuo tutor di tedesco. Parla con me in tedesco: ti ascolto, trascrivo e correggio. Prova a presentarti o a dire cosa fai oggi.",
-                        daUtente = false
-                    )
+        if (p != null && !storicoCaricato) {
+            val storico = p.stato.conversazioni
+                .filter { it.tipo == "speaking" }
+                .map { MessaggioSpeaking(it.testo, it.ruolo == "utente", it.correzione) }
+            messaggi = if (storico.isNotEmpty()) storico else listOf(
+                MessaggioSpeaking(
+                    text = "Ciao! Sono il tuo tutor di tedesco. Parla con me in tedesco: ti ascolto, trascrivo e correggio. Prova a presentarti o a dire cosa fai oggi.",
+                    daUtente = false
                 )
-        )
+            )
+            storicoCaricato = true
+        }
     }
     var inputTesto by remember { mutableStateOf("") }
     var ascoltoAttivo by remember { mutableStateOf(false) }
@@ -89,7 +92,7 @@ fun SpeakingScreen(
     // Salva conversazione nel profilo quando cambiano i messaggi
     LaunchedEffect(messaggi, profilo) {
         val p = profilo
-        if (p != null) {
+        if (p != null && storicoCaricato) {
             val conversazioni = messaggi.mapIndexed { index, msg ->
                 ConversazioneEntry(
                     id = "speaking_${System.currentTimeMillis()}_$index",
