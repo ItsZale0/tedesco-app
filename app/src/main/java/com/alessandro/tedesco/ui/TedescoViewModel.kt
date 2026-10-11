@@ -345,6 +345,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val reviews: List<ReviewEntity> = repo.dueReviews()
             val tutte: List<WordEntity> = parole.first()
             val cards = reviews.mapNotNull { r -> tutte.firstOrNull { w -> w.id == r.wordId } }
+                .filter { w -> w.italian.isNotBlank() && w.italian != "(da completare)" }
             _sessione.value = SessionState(cards = cards)
             _caricamento.value = false
             if (cards.isEmpty()) _messaggio.value = "Niente da ripassare. Torna domani."
