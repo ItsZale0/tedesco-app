@@ -253,7 +253,7 @@ object AdaptiveSessionEngine {
                     durataMinuti = 20,
                     priorita = prioritaCounter++,
                     urgente = false,
-                    azione = "sessioni"
+                    azione = "ripasso"
                 )
             )
         }
@@ -269,7 +269,7 @@ object AdaptiveSessionEngine {
                     durataMinuti = 15,
                     priorita = 1,
                     urgente = false,
-                    azione = "sessioni"
+                    azione = "ripasso"
                 )
             )
         }

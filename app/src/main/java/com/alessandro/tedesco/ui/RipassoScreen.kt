@@ -57,7 +57,7 @@ import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
+fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () -> Unit = {}) {
     val sessionState by vm.sessione.collectAsStateWithLifecycle(SessionState())
     val caricamento by vm.caricamento.collectAsStateWithLifecycle(false)
 
@@ -87,9 +87,41 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                     Text("Preparo le carte...")
                 }
             } else if (carta == null) {
-                // sessione finita
+                // sessione finita (o vuota)
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (sessionState.totale == 0) {
+                            // Nulla da ripassare: guida verso le nuove parole
+                            Text(
+                                text = "Nessuna parola da ripassare ora",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                text = "Impara nuove parole dalla sezione Lessico!",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(24.dp))
+                            Button(
+                                onClick = onVaiANuove,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(AltezzaBottonePrincipale())
+                            ) { Text("Impara nuove parole") }
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = {
+                                    vm.nuovaSessione()
+                                    onIndietro()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(AltezzaBottonePrincipale())
+                            ) { Text("Chiudi") }
+                        } else {
                         Text(
                             text = "Fatto!",
                             style = MaterialTheme.typography.headlineMedium,
@@ -119,6 +151,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 .fillMaxWidth()
                                 .height(AltezzaBottonePrincipale())
                         ) { Text("Chiudi") }
+                        }
                     }
                 }
             } else {

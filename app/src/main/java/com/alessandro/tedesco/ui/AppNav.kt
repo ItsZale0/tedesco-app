@@ -297,7 +297,7 @@ private fun ContenutoApp(
                         // Ogni sessione porta davvero da qualche parte.
                         // Gestisce sia enum (PRODUZIONE, VOCABOLARIO...) sia route dirette (quiz-produzione, nuove...)
                         val rotta = when (azione.uppercase()) {
-                            "SESSIONE", "SESSIONE_GUIDATA" -> "sessioni"
+                            "SESSIONE", "SESSIONE_GUIDATA" -> "ripasso"
                             "RIPASSO" -> "ripasso"
                             "GRAMMATICA" -> "grammatica"
                             "COMPRENSIONE" -> "quiz-comprensione"
@@ -334,7 +334,7 @@ private fun ContenutoApp(
             }
             composable("roleplay") { RoleplayScreen(vm) }
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
-            composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }) }
+            composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }, onVaiANuove = { nav.navigate("nuove") }) }
             composable("competenze") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); CompetenzeScreen(vm, profilo = profilo) }
             composable("quiz-comprensione") { ComprensioneScreen(vm) }
             composable("quiz-produzione") { ProduzioneScreen(vm) }
