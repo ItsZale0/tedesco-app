@@ -2,6 +2,7 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.toDomandaTest
 import com.alessandro.tedesco.data.local.LivelloCEFR
+import com.alessandro.tedesco.data.local.TipoDomanda
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -53,7 +55,8 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
     val statiche = remember(livelloUtente) { QuizData.domandeProduzione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
-    var elenco by remember { mutableStateOf<List<DomandaTest>>(eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }) }
+    var elenco by remember { mutableStateOf<List<DomandaTest>>(emptyList()) }
+    var caricato by remember { mutableStateOf(false) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -63,11 +66,29 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.PRODUZIONE, soglia = 99, quanti = 5) }
-    LaunchedEffect(eserciziGen, completato) {
-        if (completato) {
-            elenco = eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }
+    // Genera un batch FRESCO ad ogni ingresso (i salvati servono solo per 'evita')
+    LaunchedEffect(Unit) {
+        vm.caricaEserciziGenerati()
+        val freschi = try {
+            vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 5)
+        } catch (e: Exception) {
+            emptyList()
         }
+        elenco = freschi.map {
+            DomandaTest(
+                id = it.id,
+                tipo = TipoDomanda.GRAMMATICA,
+                domanda = it.domanda,
+                opzioni = it.opzioni,
+                rispostaCorretta = it.rispostaCorretta,
+                spiegazione = it.spiegazione,
+                livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
+                tagGrammatica = null
+            )
+        }
+        if (elenco.isEmpty()) elenco = statiche
+        if (indice >= elenco.size) indice = (elenco.size - 1).coerceAtLeast(0)
+        caricato = true
     }
 
     ScreenScaffold("Produzione") {
@@ -76,7 +97,15 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
-                if (!completato) {
+                if (!caricato) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(12.dp))
+                            Text("Genero esercizi nuovi...")
+                        }
+                    }
+                } else if (!completato) {
                     val domanda = elenco[indice]
 
                     // Progress

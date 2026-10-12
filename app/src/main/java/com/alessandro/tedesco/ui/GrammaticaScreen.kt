@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import java.net.URLEncoder
 import com.alessandro.tedesco.data.GrammaticaB1
+import com.alessandro.tedesco.data.EsercizioGrammatica
 import com.alessandro.tedesco.data.toEsercizioGrammatica
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.remote.TipoEsercizio
@@ -60,17 +61,34 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     val eserciziGen by vm.eserciziGenGrammatica.collectAsStateWithLifecycle()
     var generaInCorso by remember { mutableStateOf(false) }
     var erroreGen by remember { mutableStateOf<String?>(null) }
-    var esercizi by remember { mutableStateOf(GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)) }
+    var esercizi by remember { mutableStateOf<List<EsercizioGrammatica>>(emptyList()) }
+    var caricato by remember { mutableStateOf(false) }
     var indice by remember { mutableStateOf(0) }
 
     // Carica e ricostruisce la lista quando arrivano nuovi esercizi generati
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.GRAMMATICA, soglia = 99, quanti = 5) }
-    LaunchedEffect(lezioneCorrente, eserciziGen, livello) {
-        val aiNonCompletati = eserciziGen.filter { it.livello == livello && !it.completato }
-            .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
-        esercizi = if (aiNonCompletati.isNotEmpty()) aiNonCompletati
-            else GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
+    // Genera un batch FRESCO ad ogni ingresso (i salvati servono solo per 'evita')
+    LaunchedEffect(Unit) {
+        vm.caricaEserciziGenerati()
+        val freschi = try {
+            vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5)
+        } catch (e: Exception) {
+            emptyList()
+        }
+        esercizi = freschi.map {
+            EsercizioGrammatica(
+                id = it.id,
+                categoria = CategoriaGrammatica.perLivello(livello).firstOrNull() ?: CategoriaGrammatica.VERBI_TEMPI,
+                lezione = lezioneCorrente,
+                domanda = it.domanda,
+                opzioni = it.opzioni,
+                rispostaCorretta = it.rispostaCorretta,
+                spiegazione = it.spiegazione,
+                esempio = it.spiegazione
+            )
+        }
+        if (esercizi.isEmpty()) esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
         if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
+        caricato = true
     }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -91,7 +109,15 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
-                if (!completato) {
+                if (!caricato) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(12.dp))
+                            Text("Genero esercizi nuovi...")
+                        }
+                    }
+                } else if (!completato) {
                     val esercizio = esercizi[indice]
 
                     // Categoria
