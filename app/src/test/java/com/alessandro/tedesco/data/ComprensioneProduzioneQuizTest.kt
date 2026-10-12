@@ -195,29 +195,26 @@ class ComprensioneProduzioneQuizTest {
     // --- Integration with CalcoloCompetenze ---
 
     @Test
-    fun `CalcoloCompetenze uses accuratezzaMedia as proxy for comprensione`() {
-        // Currently comprensione = accuratezzaMedia * 100
-        // TODO: This should be replaced with actual quiz scores
+    fun `CalcoloCompetenze NON usa piu accuratezzaMedia come proxy per comprensione`() {
+        // Senza test di comprensione il punteggio e 0 (niente fallback gonfiato)
         val risultato = CalcoloCompetenze.calcola(
             parole = emptyList(),
             reviews = emptyMap(),
             progresso = ProgressoUtente(accuratezzaMedia = 0.7f),
             now = NOW
         )
-        assertEquals(70f, risultato.comprensione, 0.01f)
+        assertEquals(0f, risultato.comprensione, 0.01f)
     }
 
     @Test
-    fun `CalcoloCompetenze uses accuratezzaMedia as proxy for produzione`() {
-        // Currently produzione = accuratezzaMedia * 100
-        // TODO: This should be replaced with actual quiz scores
+    fun `CalcoloCompetenze NON usa piu accuratezzaMedia come proxy per produzione`() {
         val risultato = CalcoloCompetenze.calcola(
             parole = emptyList(),
             reviews = emptyMap(),
             progresso = ProgressoUtente(accuratezzaMedia = 0.7f),
             now = NOW
         )
-        assertEquals(70f, risultato.produzione, 0.01f)
+        assertEquals(0f, risultato.produzione, 0.01f)
     }
 
     @Test

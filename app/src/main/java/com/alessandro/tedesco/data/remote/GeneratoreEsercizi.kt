@@ -278,6 +278,8 @@ class GeneratoreEsercizi {
             // Scarta esercizi in lingua sbagliata (spagnolo/inglese) nelle domande o opzioni
             if (contieneSpagnolo(domanda) || opzioni.any { contieneSpagnolo(it) }) return@mapIndexedNotNull null
             if (contieneNonLatino(domanda) || opzioni.any { contieneNonLatino(it) }) return@mapIndexedNotNull null
+            // Scarta se la spiegazione è in tedesco invece che in italiano (modello che ignora la lingua)
+            if (!e.spiegazione.isNullOrBlank() && contieneNonLatino(e.spiegazione)) return@mapIndexedNotNull null
             // ASCOLTO richiede la frase da ascoltare e la traduzione
             if (tipo == TipoEsercizio.ASCOLTO && (e.fraseTedesca.isNullOrBlank() || e.traduzioneItaliana.isNullOrBlank())) return@mapIndexedNotNull null
 
@@ -329,7 +331,7 @@ private data class ChatRequestCompat(
     val model: String,
     val messages: List<ChatMessageCompat>,
     @SerialName("max_tokens") val maxTokens: Int = 4096,
-    val temperature: Double = 0.8,
+    val temperature: Double = 0.25,
     @SerialName("reasoning_effort") val reasoningEffort: String? = null
 )
 

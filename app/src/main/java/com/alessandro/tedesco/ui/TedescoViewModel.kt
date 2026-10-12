@@ -290,7 +290,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 val id = repo.profiloAttivoId
                 if (id != ultimoProfilo) {
                     ultimoProfilo = id
-                    if (id != null) caricaEserciziGenerati()
+                    if (id != null) {
+                        caricaEserciziGenerati()
+                        // Riallinea il livello CEFR ai criteri reali: corregge eventuali
+                        // livelli gonfiati salvati in precedenza (es. falso "A2").
+                        verificaEPromuovi()
+                    }
                 }
             }
         }
@@ -469,21 +474,27 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Promuove automaticamente al livello successivo quando la competenza stimata lo consente. */
+    /**
+     * Allinea il livello del profilo al livello CEFR REALE calcolato dai test.
+     * Promuove solo se tutte le dimensioni raggiungono la soglia; declassa se il
+     * livello attuale non è più supportato dai dati (evita falsi "pronto per A2").
+     */
     fun verificaEPromuovi() {
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
             val p = profilo.stato.progresso
-            if (p.livelloCorrente.ordine >= p.obiettivoLivello.ordine) return@launch
             val parole = repo.observeWords().first()
             val reviews = repo.reviewsFlow.first()
             val comp = CalcoloCompetenze.calcola(parole, reviews, p, System.currentTimeMillis())
             val stimato = comp.livelloComplessivo
-            if (stimato.ordine > p.livelloCorrente.ordine && stimato.ordine <= p.obiettivoLivello.ordine) {
-                val nuovoStato = profilo.stato.copy(progresso = p.copy(livelloCorrente = stimato))
-                profileManager.aggiornaStatoAttivo(nuovoStato)
-                _messaggio.value = "Complimenti! I tuoi progressi ti portano a ${stimato.label}!"
-            }
+            if (stimato == p.livelloCorrente) return@launch
+
+            val nuovoStato = profilo.stato.copy(progresso = p.copy(livelloCorrente = stimato))
+            profileManager.aggiornaStatoAttivo(nuovoStato)
+            _messaggio.value = if (stimato.ordine > p.livelloCorrente.ordine)
+                "Complimenti! I tuoi progressi ti portano a ${stimato.label}!"
+            else
+                "Livello riallineato a ${stimato.label}: completa più test per avanzare."
         }
     }
 

@@ -379,7 +379,9 @@ class TutorService {
          * Modelli gratuiti senza chiave API (Gemini), in ordine di preferenza.
          */
         val MODELLI_NO_KEY = listOf(
-            "qwen/qwen3.8-27b"
+            "openai/gpt-oss-120b",
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-20b"
         )
 
         /**
@@ -388,8 +390,8 @@ class TutorService {
          * Se uno è in rate limit si passa al successivo.
          */
         val MODELLI_FREE = listOf(
-            "qwen/qwen3.8-27b",
             "openai/gpt-oss-120b",
+            "qwen/qwen3.8-27b",
             "openai/gpt-oss-20b"
         )
         const val MODELLO = "qwen/qwen3.8-27b"

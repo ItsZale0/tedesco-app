@@ -54,11 +54,12 @@ class PercorsoAdattivoTest {
             livelloStimato = LivelloCEFR.A0,
             perLezione = emptyList(),
             ultimi7giorni = emptyList(),
-            punteggiCompetenze = CalcoloCompetenze.calcola(
-                parole = parole,
-                reviews = reviews,
-                progresso = ProgressoUtente(accuratezzaMedia = accuratezza),
-                now = NOW
+            punteggiCompetenze = CalcoloCompetenze.PunteggiCompetenze(
+                lessico = accuratezza * 100f,
+                grammatica = accuratezza * 100f,
+                comprensione = accuratezza * 100f,
+                produzione = accuratezza * 100f,
+                livelloComplessivo = LivelloCEFR.A0
             ),
             progresso = emptyList()
         )
