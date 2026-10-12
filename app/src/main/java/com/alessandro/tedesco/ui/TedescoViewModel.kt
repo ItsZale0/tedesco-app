@@ -212,6 +212,15 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         _passiCompletatiOggi.value = _passiCompletatiOggi.value + passoId
     }
 
+    /** Segna le parole mostrate come studiate e completa il passo vocabolario del giorno. */
+    fun segnaParoleStudiate(wordIds: List<String>) {
+        if (wordIds.isEmpty()) return
+        viewModelScope.launch {
+            repo.segnaParoleStudiate(wordIds)
+            completaPassoGiornaliero("vocabolario")
+        }
+    }
+
     /** Resetta il percorso giornaliero (nuovo giorno). */
     fun resetPercorsoGiornaliero() {
         _passiCompletatiOggi.value = emptySet()

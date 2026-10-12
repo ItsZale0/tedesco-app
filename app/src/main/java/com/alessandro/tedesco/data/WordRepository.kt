@@ -354,6 +354,25 @@ class WordRepository(
     }
 
     /** Svuota i dati del profilo attivo (parole, ripassi, log, guida). */
+    /** Segna le parole specificate come studiate (conosciute), creando la review se manca. */
+    suspend fun segnaParoleStudiate(wordIds: List<String>) = withContext(io) {
+        if (wordIds.isEmpty()) return@withContext
+        val reviews = _reviews.value.toMutableMap()
+        for (wordId in wordIds) {
+            val r = reviews[wordId] ?: ReviewEntity(wordId = wordId)
+            val next = INTERVALS.getOrElse(r.repetitions) { INTERVALS.last() }
+            reviews[wordId] = r.copy(
+                repetitions = r.repetitions + 1,
+                intervalDays = next,
+                easeFactor = (r.easeFactor + 0.05f).coerceAtMost(3.0f),
+                dueAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(next.toLong()),
+                lastReviewedAt = System.currentTimeMillis()
+            )
+        }
+        _reviews.value = reviews
+        salvaSuProfilo()
+    }
+
     suspend fun resetAll() = withContext(io) {
         _words.value = emptyList()
         _reviews.value = emptyMap()

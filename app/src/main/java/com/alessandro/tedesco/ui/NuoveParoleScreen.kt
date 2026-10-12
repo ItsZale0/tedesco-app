@@ -201,7 +201,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                             item {
                                 Spacer(Modifier.height(12.dp))
                                 Button(
-                                    onClick = { vm.completaPassoGiornaliero("vocabolario") },
+                                    onClick = { vm.segnaParoleStudiate(filtrate.map { it.id }) },
                                     modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
                                 ) {
                                     Icon(Icons.Filled.Check, contentDescription = null)
