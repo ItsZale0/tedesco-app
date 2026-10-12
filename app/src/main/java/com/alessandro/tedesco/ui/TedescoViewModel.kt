@@ -113,14 +113,16 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
         repo.reviewsFlow,
-        profileManager.repositoryFlow
-    ) { parole, reviews, repo ->
+        profileManager.repositoryFlow,
+        repo.ripassiLogFlow
+    ) { parole, reviews, repo, ripassiLog ->
         val profilo = repo.profiloAttivoId?.let { repo.profili[it] }
         CalcoloStatistiche.calcola(
             parole = parole,
             reviews = reviews,
             progresso = profilo?.stato?.progresso ?: ProgressoUtente(),
-            now = System.currentTimeMillis()
+            now = System.currentTimeMillis(),
+            ripassiLog = ripassiLog
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -700,13 +702,17 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun copiaStatoConNuovi(tipo: TipoEsercizio, stato: ProfiloStato, nuovi: List<EsercizioGenEntity>): ProfiloStato =
-        when (tipo) {
-            TipoEsercizio.COMPRENSIONE -> stato.copy(eserciziGeneratiComprensione = stato.eserciziGeneratiComprensione + nuovi)
-            TipoEsercizio.PRODUZIONE -> stato.copy(eserciziGeneratiProduzione = stato.eserciziGeneratiProduzione + nuovi)
-            TipoEsercizio.ASCOLTO -> stato.copy(eserciziGeneratiAscolto = stato.eserciziGeneratiAscolto + nuovi)
-            TipoEsercizio.GRAMMATICA -> stato.copy(eserciziGeneratiGrammatica = stato.eserciziGeneratiGrammatica + nuovi)
+    private fun copiaStatoConNuovi(tipo: TipoEsercizio, stato: ProfiloStato, nuovi: List<EsercizioGenEntity>): ProfiloStato {
+        // Cap a 80: la lista serve solo come memoria "gia visto" per evitare ripetizioni,
+        // non deve crescere all'infinito (gonfierebbe il DataStore).
+        fun cap(l: List<EsercizioGenEntity>) = (l + nuovi).takeLast(80)
+        return when (tipo) {
+            TipoEsercizio.COMPRENSIONE -> stato.copy(eserciziGeneratiComprensione = cap(stato.eserciziGeneratiComprensione))
+            TipoEsercizio.PRODUZIONE -> stato.copy(eserciziGeneratiProduzione = cap(stato.eserciziGeneratiProduzione))
+            TipoEsercizio.ASCOLTO -> stato.copy(eserciziGeneratiAscolto = cap(stato.eserciziGeneratiAscolto))
+            TipoEsercizio.GRAMMATICA -> stato.copy(eserciziGeneratiGrammatica = cap(stato.eserciziGeneratiGrammatica))
         }
+    }
 
     /** Carica gli esercizi generati salvati nel profilo attivo (onEnter). */
     fun caricaEserciziGenerati() {

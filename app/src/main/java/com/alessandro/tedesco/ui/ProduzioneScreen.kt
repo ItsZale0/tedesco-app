@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,10 +48,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.alessandro.tedesco.data.local.DomandaTest
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProduzioneScreen(vm: TedescoViewModel) {
+fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
@@ -245,61 +248,14 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
 
                     Spacer(Modifier.height(12.dp))
 
+                    // Fine sessione: torna ad Altro; rientrando si generano 10 esercizi nuovi.
                     Button(
-                        onClick = {
-                            scope.launch {
-                                generaInCorso = true
-                                erroreGen = null
-                                runCatching {
-                                    vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 10)
-                                }.onSuccess {
-                                    generaInCorso = false
-                                    indice = 0
-                                    rispostaSelezionata = null
-                                    risultato = null
-                                    punteggio = 0
-                                    completato = false
-                                }.onFailure { e ->
-                                    generaInCorso = false
-                                    erroreGen = e.message ?: "Errore generazione"
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !generaInCorso
-                    ) {
-                        if (generaInCorso) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.height(20.dp).width(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Generazione...")
-                        } else {
-                            Text("Genera altri 5")
-                        }
-                    }
-                    if (erroreGen != null) {
-                        Text(
-                            text = erroreGen!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            indice = 0
-                            rispostaSelezionata = null
-                            risultato = null
-                            punteggio = 0
-                            completato = false
-                        },
+                        onClick = onFatto,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Nuovo quiz")
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Fatto")
                     }
                 }
             }

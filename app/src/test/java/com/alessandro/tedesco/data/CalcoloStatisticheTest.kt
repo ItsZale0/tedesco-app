@@ -3,6 +3,7 @@ package com.alessandro.tedesco.data
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.local.WordSource
 import org.junit.Assert.assertEquals
@@ -137,16 +138,33 @@ class CalcoloStatisticheTest {
         assertEquals(1f, stats.progressoB1, 0.001f)
     }
 
-    // --- Test 6: livelloStimato non scende sotto progresso.livelloCorrente ---
+    // --- Test 6: livelloStimato segue i criteri CEFR reali (corregge i livelli gonfiati) ---
     @Test
-    fun `livelloStimato non scende sotto livelloCorrente`() {
-        // Solo 10 parole mature -> livello calcolato A0
+    fun `livelloStimato NON resta gonfiato se i criteri non sono soddisfatti`() {
+        // 10 parole mature, nessun test -> non si supera alcuna soglia CEFR
         val parole = (1..10).map { parola("p$it") }
         val reviews = (1..10).associate { "p$it" to review("p$it", repetitions = 5) }
-        val progresso = ProgressoUtente(livelloCorrente = LivelloCEFR.B1)
+        val progresso = ProgressoUtente(livelloCorrente = LivelloCEFR.B1)  // livello gonfiato salvato
         val stats = CalcoloStatistiche.calcola(parole, reviews, progresso, now)
-        // Livello calcolato sarebbe A0, ma livelloCorrente è B1 -> deve restare B1
-        assertEquals(LivelloCEFR.B1, stats.livelloStimato)
+        // Deve tornare A0: un livello salvato per errore non va conservato
+        assertEquals(LivelloCEFR.A0, stats.livelloStimato)
+    }
+
+    // --- Test 6b: statistiche reali dal log eventi ---
+    @Test
+    fun `ripassi e accuratezza vengono dal log eventi`() {
+        val parole = (1..3).map { parola("p$it") }
+        val reviews = (1..3).associate { "p$it" to review("p$it", repetitions = 5) }
+        val log = listOf(
+            RipassoLogEntity("p1", now - 1000, corretta = true),
+            RipassoLogEntity("p1", now - 2000, corretta = false),
+            RipassoLogEntity("p2", now - 3000, corretta = true),
+            RipassoLogEntity("p3", now - 4000, corretta = true),
+        )
+        val stats = CalcoloStatistiche.calcola(parole, reviews, ProgressoUtente(), now, log)
+        assertEquals(4, stats.ripassiTotali)      // 4 risposte date
+        assertEquals(1, stats.erroriTotali)       // 1 sbagliata
+        assertEquals(0.75f, stats.accuratezza, 0.001f)  // 3/4
     }
 
     // --- Test 7: 7 giorni di attivita' ---
@@ -166,26 +184,14 @@ class CalcoloStatisticheTest {
         assertEquals(etichettaOggi, stats.ultimi7giorni.last().etichetta)
     }
 
-    // --- Test 8: livelloStimato cresce con paroleApprese ---
+    // --- Test 8: il livello NON sale con le sole parole (servono i test CEFR) ---
     @Test
-    fun `livelloStimato cresce con paroleApprese`() {
-        // 100 parole mature -> A1
-        val parole100 = (1..100).map { parola("p$it") }
-        val reviews100 = (1..100).associate { "p$it" to review("p$it", repetitions = 5) }
-        val stats100 = CalcoloStatistiche.calcola(parole100, reviews100, ProgressoUtente(), now)
-        assertEquals(LivelloCEFR.A1, stats100.livelloStimato)
-
-        // 500 parole mature -> B1 (soglia: <400=A2, <900=B1)
+    fun `livelloStimato non sale senza test anche con molte parole`() {
+        // 500 parole mature ma NESSUN test di competenza -> resta A0
         val parole500 = (1..500).map { parola("p$it") }
         val reviews500 = (1..500).associate { "p$it" to review("p$it", repetitions = 5) }
-        val stats500 = CalcoloStatistiche.calcola(parole500, reviews500, ProgressoUtente(), now)
-        assertEquals(LivelloCEFR.B1, stats500.livelloStimato)
-
-        // 1000 parole mature -> B2 (soglia: <900=B1, <1800=B2)
-        val parole1000 = (1..1000).map { parola("p$it") }
-        val reviews1000 = (1..1000).associate { "p$it" to review("p$it", repetitions = 5) }
-        val stats1000 = CalcoloStatistiche.calcola(parole1000, reviews1000, ProgressoUtente(), now)
-        assertEquals(LivelloCEFR.B2, stats1000.livelloStimato)
+        val stats = CalcoloStatistiche.calcola(parole500, reviews500, ProgressoUtente(), now)
+        assertEquals(LivelloCEFR.A0, stats.livelloStimato)
     }
 
     // --- Test 9: daRipassare ---
@@ -263,14 +269,14 @@ class CalcoloStatisticheTest {
         )
         val stats = CalcoloStatistiche.calcola(parole, reviews, ProgressoUtente(), now)
 
-        // Ultimo giorno: tutte le parole con lastReviewedAt < fine oggi
+        // Ultimo giorno: parole "imparate" = con prima risposta registrata prima di oggi
         val ultimo = stats.progresso.last()
         assertEquals(3, ultimo.paroleTotali)
-        assertEquals(2, ultimo.paroleMature) // a e b sono mature (repetitions >= 4)
+        assertEquals(3, ultimo.paroleMature) // a, b, c hanno tutte una risposta registrata
 
         // Il progresso è cumulativo: l'ultimo elemento ha il valore massimo
         val maxMature = stats.progresso.maxOf { it.paroleMature }
-        assertEquals(2, maxMature)
+        assertEquals(3, maxMature)
     }
 
     // --- Test 13: progresso vuoto quando non ci sono parole ---

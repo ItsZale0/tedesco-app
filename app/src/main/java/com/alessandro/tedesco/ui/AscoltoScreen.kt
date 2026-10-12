@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +59,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
+fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto: () -> Unit = {}) {
     val livelli = remember { AscoltoData.livelliDisponibili(profilo) }
     var livelloSelezionato by remember { mutableStateOf(livelli.firstOrNull() ?: "A1") }
     var esercizi by remember { mutableStateOf(AscoltoData.eserciziPerLivello(livelloSelezionato, profilo)) }
@@ -76,8 +77,11 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    // Carica esercizi generati al primo entrata
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.ASCOLTO) }
+    // Genera un batch fresco ad ogni ingresso (i salvati servono solo per 'evita')
+    LaunchedEffect(Unit) {
+        vm.caricaEserciziGenerati()
+        runCatching { vm.generaEsercizi(TipoEsercizio.ASCOLTO, quanti = 10) }
+    }
 
     // Ricostruisce la lista quando cambia livello o arrivano nuovi generati
     LaunchedEffect(livelloSelezionato, eserciziGen) {
@@ -314,63 +318,14 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null) {
 
                     Spacer(Modifier.height(12.dp))
 
+                    // Fine sessione: torna ad Altro; rientrando si generano 10 esercizi nuovi.
                     Button(
-                        onClick = {
-                            scope.launch {
-                                generaInCorso = true
-                                erroreGen = null
-                                runCatching {
-                                    vm.generaEsercizi(TipoEsercizio.ASCOLTO, quanti = 5)
-                                }.onSuccess {
-                                    generaInCorso = false
-                                    indice = 0
-                                    rispostaSelezionata = null
-                                    risultato = null
-                                    punteggio = 0
-                                    completato = false
-                                    mostraTraduzione = false
-                                }.onFailure { e ->
-                                    generaInCorso = false
-                                    erroreGen = e.message ?: "Errore generazione"
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !generaInCorso
-                    ) {
-                        if (generaInCorso) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.height(20.dp).width(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Generazione...")
-                        } else {
-                            Text("Genera altri 5")
-                        }
-                    }
-                    if (erroreGen != null) {
-                        Text(
-                            text = erroreGen!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            indice = 0
-                            rispostaSelezionata = null
-                            risultato = null
-                            punteggio = 0
-                            completato = false
-                            mostraTraduzione = false
-                        },
+                        onClick = onFatto,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Nuovo quiz")
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Fatto")
                     }
                 } else {
                     // Stato vuoto

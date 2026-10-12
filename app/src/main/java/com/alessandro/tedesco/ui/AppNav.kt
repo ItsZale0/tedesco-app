@@ -322,7 +322,7 @@ private fun ContenutoApp(
                     lezioneCorrente = vm.lezioneCorrente.collectAsStateWithLifecycle().value
                 )
             }
-            composable("grammatica") { GrammaticaScreen(vm) }
+            composable("grammatica") { GrammaticaScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("testb1") { TestB1Screen(vm) }
             composable("test-adattivi") { TestAdattiviScreen(vm) }
             composable("stats") { StatsScreen(vm) }
@@ -336,9 +336,9 @@ private fun ContenutoApp(
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }, onVaiANuove = { nav.navigate("nuove") }) }
             composable("competenze") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); CompetenzeScreen(vm, profilo = profilo) }
-            composable("quiz-comprensione") { ComprensioneScreen(vm) }
-            composable("quiz-produzione") { ProduzioneScreen(vm) }
-            composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo) }
+            composable("quiz-comprensione") { ComprensioneScreen(vm, onFatto = { nav.popBackStack() }) }
+            composable("quiz-produzione") { ProduzioneScreen(vm, onFatto = { nav.popBackStack() }) }
+            composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo, onFatto = { nav.popBackStack() }) }
             composable("contestoMedico") { ContestoMedicoScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("produzioneScritta") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }, profilo = profilo) }
         }

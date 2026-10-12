@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
@@ -54,7 +55,7 @@ private fun etichettaCategoria(categoria: CategoriaGrammatica): String = when (c
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GrammaticaScreen(vm: TedescoViewModel) {
+fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label ?: "A0"
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
@@ -374,65 +375,14 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                         }
                     }
 
+                    // Fine sessione: torna ad Altro; rientrando si generano 10 esercizi nuovi.
                     Button(
-                        onClick = {
-                            scope.launch {
-                                generaInCorso = true
-                                erroreGen = null
-                                runCatching { vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10) }
-                                    .onSuccess {
-                                        generaInCorso = false
-                                        indice = 0
-                                        rispostaSelezionata = null
-                                        risultato = null
-                                        punteggio = 0
-                                        completato = false
-                                        erroriRef.clear()
-                                    }
-                                    .onFailure { e -> generaInCorso = false; erroreGen = e.message ?: "Errore generazione" }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !generaInCorso
+                        onClick = onFatto,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Nuovi esercizi (AI)")
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                generaInCorso = true
-                                erroreGen = null
-                                runCatching {
-                                    vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10)
-                                }.onSuccess {
-                                    generaInCorso = false
-                                    indice = 0
-                                    rispostaSelezionata = null
-                                    risultato = null
-                                    punteggio = 0
-                                    completato = false
-                                    erroriRef.clear()
-                                }.onFailure { e ->
-                                    generaInCorso = false
-                                    erroreGen = e.message ?: "Errore generazione"
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !generaInCorso
-                    ) {
-                        if (generaInCorso) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.height(20.dp).width(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Generazione...")
-                        } else {
-                            Text("Genera altri 5")
-                        }
+                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Fatto")
                     }
                     if (erroreGen != null) {
                         Text(

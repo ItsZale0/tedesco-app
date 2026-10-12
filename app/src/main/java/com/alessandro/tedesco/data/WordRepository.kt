@@ -6,6 +6,7 @@ import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.LessonEntity
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.SezioneEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.local.WordSource
@@ -61,9 +62,11 @@ class WordRepository(
     private val _piano = MutableStateFlow<PianoEntity?>(null)
     private val _progressoFeed = MutableStateFlow<ProgressoFeedEntity?>(null)
     private val _sessioni = MutableStateFlow<List<SessioneEntity>>(emptyList())
+    private val _ripassiLog = MutableStateFlow<List<RipassoLogEntity>>(emptyList())
 
     val wordsFlow: Flow<List<WordEntity>> = _words
     val reviewsFlow: Flow<Map<String, ReviewEntity>> = _reviews
+    val ripassiLogFlow: Flow<List<RipassoLogEntity>> = _ripassiLog
     val feedLogFlow: Flow<List<FeedLogEntity>> = _feedLog
     val guidaFlow: Flow<GuidaEntity?> = _guida
     val pianoFlow: Flow<PianoEntity?> = _piano
@@ -93,6 +96,7 @@ class WordRepository(
         _piano.value = stato.piano
         _progressoFeed.value = stato.progressoFeed
         _sessioni.value = stato.sessioni
+        _ripassiLog.value = stato.ripassiLog
     }
 
     private suspend fun salvaSuProfilo() {
@@ -105,6 +109,7 @@ class WordRepository(
                 piano = _piano.value,
                 progressoFeed = _progressoFeed.value,
                 sessioni = _sessioni.value,
+                ripassiLog = _ripassiLog.value,
                 progresso = profileManager.statoAttivo().progresso,
                 etag = profileManager.statoAttivo().etag,
                 lastSync = System.currentTimeMillis()
@@ -350,7 +355,14 @@ class WordRepository(
         }
         reviews[wordId] = updated
         _reviews.value = reviews
+        registraRipasso(wordId, knewIt)
         salvaSuProfilo()
+    }
+
+    /** Registra un evento di ripasso reale (per statistiche accurate nel tempo). */
+    private fun registraRipasso(wordId: String, corretta: Boolean) {
+        // Cap a 5000 eventi (~ultimi mesi) per non gonfiare il DataStore.
+        _ripassiLog.value = (_ripassiLog.value + RipassoLogEntity(wordId, System.currentTimeMillis(), corretta)).takeLast(5000)
     }
 
     /** Svuota i dati del profilo attivo (parole, ripassi, log, guida). */

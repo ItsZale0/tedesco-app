@@ -118,6 +118,17 @@ data class ProgressoUtente(
     val erroriGrammatica: List<String> = emptyList()
 )
 
+/**
+ * Evento di ripasso: una riga per OGNI risposta data dall'utente.
+ * Base delle statistiche reali (ripassi, accuratezza, grafici nel tempo).
+ */
+@Serializable
+data class RipassoLogEntity(
+    val wordId: String,
+    val timestamp: Long,
+    val corretta: Boolean
+)
+
 /** Risultato di un test di grammatica */
 @Serializable
 data class TestGrammatica(
@@ -284,7 +295,8 @@ data class ProfiloStato(
     val eserciziGeneratiComprensione: List<EsercizioGenEntity> = emptyList(),
     val eserciziGeneratiProduzione: List<EsercizioGenEntity> = emptyList(),
     val eserciziGeneratiAscolto: List<EsercizioGenEntity> = emptyList(),
-    val eserciziGeneratiGrammatica: List<EsercizioGenEntity> = emptyList()
+    val eserciziGeneratiGrammatica: List<EsercizioGenEntity> = emptyList(),
+    val ripassiLog: List<RipassoLogEntity> = emptyList()
 )
 
 /** Piano di studio verso il B2. */

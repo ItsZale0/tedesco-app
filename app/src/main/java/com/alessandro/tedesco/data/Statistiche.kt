@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data
 
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.local.WordSource
@@ -60,7 +61,9 @@ data class Statistiche(
  */
 object CalcoloStatistiche {
 
-    const val OBIETTIVO_B1 = 2000
+    // Obiettivo di parole MATURE (SRS) per il traguardo B1 del corso.
+    // 2000 e il vocabolario passivo teorico: irraggiungibile e demotivante.
+    const val OBIETTIVO_B1 = 1000
 
     private val FORMATTER_GIORNO = DateTimeFormatter.ofPattern("EEE", Locale.ITALIAN)
 
@@ -76,7 +79,8 @@ object CalcoloStatistiche {
         parole: List<WordEntity>,
         reviews: Map<String, ReviewEntity>,
         progresso: ProgressoUtente,
-        now: Long
+        now: Long,
+        ripassiLog: List<RipassoLogEntity> = emptyList()
     ): Statistiche {
         // Filtra le parole archiviate: non devono comparire in nessun conteggio
         val paroleAttive = parole.filter { !it.archived }
@@ -106,15 +110,20 @@ object CalcoloStatistiche {
         val lezioniDistinte = paroleAttive.map { it.lesson }.distinct().sorted()
         val lezioniTotali = lezioniDistinte.size
 
-        // Ripassi ed errori totali
-        val ripassiTotali = reviewAttive.values.sumOf { it.repetitions }
-        val erroriTotali = reviewAttive.values.sumOf { it.lapses }
-
-        // Accuratezza: ripassi riusciti / (ripassi + errori)
-        val accuratezza = if (ripassiTotali + erroriTotali == 0) {
-            0f
+        // Ripassi ed errori REALI dal log eventi (una riga per risposta data).
+        // Fallback: se il log e vuoto (installazioni vecchie) stima da repetitions/lapses.
+        val ripassiTotali: Int
+        val erroriTotali: Int
+        val accuratezza: Float
+        if (ripassiLog.isNotEmpty()) {
+            ripassiTotali = ripassiLog.size
+            erroriTotali = ripassiLog.count { !it.corretta }
+            accuratezza = ripassiLog.count { it.corretta }.toFloat() / ripassiLog.size.toFloat()
         } else {
-            ripassiTotali.toFloat() / (ripassiTotali + erroriTotali).toFloat()
+            ripassiTotali = reviewAttive.values.sumOf { it.repetitions }
+            erroriTotali = reviewAttive.values.sumOf { it.lapses }
+            accuratezza = if (ripassiTotali + erroriTotali == 0) 0f
+                else ripassiTotali.toFloat() / (ripassiTotali + erroriTotali).toFloat()
         }
 
         // Parole apprese = mature (repetitions >= 4)
@@ -123,13 +132,9 @@ object CalcoloStatistiche {
         // Progresso verso B1 (2000 parole)
         val progressoB1 = (paroleApprese.toFloat() / OBIETTIVO_B1.toFloat()).coerceAtMost(1f)
 
-        // Livello stimato da paroleApprese, senza scendere sotto il livello corrente
-        val livelloCalcolato = livelloDaParole(paroleApprese)
-        val livelloStimato = if (progresso.livelloCorrente.ordine > livelloCalcolato.ordine) {
-            progresso.livelloCorrente
-        } else {
-            livelloCalcolato
-        }
+        // Livello stimato: UNICA fonte di verita = criteri CEFR delle competenze.
+        // (niente piu soglie-parole separate, niente "mai scendere": cosi un livello
+        //  gonfiato in passato viene corretto, non conservato)
 
         // Conteggio per lezione
         val perLezione = lezioniDistinte.map { lezione ->
@@ -144,13 +149,17 @@ object CalcoloStatistiche {
             )
         }
 
-        // Attività degli ultimi 7 giorni (dal più vecchio a oggi)
+        // Attività degli ultimi 7 giorni (dal più vecchio a oggi) dal log REALE.
         val oggi = LocalDate.ofEpochDay(now / (1000 * 60 * 60 * 24))
         val ultimi7giorni = (6 downTo 0).map { offset ->
             val giorno = oggi.minusDays(offset.toLong())
             val etichetta = giorno.format(FORMATTER_GIORNO)
-            val ripassi = reviewAttive.values.count { r ->
-                r.lastReviewedAt != null && stessoGiorno(r.lastReviewedAt, giorno)
+            val ripassi = if (ripassiLog.isNotEmpty()) {
+                ripassiLog.count { stessoGiorno(it.timestamp, giorno) }
+            } else {
+                reviewAttive.values.count { r ->
+                    r.lastReviewedAt != null && stessoGiorno(r.lastReviewedAt, giorno)
+                }
             }
             AttivitaGiorno(etichetta = etichetta, ripassi = ripassi)
         }
@@ -164,7 +173,7 @@ object CalcoloStatistiche {
         )
 
         // Progresso cumulativo degli ultimi 30 giorni
-        val progresso30gg = calcolaProgresso(paroleAttive, reviews, now)
+        val progresso30gg = calcolaProgresso(paroleAttive, reviews, now, ripassiLog)
 
         return Statistiche(
             paroleTotali = paroleTotali,
@@ -182,7 +191,7 @@ object CalcoloStatistiche {
             paroleApprese = paroleApprese,
             obiettivoB1 = OBIETTIVO_B1,
             progressoB1 = progressoB1,
-            livelloStimato = livelloStimato,
+            livelloStimato = punteggiCompetenze.livelloComplessivo,
             perLezione = perLezione,
             ultimi7giorni = ultimi7giorni,
             punteggiCompetenze = punteggiCompetenze,
@@ -197,30 +206,33 @@ object CalcoloStatistiche {
     private fun calcolaProgresso(
         paroleAttive: List<WordEntity>,
         reviews: Map<String, ReviewEntity>,
-        now: Long
+        now: Long,
+        ripassiLog: List<RipassoLogEntity> = emptyList()
     ): List<ProgressPoint> {
         val oggi = LocalDate.ofEpochDay(now / (1000 * 60 * 60 * 24))
         val formatter = DateTimeFormatter.ofPattern("d/M", Locale.ITALIAN)
+
+        // Prima risposta CORRETTA per parola (dal log reale): quando la parola e stata "imparata".
+        val primaCorretta: Map<String, Long> = if (ripassiLog.isNotEmpty()) {
+            ripassiLog.filter { it.corretta }
+                .groupBy { it.wordId }
+                .mapValues { (_, evs) -> evs.minOf { it.timestamp } }
+        } else {
+            reviews.values.filter { it.lastReviewedAt != null }
+                .associate { it.wordId to (it.lastReviewedAt ?: 0L) }
+        }
 
         return (29 downTo 0).map { offset ->
             val giorno = oggi.minusDays(offset.toLong())
             val etichetta = giorno.format(formatter)
             val giornoFine = giorno.plusDays(1).toEpochDay() * 1000 * 60 * 60 * 24
 
-            val paroleDelGiorno = paroleAttive.filter { w ->
-                val r = reviews[w.id]
-                r != null && r.lastReviewedAt != null && r.lastReviewedAt < giornoFine
-            }
-
-            val mature = paroleDelGiorno.count { w ->
-                val r = reviews[w.id]
-                r != null && r.repetitions >= 4
-            }
+            val imparate = primaCorretta.values.count { it < giornoFine }
 
             ProgressPoint(
                 etichetta = etichetta,
-                paroleMature = mature,
-                paroleTotali = paroleDelGiorno.size
+                paroleMature = imparate,
+                paroleTotali = paroleAttive.size
             )
         }
     }
