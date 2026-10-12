@@ -18,6 +18,8 @@ import com.alessandro.tedesco.data.TestB1
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.LivelloIniziale
+import com.alessandro.tedesco.data.CalcoloCompetenze
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
@@ -458,6 +460,24 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Promuove automaticamente al livello successivo quando la competenza stimata lo consente. */
+    fun verificaEPromuovi() {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val p = profilo.stato.progresso
+            if (p.livelloCorrente.ordine >= p.obiettivoLivello.ordine) return@launch
+            val parole = repo.observeWords().first()
+            val reviews = repo.reviewsFlow.first()
+            val comp = CalcoloCompetenze.calcola(parole, reviews, p, System.currentTimeMillis())
+            val stimato = comp.livelloComplessivo
+            if (stimato.ordine > p.livelloCorrente.ordine && stimato.ordine <= p.obiettivoLivello.ordine) {
+                val nuovoStato = profilo.stato.copy(progresso = p.copy(livelloCorrente = stimato))
+                profileManager.aggiornaStatoAttivo(nuovoStato)
+                _messaggio.value = "Complimenti! I tuoi progressi ti portano a ${stimato.label}!"
+            }
+        }
+    }
+
     fun cambiaLezione(nuovaLezione: Int) {
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
@@ -744,6 +764,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             }
             profileManager.aggiornaStatoAttivo(copiaStatoCon(tipo, profilo.stato, aggiornati))
             setGenFlow(tipo, aggiornati)
+            verificaEPromuovi()
         }
     }
 
@@ -789,6 +810,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
+            verificaEPromuovi()
         }
     }
 
@@ -809,6 +831,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
+            verificaEPromuovi()
         }
     }
 
@@ -829,6 +852,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
+            verificaEPromuovi()
         }
     }
 

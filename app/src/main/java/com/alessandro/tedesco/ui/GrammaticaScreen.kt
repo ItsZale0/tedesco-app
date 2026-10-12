@@ -64,11 +64,12 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     var indice by remember { mutableStateOf(0) }
 
     // Carica e ricostruisce la lista quando arrivano nuovi esercizi generati
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.GRAMMATICA) }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.GRAMMATICA, soglia = 99, quanti = 5) }
     LaunchedEffect(lezioneCorrente, eserciziGen, livello) {
-        esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5) +
-            eserciziGen.filter { it.livello == livello }
-                .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
+        val aiNonCompletati = eserciziGen.filter { it.livello == livello && !it.completato }
+            .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
+        esercizi = if (aiNonCompletati.isNotEmpty()) aiNonCompletati
+            else GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
         if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
     }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
@@ -349,17 +350,26 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
 
                     Button(
                         onClick = {
-                            esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
-                            indice = 0
-                            rispostaSelezionata = null
-                            risultato = null
-                            punteggio = 0
-                            completato = false
-                            erroriRef.clear()
+                            scope.launch {
+                                generaInCorso = true
+                                erroreGen = null
+                                runCatching { vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5) }
+                                    .onSuccess {
+                                        generaInCorso = false
+                                        indice = 0
+                                        rispostaSelezionata = null
+                                        risultato = null
+                                        punteggio = 0
+                                        completato = false
+                                        erroriRef.clear()
+                                    }
+                                    .onFailure { e -> generaInCorso = false; erroreGen = e.message ?: "Errore generazione" }
+                            }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !generaInCorso
                     ) {
-                        Text("Nuovi esercizi")
+                        Text("Nuovi esercizi (AI)")
                     }
                     Spacer(Modifier.height(8.dp))
                     Button(

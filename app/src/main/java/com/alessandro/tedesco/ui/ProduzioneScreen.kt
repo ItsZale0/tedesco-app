@@ -53,7 +53,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
     val statiche = remember(livelloUtente) { QuizData.domandeProduzione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
-    var elenco by remember { mutableStateOf<List<DomandaTest>>(statiche + eserciziGen.map { it.toDomandaTest() }) }
+    var elenco by remember { mutableStateOf<List<DomandaTest>>(eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -63,10 +63,10 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.PRODUZIONE) }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.PRODUZIONE, soglia = 99, quanti = 5) }
     LaunchedEffect(eserciziGen, completato) {
         if (completato) {
-            elenco = statiche + eserciziGen.map { it.toDomandaTest() }
+            elenco = eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }
         }
     }
 

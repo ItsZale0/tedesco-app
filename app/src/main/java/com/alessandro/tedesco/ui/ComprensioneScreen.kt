@@ -63,7 +63,7 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
     val statiche = remember(livelloUtente) { QuizData.domandeComprensione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
-    var elenco by remember { mutableStateOf<List<DomandaTest>>(statiche + eserciziGen.map { it.toDomandaTest() }) }
+    var elenco by remember { mutableStateOf<List<DomandaTest>>(eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -77,11 +77,11 @@ fun ComprensioneScreen(vm: TedescoViewModel) {
     val scope = rememberCoroutineScope()
 
     // Carica gli esercizi generati al primo entrata
-    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.COMPRENSIONE) }
+    LaunchedEffect(Unit) { vm.caricaEserciziGenerati(); vm.preGeneraInBackground(TipoEsercizio.COMPRENSIONE, soglia = 99, quanti = 5) }
     // Ricostruisce l'elenco quando ne arrivano di nuovi (solo a risultato, non a metà quiz)
     LaunchedEffect(eserciziGen, completato) {
         if (completato) {
-            elenco = statiche + eserciziGen.map { it.toDomandaTest() }
+            elenco = eserciziGen.filter { !it.completato }.map { it.toDomandaTest() }.ifEmpty { statiche }
         }
     }
 
