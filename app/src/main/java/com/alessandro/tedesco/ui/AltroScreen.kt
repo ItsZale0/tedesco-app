@@ -72,7 +72,7 @@ fun AltroScreen(
                 ),
                 ElementoAltro(
                     titolo = "Test",
-                    descrizione = "Test B1 + test adattivi personalizzati",
+                    descrizione = "Test di livello adattivo al tuo progresso",
                     icona = Icons.Filled.Quiz,
                     onClick = onVaiATestB1
                 ),

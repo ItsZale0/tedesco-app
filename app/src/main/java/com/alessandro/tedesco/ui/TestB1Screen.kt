@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,8 @@ private fun etichettaSezione(sezione: SezioneTestB1): String = when (sezione) {
 @Composable
 fun TestB1Screen(vm: TedescoViewModel) {
     var sezione by remember { mutableStateOf(SezioneTestB1.LESEN) }
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
+    val livelloUtente = profilo?.stato?.progresso?.livelloCorrente?.label ?: "A0"
     var domande by remember { mutableStateOf(TestB1Data.domandePerSezione(SezioneTestB1.LESEN)) }
     var indice by remember { mutableStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
@@ -46,7 +49,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    ScreenScaffold("Test - ${etichettaSezione(sezione)}") {
+    ScreenScaffold("Test ${livelloUtente} - ${etichettaSezione(sezione)}") {
 
             Column(
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
