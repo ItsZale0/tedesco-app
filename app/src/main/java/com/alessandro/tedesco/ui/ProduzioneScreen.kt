@@ -70,7 +70,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
     LaunchedEffect(Unit) {
         vm.caricaEserciziGenerati()
         val freschi = try {
-            vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 5)
+            vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 10)
         } catch (e: Exception) {
             emptyList()
         }
@@ -251,7 +251,7 @@ fun ProduzioneScreen(vm: TedescoViewModel) {
                                 generaInCorso = true
                                 erroreGen = null
                                 runCatching {
-                                    vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 5)
+                                    vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 10)
                                 }.onSuccess {
                                     generaInCorso = false
                                     indice = 0

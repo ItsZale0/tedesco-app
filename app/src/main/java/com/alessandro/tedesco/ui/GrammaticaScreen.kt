@@ -70,7 +70,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
     LaunchedEffect(Unit) {
         vm.caricaEserciziGenerati()
         val freschi = try {
-            vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5)
+            vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10)
         } catch (e: Exception) {
             emptyList()
         }
@@ -379,7 +379,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                             scope.launch {
                                 generaInCorso = true
                                 erroreGen = null
-                                runCatching { vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5) }
+                                runCatching { vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10) }
                                     .onSuccess {
                                         generaInCorso = false
                                         indice = 0
@@ -404,7 +404,7 @@ fun GrammaticaScreen(vm: TedescoViewModel) {
                                 generaInCorso = true
                                 erroreGen = null
                                 runCatching {
-                                    vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 5)
+                                    vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10)
                                 }.onSuccess {
                                     generaInCorso = false
                                     indice = 0
