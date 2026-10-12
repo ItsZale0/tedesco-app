@@ -188,6 +188,8 @@ class GeneratoreEsercizi {
             - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
             - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
             - Le 4 opzioni devono essere plausibili ma con UNA sola risposta corretta.
+            - DIFFICOLTÀ: genera esercizi SFIDANTI e UTILI per il livello $livello. Evita domande banali su parole singole elementari (es. il significato di "Hallo", "ciao", "grazie"). Privilegia frasi complete, vocabulario pratico e contesto realistico.
+            - VARIETÀ: alterna schemi diversi (completare una frase, scegliere l'articolo/caso, coniugare un verbo, tradurre una frase utile, comprensione di una breve frase). Non proporre sempre lo stesso tipo.
             - I sostantivi tedeschi vanno sempre con l'articolo (der/die/das).
             - Non inventare esercizi con meno di 4 opzioni o senza rispostaCorretta.$evitaTesto
         """.trimIndent()
@@ -224,7 +226,7 @@ class GeneratoreEsercizi {
                 throw IOException(
                     when (response.code) {
                         401 -> "Chiave API non valida."
-                        429 -> "Troppe richieste. Riprova tra poco."
+                        429, 403 -> "Troppe richieste. Riprova tra poco."
                         else -> "Errore del server (${response.code})"
                     }
                 )
@@ -249,6 +251,12 @@ class GeneratoreEsercizi {
     /** true se il testo contiene parole spagnole (euristica anti-lingua-sbagliata). */
     private fun contieneSpagnolo(testo: String): Boolean = regexSpagnolo.containsMatchIn(testo)
 
+    // Alfabeti non latini: arabo, cirillico, CJK, ecc. Le domande/opzioni devono essere in italiano (latino).
+    private val regexNonLatino = Regex("[\\u0600-\\u06FF\\u0750-\\u077F\\u0400-\\u04FF\\u4E00-\\u9FFF\\u3040-\\u30FF]")
+
+    /** true se il testo contiene caratteri di alfabeti non latini (arabo, cirillico, CJK...). */
+    private fun contieneNonLatino(testo: String): Boolean = regexNonLatino.containsMatchIn(testo)
+
     private fun parseEsercizi(
         risposta: String,
         tipo: TipoEsercizio,
@@ -269,6 +277,7 @@ class GeneratoreEsercizi {
             if (opzioni.toSet().size != opzioni.size) return@mapIndexedNotNull null // opzioni duplicate
             // Scarta esercizi in lingua sbagliata (spagnolo/inglese) nelle domande o opzioni
             if (contieneSpagnolo(domanda) || opzioni.any { contieneSpagnolo(it) }) return@mapIndexedNotNull null
+            if (contieneNonLatino(domanda) || opzioni.any { contieneNonLatino(it) }) return@mapIndexedNotNull null
             // ASCOLTO richiede la frase da ascoltare e la traduzione
             if (tipo == TipoEsercizio.ASCOLTO && (e.fraseTedesca.isNullOrBlank() || e.traduzioneItaliana.isNullOrBlank())) return@mapIndexedNotNull null
 

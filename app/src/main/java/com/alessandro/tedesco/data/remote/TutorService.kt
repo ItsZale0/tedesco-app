@@ -295,7 +295,7 @@ class TutorService {
                 throw IOException(
                     when {
                         response.code == 401 -> "Chiave API non valida."
-                        response.code == 429 -> "Troppe richieste. Riprova tra poco."
+                        response.code == 429 || response.code == 403 -> "Troppe richieste. Riprova tra poco."
                         errore.isNullOrBlank() -> "Errore del server (${response.code})"
                         else -> errore
                     }
@@ -379,9 +379,7 @@ class TutorService {
          * Modelli gratuiti senza chiave API (Gemini), in ordine di preferenza.
          */
         val MODELLI_NO_KEY = listOf(
-            "qwen/qwen3.8-27b",
-            "openai/gpt-oss-20b",
-            "allam-2-7b"
+            "qwen/qwen3.8-27b"
         )
 
         /**
@@ -392,8 +390,7 @@ class TutorService {
         val MODELLI_FREE = listOf(
             "qwen/qwen3.8-27b",
             "openai/gpt-oss-120b",
-            "openai/gpt-oss-20b",
-            "allam-2-7b"
+            "openai/gpt-oss-20b"
         )
         const val MODELLO = "qwen/qwen3.8-27b"
     }
