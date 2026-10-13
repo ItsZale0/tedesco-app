@@ -189,7 +189,6 @@ fun TutorChatScreen(vm: TedescoViewModel) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .imePadding()
         ) {
             // Selettore modello
             ModelloSelector(
@@ -235,7 +234,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 }
             }
 
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
+            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth().imePadding()) {
                 Row(
                     modifier = Modifier
                         .padding(8.dp)
