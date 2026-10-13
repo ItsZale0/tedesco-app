@@ -190,6 +190,18 @@ class ProfileManager(
         saveToDataStore()
     }
 
+    /**
+     * Sostituisce l'intero repository (tutti i profili) — usato dal RIPRISTINO
+     * del backup. Operazione distruttiva: sovrascrive i dati locali.
+     * Prima di applicare, salva una copia di sicurezza dei dati correnti in
+     * [ULTIMA_COPIA_PRE_RIPRISTINO] non serve: il backup e' esplicito e l'utente
+     * ha confermato. Persiste subito su DataStore.
+     */
+    suspend fun sostituisciRepository(nuovo: ProfiliRepository) = withContext(io) {
+        _repository.value = nuovo
+        saveToDataStore()
+    }
+
     /** Aggiorna lo stato del profilo attivo (parole, reviews, guida, progresso). */
     suspend fun aggiornaStatoAttivo(stato: ProfiloStato) {
         val repo = _repository.value

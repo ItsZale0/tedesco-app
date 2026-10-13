@@ -242,7 +242,11 @@ internal fun GlassTopBar(title: String) {
 }
 
 @Composable
-fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
+fun ImpostazioniScreen(
+    vm: TedescoViewModel,
+    updater: UpdaterViewModel,
+    onVaiABackup: () -> Unit = {}
+) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val profili by vm.profiliDisponibili.collectAsStateWithLifecycle(emptyList())
     val customWords by vm.enableCustomWords.collectAsStateWithLifecycle(false)
@@ -433,6 +437,20 @@ fun ImpostazioniScreen(vm: TedescoViewModel, updater: UpdaterViewModel) {
                         statoUpd.first, style = MaterialTheme.typography.bodySmall,
                         color = if (statoUpd.second) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+
+                // --- BACKUP CLOUD ---
+                SettingsExpandableSection(
+                    title = "Backup cloud",
+                    description = "Salva i tuoi progressi su un repo GitHub privato e ripristinali."
+                ) {
+                    SettingsButton(onClick = onVaiABackup) { Text("Apri backup cloud") }
+                    Spacer(Modifier.height(6.dp))
+                    TutorialGrigio(
+                        "Il backup contiene tutti i profili (parole, ripassi, test, progressi). " +
+                            "Serve un token GitHub gratuito con permesso Contents sul repo di backup."
                     )
                 }
                 Spacer(Modifier.height(16.dp))

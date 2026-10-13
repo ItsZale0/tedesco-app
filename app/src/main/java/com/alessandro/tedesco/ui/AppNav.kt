@@ -60,6 +60,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.UpdateState
+import com.alessandro.tedesco.data.remote.BackupViewModel
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.FeedbackScreen
 import com.alessandro.tedesco.ui.PianoScreen
@@ -84,6 +85,13 @@ private class TedescoViewModelFactory(private val app: TedescoApp) : ViewModelPr
     @Suppress("UNCHECKED_CAST")
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         return TedescoViewModel(app) as T
+    }
+}
+
+private class BackupViewModelFactory(private val app: TedescoApp) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        return BackupViewModel(app) as T
     }
 }
 
@@ -248,7 +256,7 @@ private fun ContenutoApp(
             }
             composable(Dest.Nuove.route) { NuoveParoleScreen(vm) }
             composable(Dest.Guida.route) { GuidaScreen(vm) }
-            composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater) }
+            composable(Dest.Impostazioni.route) { ImpostazioniScreen(vm, updater, onVaiABackup = { nav.navigate("backup") }) }
             composable(Dest.Altro.route) {
                 val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
                 AltroScreen(
@@ -310,6 +318,11 @@ private fun ContenutoApp(
                 )
             }
             // Feedback / Correzione risposte
+            composable("backup") {
+                val appCtx = LocalContext.current.applicationContext as TedescoApp
+                val bvm: BackupViewModel = viewModel(factory = BackupViewModelFactory(appCtx))
+                BackupScreen(bvm, onIndietro = { nav.popBackStack() })
+            }
             composable("feedback") {
                 FeedbackScreen(
                     onIndietro = { nav.popBackStack() },
