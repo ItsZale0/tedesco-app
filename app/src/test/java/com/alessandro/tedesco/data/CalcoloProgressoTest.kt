@@ -20,9 +20,9 @@ class CalcoloProgressoTest {
     private fun log(giorniFa: Long, corretta: Boolean = true, wordId: String = "w") =
         RipassoLogEntity(wordId = wordId, timestamp = NOW - giorniFa * GIORNO, corretta = corretta)
 
-    /** Log che VERIFICA le parole indicate (2 corrette, ultima corretta). */
-    private fun logVerificate(ids: Collection<String>) = ids.flatMap { id ->
-        listOf(log(2, true, id), log(1, true, id))
+    /** Log che VERIFICA le parole indicate (una verifica corretta basta). */
+    private fun logVerificate(ids: Collection<String>) = ids.map { id ->
+        RipassoLogEntity(id, NOW - 1000L, true, verifica = true)
     }
 
     @Test

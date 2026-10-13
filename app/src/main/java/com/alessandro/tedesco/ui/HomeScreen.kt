@@ -210,9 +210,13 @@ fun HomeScreen(
                                     modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.size(8.dp))
                                 Text(
-                                    if (pr.paroleFragili > 0)
-                                        "Verifica il lessico (${pr.paroleFragili} da rivedere)"
-                                    else "Verifica il lessico"
+                                    when {
+                                        pr.paroleDaVerificare > 0 ->
+                                            "Verifica il lessico (${pr.paroleDaVerificare} da verificare)"
+                                        pr.paroleFragili > 0 ->
+                                            "Ripassa gli errori (${pr.paroleFragili})"
+                                        else -> "Verifica il lessico"
+                                    }
                                 )
                             }
                             Spacer(Modifier.height(4.dp))

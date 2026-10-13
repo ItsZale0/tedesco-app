@@ -80,18 +80,17 @@ object VerificaLessico {
     }
 
     /**
-     * Ricostruisce quali parole risultano verificate dal log dei ripassi.
-     * Una parola e' "verificata" se l'ultima risposta registrata e' corretta
-     * E il totale di risposte corrette e' >= 2 (evita il colpo di fortuna).
-     * Le parole sbagliate di recente restano non verificate.
+     * Ricostruisce quali parole risultano VERIFICATE dal log.
+     * Una parola e' verificata se l'ultima VERIFICA (quiz) e' corretta.
+     * Il self-report del flashcard ("Lo so"/"Non lo so") NON conta: non e' evidenza.
      */
     fun verificheDaLog(log: List<RipassoLogEntity>): Map<String, Boolean> {
-        val perParola = log.groupBy { it.wordId }
+        // SOLO gli eventi di verifica contano (il self-report del flashcard non e' evidenza).
+        // Basta l'ULTIMA verifica corretta: il quiz chiede ogni parola una volta, quindi
+        // pretendere "2 corrette" la renderebbe non verificabile per sempre.
+        val perParola = log.filter { it.verifica }.groupBy { it.wordId }
         return perParola.mapValues { (_, eventi) ->
-            val ordinati = eventi.sortedBy { it.timestamp }
-            val ultimo = ordinati.last()
-            val corrette = ordinati.count { it.corretta }
-            ultimo.corretta && corrette >= 2
+            eventi.maxByOrNull { it.timestamp }?.corretta == true
         }
     }
 
@@ -104,7 +103,9 @@ object VerificaLessico {
         log: List<RipassoLogEntity>,
         verifiche: Map<String, Boolean>
     ): List<WordEntity> {
-        val sbagliate = log.filter { !it.corretta }.map { it.wordId }.toSet()
+        // Solo le verifiche sbagliate rendono una parola "fragile": un "Non lo so"
+        // nel flashcard non e' un errore dimostrato.
+        val sbagliate = log.filter { it.verifica && !it.corretta }.map { it.wordId }.toSet()
         return parole.filter { w -> !w.archived && sbagliate.contains(w.id) && verifiche[w.id] != true }
     }
 
@@ -115,7 +116,7 @@ object VerificaLessico {
         verifiche: Map<String, Boolean>,
         limite: Int
     ): List<WordEntity> {
-        val erroriPerParola = log.filter { !it.corretta }.groupingBy { it.wordId }.eachCount()
+        val erroriPerParola = log.filter { it.verifica && !it.corretta }.groupingBy { it.wordId }.eachCount()
         return parole
             .filter { !it.archived && verifiche[it.id] != true }
             .sortedByDescending { erroriPerParola[it.id] ?: 0 }

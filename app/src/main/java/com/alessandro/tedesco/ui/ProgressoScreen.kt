@@ -194,6 +194,10 @@ private fun CardAttivita(pr: CalcoloProgresso.ProgressoReale) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Text("La tua attività", style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text("\"Verificate\" = parole dimostrate nel quiz, non solo ripassate.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 KpiBox("Streak", "${pr.streakGiorni}g", "giorni di fila", MaterialTheme.colorScheme.primary,
@@ -203,7 +207,7 @@ private fun CardAttivita(pr: CalcoloProgresso.ProgressoReale) {
             }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                KpiBox("Parole", "${pr.paroleImparate}", "su ${pr.paroleDisponibili}", MaterialTheme.colorScheme.primary,
+                KpiBox("Verificate", "${pr.paroleImparate}", "su ${pr.paroleDisponibili}", MaterialTheme.colorScheme.primary,
                     Modifier.weight(1f))
                 KpiBox("Ripassi", "${pr.ripassiTotali}", "totali", MaterialTheme.colorScheme.secondary,
                     Modifier.weight(1f))

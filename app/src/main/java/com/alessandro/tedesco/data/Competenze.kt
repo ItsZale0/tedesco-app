@@ -87,7 +87,11 @@ object CalcoloCompetenze {
         // stata mostrata: si poteva dire "lo so" senza saperlo. Ora conta solo cio'
         // che l'utente ha DIMOSTRATO nel quiz a scelta multipla (VerificaLessico).
         val verifiche = VerificaLessico.verificheDaLog(log)
-        val lessico = VerificaLessico.punteggioLessico(paroleAttive.size, verifiche)
+        // Conta solo le verificate che sono ancora nel vocabolario attivo:
+        // una parola archiviata/rimossa non deve gonfiare il punteggio.
+        val idAttivi = paroleAttive.map { it.id }.toSet()
+        val verificheAttive = verifiche.filterKeys { it in idAttivi }
+        val lessico = VerificaLessico.punteggioLessico(paroleAttive.size, verificheAttive)
 
         // GRAMMATICA: accuratezza delle review (SM-2). Nessun fallback gonfiato.
         val tutteReviews = paroleAttive.mapNotNull { reviews[it.id] }

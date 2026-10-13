@@ -13,8 +13,8 @@ class VerificaLessicoTest {
     private fun parola(id: String, de: String, it: String) =
         WordEntity(id = id, german = de, italian = it)
 
-    private fun log(id: String, corretta: Boolean, ts: Long = 1000L) =
-        RipassoLogEntity(wordId = id, timestamp = ts, corretta = corretta)
+    private fun log(id: String, corretta: Boolean, ts: Long = 1000L, verifica: Boolean = true) =
+        RipassoLogEntity(wordId = id, timestamp = ts, corretta = corretta, verifica = verifica)
 
     @Test
     fun `le domande hanno la risposta corretta tra le opzioni`() {
@@ -54,18 +54,26 @@ class VerificaLessicoTest {
     }
 
     @Test
-    fun `una parola e verificata solo con almeno 2 corrette e ultima corretta`() {
-        // 1 sola corretta -> NON verificata (colpo di fortuna)
+    fun `una parola e verificata se l ultima verifica e corretta`() {
+        // Una sola verifica corretta BASTA: il quiz chiede ogni parola una volta,
+        // pretendere 2 corrette la renderebbe non verificabile per sempre.
         val v1 = VerificaLessico.verificheDaLog(listOf(log("a", true, 1)))
-        assertFalse(v1["a"] ?: false)
+        assertTrue(v1["a"] ?: false)
 
-        // 2 corrette, ultima corretta -> verificata
-        val v2 = VerificaLessico.verificheDaLog(listOf(log("a", true, 1), log("a", true, 2)))
-        assertTrue(v2["a"] ?: false)
+        // Verifica corretta poi sbagliata -> non verificata
+        val v2 = VerificaLessico.verificheDaLog(listOf(log("a", true, 1), log("a", false, 2)))
+        assertFalse(v2["a"] ?: false)
 
-        // 2 corrette ma ULTIMA sbagliata -> non verificata
-        val v3 = VerificaLessico.verificheDaLog(listOf(log("a", true, 1), log("a", false, 2)))
-        assertFalse(v3["a"] ?: false)
+        // Sbagliata poi corretta -> verificata (ultima comanda)
+        val v3 = VerificaLessico.verificheDaLog(listOf(log("a", false, 1), log("a", true, 2)))
+        assertTrue(v3["a"] ?: false)
+    }
+
+    @Test
+    fun `il self-report del flashcard non verifica`() {
+        // "Lo so" nel ripasso NON e' evidenza: serve la verifica oggettiva.
+        val v = VerificaLessico.verificheDaLog(listOf(log("a", true, 1, verifica = false)))
+        assertFalse(v["a"] ?: false)
     }
 
     @Test
@@ -75,12 +83,16 @@ class VerificaLessicoTest {
         val verifiche = VerificaLessico.verificheDaLog(log)
         val fragili = VerificaLessico.paroleFragili(parole, log, verifiche)
         assertEquals(listOf("1"), fragili.map { it.id })
+        // Un "Non lo so" del flashcard NON rende fragile
+        val logFlash = listOf(log("3", false, verifica = false))
+        val fragiliFlash = VerificaLessico.paroleFragili(parole, logFlash, VerificaLessico.verificheDaLog(logFlash))
+        assertTrue(fragiliFlash.isEmpty())
     }
 
     @Test
     fun `le parole da verificare escludono quelle gia verificate`() {
         val parole = (1..5).map { parola("$it", "w$it", "i$it") }
-        val log = listOf(log("1", true, 1), log("1", true, 2))
+        val log = listOf(log("1", true, 1))
         val verifiche = VerificaLessico.verificheDaLog(log)
         val daVerificare = VerificaLessico.paroleDaVerificare(parole, log, verifiche, 10)
         assertFalse(daVerificare.any { it.id == "1" })
@@ -102,5 +114,35 @@ class VerificaLessicoTest {
     fun `con meno di 2 parole non si generano domande`() {
         assertEquals(0, VerificaLessico.costruisciDomande(listOf(parola("1","a","A"))).size)
         assertEquals(0, VerificaLessico.costruisciDomande(emptyList()).size)
+    }
+
+    @Test
+    fun `dopo aver verificato tutto non resta nulla da verificare`() {
+        // Riproduce il bug segnalato: "ho completato il lessico ma mi ripropone le stesse".
+        val parole = (1..10).map { parola("$it", "w$it", "i$it") }
+        // Una verifica CORRETTA per ogni parola (il quiz le chiede una volta sola)
+        val log = parole.mapIndexed { i, w -> log(w.id, true, ts = 1000L + i) }
+        val verifiche = VerificaLessico.verificheDaLog(log)
+
+        // Tutte verificate
+        assertEquals(10, verifiche.count { it.value })
+        // Niente da verificare, niente fragili
+        assertTrue(VerificaLessico.paroleDaVerificare(parole, log, verifiche, 10).isEmpty())
+        assertTrue(VerificaLessico.paroleFragili(parole, log, verifiche).isEmpty())
+        // E il punteggio lessico e' 100%
+        assertEquals(100f, VerificaLessico.punteggioLessico(parole.size, verifiche), 0.01f)
+    }
+
+    @Test
+    fun `le parole sbagliate tornano fragili finche non verificate`() {
+        val parole = (1..4).map { parola("$it", "w$it", "i$it") }
+        // 3 verificate, 1 sbagliata
+        val log = listOf(log("1", true, 1), log("2", true, 2), log("3", true, 3), log("4", false, 4))
+        val verifiche = VerificaLessico.verificheDaLog(log)
+        assertEquals(listOf("4"), VerificaLessico.paroleFragili(parole, log, verifiche).map { it.id })
+        // Dopo una verifica corretta non e' piu' fragile
+        val log2 = log + log("4", true, 5)
+        val v2 = VerificaLessico.verificheDaLog(log2)
+        assertTrue(VerificaLessico.paroleFragili(parole, log2, v2).isEmpty())
     }
 }

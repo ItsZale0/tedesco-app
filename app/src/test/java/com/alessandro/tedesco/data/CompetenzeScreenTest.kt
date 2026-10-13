@@ -28,8 +28,8 @@ class CompetenzeScreenTest {
         wordId = wordId, repetitions = repetitions, lapses = lapses
     )
     /** Log che VERIFICA le parole indicate (2 risposte corrette = verificata). */
-    private fun logVerificate(ids: Collection<String>) = ids.flatMapIndexed { i, id ->
-        listOf(RipassoLogEntity(id, NOW - 1000L + i, true), RipassoLogEntity(id, NOW + i, true))
+    private fun logVerificate(ids: Collection<String>) = ids.mapIndexed { i, id ->
+        RipassoLogEntity(id, NOW + i, true, verifica = true)
     }
     private fun tGramm(p: Float) = TestGrammatica(NOW, p, 0, 10)
     private fun tComp(p: Float) = TestComprensione(NOW, p, 0, 10)

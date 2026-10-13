@@ -133,10 +133,22 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
             } else if (totale == 0) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Non ci sono abbastanza parole per la verifica",
-                            style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(16.dp))
-                        Button(onClick = onIndietro) { Text("Torna indietro") }
+                        Text("Hai verificato tutto il lessico disponibile",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Non ci sono parole nuove da dimostrare. Le parole gia' verificate " +
+                                "tornano nel Ripasso secondo la spaced repetition.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(20.dp))
+                        Button(onClick = onIndietro,
+                            modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
+                        ) { Text("Fatto") }
                     }
                 }
             } else {

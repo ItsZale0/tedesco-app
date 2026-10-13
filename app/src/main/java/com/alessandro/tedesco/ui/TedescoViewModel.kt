@@ -449,12 +449,13 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val parole = repo.observeWords().first().filter { !it.archived && it.italian.isNotBlank() }
             val log = repo.ripassiLogFlow.first()
             val verifiche = VerificaLessico.verificheDaLog(log)
-            // Prima le fragili (sbagliate), poi le mai verificate
+            // Prima le fragili (verificate e sbagliate), poi quelle mai verificate.
             val fragili = VerificaLessico.paroleFragili(parole, log, verifiche)
             val daVerificare = VerificaLessico.paroleDaVerificare(parole, log, verifiche, limite)
-            val scelte = (fragili + daVerificare).distinctBy { it.id }.take(limite)
-            val base = if (scelte.size >= 2) scelte else parole.take(limite)
-            _domandeVerifica.value = VerificaLessico.costruisciDomande(base)
+            // NIENTE fallback su tutte le parole: se non c'e' nulla da verificare,
+            // il quiz e' vuoto e la schermata lo dice (prima riproponeva le stesse).
+            val base = (fragili + daVerificare).distinctBy { it.id }.take(limite)
+            _domandeVerifica.value = if (base.size >= 2) VerificaLessico.costruisciDomande(base) else emptyList()
             _indiceVerifica.value = 0
             _sceltaVerifica.value = null
             _esitoVerifica.value = null

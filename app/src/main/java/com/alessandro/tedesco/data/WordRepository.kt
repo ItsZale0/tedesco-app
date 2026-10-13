@@ -387,14 +387,14 @@ class WordRepository(
             )
         }
         _reviews.value = reviews
-        registraRipasso(wordId, corretta)
+        registraRipasso(wordId, corretta, verifica = true)
         salvaSuProfilo()
     }
 
     /** Registra un evento di ripasso reale (per statistiche accurate nel tempo). */
-    private fun registraRipasso(wordId: String, corretta: Boolean) {
+    private fun registraRipasso(wordId: String, corretta: Boolean, verifica: Boolean = false) {
         // Cap a 5000 eventi (~ultimi mesi) per non gonfiare il DataStore.
-        _ripassiLog.value = (_ripassiLog.value + RipassoLogEntity(wordId, System.currentTimeMillis(), corretta)).takeLast(5000)
+        _ripassiLog.value = (_ripassiLog.value + RipassoLogEntity(wordId, System.currentTimeMillis(), corretta, verifica)).takeLast(5000)
     }
 
     /** Svuota i dati del profilo attivo (parole, ripassi, log, guida). */

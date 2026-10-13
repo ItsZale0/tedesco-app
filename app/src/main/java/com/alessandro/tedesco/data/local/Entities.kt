@@ -133,7 +133,14 @@ data class ProgressoUtente(
 data class RipassoLogEntity(
     val wordId: String,
     val timestamp: Long,
-    val corretta: Boolean
+    val corretta: Boolean,
+    /**
+     * true = evento di VERIFICA (quiz a scelta multipla, evidenza forte);
+     * false = ripasso flashcard (self-report "Lo so"/"Non lo so").
+     * Serve a distinguere l'evidenza oggettiva dal self-report: solo le
+     * verifiche contano per il lessico dimostrato.
+     */
+    val verifica: Boolean = false
 )
 
 /** Risultato di un test di grammatica */

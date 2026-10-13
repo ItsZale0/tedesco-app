@@ -25,8 +25,8 @@ class CompetenzeTest {
     )
 
     /** Log che VERIFICA le parole indicate (2 risposte corrette = verificata). */
-    private fun logVerificate(ids: Collection<String>) = ids.flatMapIndexed { i, id ->
-        listOf(RipassoLogEntity(id, NOW - 1000L + i, true), RipassoLogEntity(id, NOW + i, true))
+    private fun logVerificate(ids: Collection<String>) = ids.mapIndexed { i, id ->
+        RipassoLogEntity(id, NOW + i, true, verifica = true)
     }
     private fun testGramm(p: Float) = TestGrammatica(data = NOW, punteggio = p, errori = 0, totale = 10)
     private fun testComp(p: Float) = TestComprensione(data = NOW, punteggio = p, errori = 0, totale = 10)
