@@ -104,6 +104,25 @@ class BackupGitHubClient(
             }
         }
 
+    /** Ricava l'username a cui appartiene il token (per completare il repo). */
+    suspend fun ownerDelToken(): String? = withContext(Dispatchers.IO) {
+        val r = Request.Builder()
+            .url("https://api.github.com/user")
+            .header("Authorization", "Bearer $token")
+            .header("Accept", "application/vnd.github+json")
+            .header("User-Agent", "TedescoApp-Backup")
+            .get().build()
+        try {
+            client.newCall(r).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                val body = resp.body?.string() ?: return@use null
+                json.parseToJsonElement(body).jsonObject["login"]?.jsonPrimitive?.contentOrNull
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Verifica che token e repo siano validi (per il pulsante "Prova connessione"). */
     suspend fun verificaAccesso(): BackupCloud.Esito = withContext(Dispatchers.IO) {
         try {

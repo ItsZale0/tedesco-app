@@ -11,6 +11,9 @@ import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.data.remote.VocabPublishService
 import com.alessandro.tedesco.di.AppModule
 import com.alessandro.tedesco.sync.ReminderWorker
+import com.alessandro.tedesco.data.BackupSettings
+import kotlinx.coroutines.launch
+import com.alessandro.tedesco.sync.BackupWorker
 import com.alessandro.tedesco.sync.SyncWorker
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +21,11 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 
 class TedescoApp : Application(), Configuration.Provider {
+
+    /** Scope dell'app: per lavoro che deve sopravvivere all'Activity ma non e' un worker. */
+    private val appScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+    )
 
     // Manual DI - singletons
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -50,6 +58,13 @@ class TedescoApp : Application(), Configuration.Provider {
         super.onCreate()
         SyncWorker.schedule(this)
         ReminderWorker.schedule(this)
+        // Riprogramma il backup automatico se l'utente lo aveva attivato
+        // (WorkManager perde il job se l'app viene reinstallata/aggiornata).
+        appScope.launch {
+            if (BackupSettings(this@TedescoApp).autoAbilitato()) {
+                BackupWorker.schedule(this@TedescoApp)
+            }
+        }
     }
 
     companion object {

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.BackupCloud
+import com.alessandro.tedesco.data.BackupEsecutore
 import com.alessandro.tedesco.data.BackupSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,30 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     private val _stato = MutableStateFlow<BackupStato>(BackupStato.Idle)
     val stato: StateFlow<BackupStato> = _stato
 
+    /** Backup automatico attivo/disattivo. */
+    val auto: StateFlow<Boolean> = settings.autoFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Timestamp dell'ultimo backup automatico. */
+    val ultimoAuto: StateFlow<Long> = settings.ultimoAutoFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+
+    /**
+     * Attiva/disattiva il backup automatico.
+     * Quando e' attivo: periodico in background (minimo 15 min imposto da Android)
+     * + ogni 5 minuti mentre l'app e' aperta.
+     */
+    fun impostaAuto(abilitato: Boolean) {
+        viewModelScope.launch {
+            settings.salvaAuto(abilitato)
+            if (abilitato) {
+                com.alessandro.tedesco.sync.BackupWorker.schedule(getApplication())
+            } else {
+                com.alessandro.tedesco.sync.BackupWorker.cancel(getApplication())
+            }
+        }
+    }
+
     /** Riepilogo del backup scaricato, in attesa di conferma per il ripristino. */
     private val _daRipristinare = MutableStateFlow<BackupCloud.Riepilogo?>(null)
     val daRipristinare: StateFlow<BackupCloud.Riepilogo?> = _daRipristinare
@@ -55,19 +80,34 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     fun salvaRepo(r: String) { viewModelScope.launch { settings.salvaRepo(r) } }
     fun pulisciStato() { _stato.value = BackupStato.Idle }
 
-    private fun client(): BackupGitHubClient? {
+    private fun client(repoNormalizzato: String? = null): BackupGitHubClient? {
         val t = token.value.trim()
-        val r = repo.value.trim()
         if (t.isBlank()) return null
-        return BackupGitHubClient(t, if (r.isBlank()) BackupCloud.REPO_DEFAULT else r)
+        val r = repoNormalizzato ?: repo.value.trim().ifBlank { BackupCloud.REPO_DEFAULT }
+        return BackupGitHubClient(t, r)
+    }
+
+    /**
+     * Normalizza il repo: se l'utente scrive solo il nome ("tedesco-backup")
+     * aggiunge l'owner ricavato dal token. L'API vuole sempre {owner}/{repo},
+     * quindi "tedesco-backup" da solo darebbe 404.
+     */
+    private suspend fun repoNormalizzato(): String {
+        val r = repo.value.trim().trimEnd('/')
+        if (r.isBlank()) return BackupCloud.REPO_DEFAULT
+        if (r.contains("/")) return r
+        val owner = client()?.ownerDelToken()
+        return if (owner.isNullOrBlank()) r else "$owner/$r"
     }
 
     /** Verifica token + repo senza toccare i dati. */
     fun provaConnessione() {
-        val c = client()
-        if (c == null) { _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return }
+        if (token.value.isBlank()) {
+            _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return
+        }
         _stato.value = BackupStato.InCorso
         viewModelScope.launch {
+            val c = client(repoNormalizzato()) ?: return@launch
             _stato.value = when (val e = c.verificaAccesso()) {
                 is BackupCloud.Esito.Ok -> BackupStato.Ok(e.dettaglio)
                 is BackupCloud.Esito.Errore -> BackupStato.Errore(e.messaggio)
@@ -77,30 +117,33 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
 
     /** Carica il backup (tutti i profili) sul repo privato. */
     fun eseguiBackup(versioneApp: String) {
-        val c = client()
-        if (c == null) { _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return }
+        if (token.value.isBlank()) {
+            _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return
+        }
         _stato.value = BackupStato.InCorso
         viewModelScope.launch {
-            try {
-                val repoCompleto = app.profileManagerInstance.repositoryFlow.first()
-                val json = BackupCloud.serializza(repoCompleto, versioneApp, System.currentTimeMillis())
-                c.carica(json, "Backup Tedesco App")
-                settings.registraBackup(System.currentTimeMillis())
-                val n = repoCompleto.profili.size
-                _stato.value = BackupStato.Ok("Backup completato: $n profili, ${json.length / 1024} KB")
-            } catch (e: Exception) {
-                _stato.value = BackupStato.Errore(e.message ?: "Errore sconosciuto")
+            _stato.value = when (val e = BackupEsecutore.esegui(getApplication(), versioneApp, forza = true)) {
+                is BackupEsecutore.Esito.Ok -> {
+                    val n = app.profileManagerInstance.repositoryFlow.first().profili.size
+                    BackupStato.Ok("Backup completato: $n profili, ${e.byteCaricati / 1024} KB")
+                }
+                is BackupEsecutore.Esito.Errore -> BackupStato.Errore(e.messaggio)
+                is BackupEsecutore.Esito.NonConfigurato -> BackupStato.Errore(e.motivo)
+                BackupEsecutore.Esito.NessunCambiamento ->
+                    BackupStato.Ok("Nessuna modifica da salvare")
             }
         }
     }
 
     /** Scarica il backup e mostra il riepilogo; il ripristino richiede conferma. */
     fun preparaRipristino() {
-        val c = client()
-        if (c == null) { _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return }
+        if (token.value.isBlank()) {
+            _stato.value = BackupStato.Errore("Inserisci prima il token GitHub"); return
+        }
         _stato.value = BackupStato.InCorso
         viewModelScope.launch {
             try {
+                val c = client(repoNormalizzato()) ?: return@launch
                 val json = c.scarica()
                 if (json == null) {
                     _stato.value = BackupStato.Errore("Nessun backup trovato su GitHub")

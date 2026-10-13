@@ -22,8 +22,11 @@ object BackupCloud {
     /** Nome file usato nel repo di backup. */
     const val NOME_FILE = "tedesco-backup.json"
 
-    /** Repo di backup di default (privato). */
-    const val REPO_DEFAULT = "tedesco-backup"
+    /**
+     * Repo di backup di default (privato). DEVE includere l'owner:
+     * l'API e' /repos/{owner}/{repo}, quindi "tedesco-backup" da solo darebbe 404.
+     */
+    const val REPO_DEFAULT = "ItsZale0/tedesco-backup"
 
     @Serializable
     data class Pacchetto(

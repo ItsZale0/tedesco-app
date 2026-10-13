@@ -53,6 +53,8 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
     val stato by vm.stato.collectAsStateWithLifecycle()
     val daRipristinare by vm.daRipristinare.collectAsStateWithLifecycle(null)
 
+    val auto by vm.auto.collectAsStateWithLifecycle(false)
+    val ultimoAuto by vm.ultimoAuto.collectAsStateWithLifecycle(0L)
     var tokenInput by remember(token) { mutableStateOf(token) }
     var repoInput by remember(repo) { mutableStateOf(repo) }
     var confermaRipristino by remember { mutableStateOf(false) }
@@ -106,10 +108,17 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                     OutlinedTextField(
                         value = repoInput,
                         onValueChange = { repoInput = it },
-                        label = { Text("Repo di backup (utente/nome)") },
+                        label = { Text("Repo di backup") },
                         placeholder = { Text("ItsZale0/tedesco-backup") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Scrivi utente/nome-repo (es. ItsZale0/tedesco-backup). " +
+                            "Se scrivi solo il nome, aggiungo io il tuo utente.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
@@ -123,8 +132,14 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                     )
                     Spacer(Modifier.height(6.dp))
                     TutorialGrigioBackup(
-                        "Crea un token su github.com/settings/tokens con permesso " +
-                            "\"Contents: Read and write\" sul repo di backup. Il token resta solo sul telefono."
+                        "PASSI:\n" +
+                            "1. Crea un repo privato su github.com/new (es. tedesco-backup).\n" +
+                            "2. Vai su github.com/settings/personal-access-tokens/new\n" +
+                            "3. In \"Repository access\" scegli SOLO il repo di backup.\n" +
+                            "4. In \"Permissions\" → Repository permissions → Contents: Read and write.\n" +
+                            "5. Genera il token (inizia con github_pat_) e incollalo qui sopra.\n" +
+                            "Il token resta solo sul telefono: non viene inviato da nessuna parte " +
+                            "tranne a GitHub."
                     )
                     Spacer(Modifier.height(12.dp))
                     Button(
@@ -170,6 +185,61 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 enabled = token.isNotBlank() && stato !is BackupStato.InCorso
             ) { Text("Ripristina dal backup") }
+
+            // --- Backup automatico ---
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(Raggi.card),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Backup automatico",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                if (auto) "Attivo · ogni 5 minuti (15 min in background)"
+                                else "Disattivato",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = auto,
+                            onCheckedChange = { vm.impostaAuto(it) },
+                            enabled = token.isNotBlank()
+                        )
+                    }
+                    if (ultimoAuto > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Ultimo automatico: " + SimpleDateFormat("d MMM HH:mm", Locale.ITALIAN)
+                                .format(Date(ultimoAuto)),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (!token.isNotBlank()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text("Inserisci il token per attivare il backup automatico",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Salva solo quando qualcosa cambia (confronto hash): " +
+                            "non consuma richieste GitHub inutilmente.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             Spacer(Modifier.height(24.dp))
         }
