@@ -1,6 +1,7 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.*
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VolumeOff
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -75,7 +78,8 @@ fun TutorChatScreen(vm: TedescoViewModel) {
             storicoCaricato = true
         }
     }
-    var input by remember { mutableStateOf("") }
+    var input by remember { mutableStateOf(TextFieldValue("")) }
+    val keyboard = LocalSoftwareKeyboardController.current
     var caricamento by remember { mutableStateOf(false) }
     var rispostaAnimata by remember { mutableStateOf("") }
     var animazioneAttiva by remember { mutableStateOf(false) }
@@ -100,10 +104,11 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     }
 
     fun invia(testo: String) {
+        keyboard?.hide()
         val t = testo.trim()
         if (t.isBlank() || caricamento) return
         messaggi = messaggi + MessaggioTutor(t, daUtente = true)
-        input = ""
+        input = TextFieldValue("")
         caricamento = true
 
         scope.launch {
@@ -184,25 +189,8 @@ fun TutorChatScreen(vm: TedescoViewModel) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .imePadding()
         ) {
-            if (apiKey.isBlank()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = spaziaturaSchermo(), vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        "Inserisci una chiave API Groq gratuita in Profilo → Tutor AI per usare il tutor.",
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
             // Selettore modello
             ModelloSelector(
                 modello = modelloTutor,
@@ -260,12 +248,13 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                         placeholder = { Text("Chiedi qualcosa…") },
                         modifier = Modifier.weight(1f),
                         maxLines = 3,
-                        enabled = !caricamento
+                        enabled = !caricamento,
+                        singleLine = false
                     )
                     Spacer(Modifier.width(8.dp))
                     FilledIconButton(
-                        onClick = { invia(input) },
-                        enabled = input.isNotBlank() && !caricamento
+                        onClick = { invia(input.text); input = TextFieldValue("") },
+                        enabled = input.text.isNotBlank() && !caricamento
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Invia")
                     }

@@ -158,8 +158,13 @@ object CalcoloProgresso {
             else -> "Continua a esercitarti"
         }
 
-        // --- Verso il prossimo livello (media delle competenze, criterio chiaro) ---
-        val media = dimensioni.map { it.second }.average().toFloat()
+        // --- Verso il prossimo livello ---
+        // Regola ufficiale: serve il 60% in TUTTE le competenze. La barra mostra
+        // quanto la competenza PIÙ DEBOLE è vicina alla soglia (100% = tutte superano il 60%).
+        val soglia = CertificazioniUfficiali.SOGLIA_SUPERAMENTO
+        val piuDebole = dimensioni.minByOrNull { it.second }
+        val versoLivello = if (piuDebole == null || piuDebole.second >= soglia) 1f
+            else (piuDebole.second / soglia).coerceIn(0f, 1f)
         val prossimo = LivelloCEFR.entries.firstOrNull { it.ordine == livello.ordine + 1 }
             ?.takeIf { it.ordine <= obiettivo.ordine }
 
@@ -185,11 +190,11 @@ object CalcoloProgresso {
         return ProgressoReale(
             livello = livello,
             livelloObiettivo = obiettivo,
-            versoProssimoLivello = (media / 100f).coerceIn(0f, 1f),
+            versoProssimoLivello = versoLivello,
             prossimoLivello = prossimo,
             dimensioneDebole = nomeDebole,
             dimensioneDeboleValore = valoreDebole,
-            azioneConsigliata = azione,
+            azioneConsigliata = if (valoreDebole >= soglia) "Tutte le competenze superano la soglia. Continua così!" else azione,
             paroleImparate = paroleImparate,
             paroleFragili = VerificaLessico.paroleFragili(paroleAttive, log, verifiche).size,
             paroleDaVerificare = VerificaLessico.paroleDaVerificare(paroleAttive, log, verifiche, Int.MAX_VALUE).size,

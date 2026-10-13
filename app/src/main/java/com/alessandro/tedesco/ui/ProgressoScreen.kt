@@ -157,16 +157,17 @@ private fun CardCompetenze(pr: CalcoloProgresso.ProgressoReale) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
-            BarraCompetenza("Lessico", pr.competenze.lessico, MaterialTheme.colorScheme.primary)
-            BarraCompetenza("Grammatica", pr.competenze.grammatica, MaterialTheme.colorScheme.tertiary)
-            BarraCompetenza("Comprensione", pr.competenze.comprensione, MaterialTheme.colorScheme.secondary)
-            BarraCompetenza("Produzione", pr.competenze.produzione, MaterialTheme.colorScheme.error)
+            BarraCompetenza("Lessico", pr.competenze.lessico)
+            BarraCompetenza("Grammatica", pr.competenze.grammatica)
+            BarraCompetenza("Comprensione", pr.competenze.comprensione)
+            BarraCompetenza("Produzione", pr.competenze.produzione)
         }
     }
 }
 
 @Composable
-private fun BarraCompetenza(nome: String, valore: Float, colore: Color) {
+private fun BarraCompetenza(nome: String, valore: Float) {
+    val colore = if (valore >= 60f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
     val v = valore.coerceIn(0f, 100f)
     val ok = v >= CertificazioniUfficiali.SOGLIA_SUPERAMENTO
     Column(Modifier.padding(vertical = 5.dp)) {

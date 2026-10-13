@@ -541,6 +541,43 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Rimuove un esercizio generato (per id) dalla lista in memoria e dal profilo. */
+    fun eliminaEsercizioGenerato(tipo: TipoEsercizio, id: String) {
+        viewModelScope.launch {
+            when (tipo) {
+                TipoEsercizio.COMPRENSIONE -> {
+                    val aggiornati = _eserciziGenComprensione.value.filterNot { it.id == id }
+                    _eserciziGenComprensione.value = aggiornati
+                    val profilo = profileManager.profiloAttivo() ?: return@launch
+                    val nuovoStato = profilo.stato.copy(eserciziGeneratiComprensione = aggiornati)
+                    profileManager.aggiornaStatoAttivo(nuovoStato)
+                }
+                TipoEsercizio.PRODUZIONE -> {
+                    val aggiornati = _eserciziGenProduzione.value.filterNot { it.id == id }
+                    _eserciziGenProduzione.value = aggiornati
+                    val profilo = profileManager.profiloAttivo() ?: return@launch
+                    val nuovoStato = profilo.stato.copy(eserciziGeneratiProduzione = aggiornati)
+                    profileManager.aggiornaStatoAttivo(nuovoStato)
+                }
+                TipoEsercizio.ASCOLTO -> {
+                    val aggiornati = _eserciziGenAscolto.value.filterNot { it.id == id }
+                    _eserciziGenAscolto.value = aggiornati
+                    val profilo = profileManager.profiloAttivo() ?: return@launch
+                    val nuovoStato = profilo.stato.copy(eserciziGeneratiAscolto = aggiornati)
+                    profileManager.aggiornaStatoAttivo(nuovoStato)
+                }
+                TipoEsercizio.GRAMMATICA -> {
+                    val aggiornati = _eserciziGenGrammatica.value.filterNot { it.id == id }
+                    _eserciziGenGrammatica.value = aggiornati
+                    val profilo = profileManager.profiloAttivo() ?: return@launch
+                    val nuovoStato = profilo.stato.copy(eserciziGeneratiGrammatica = aggiornati)
+                    profileManager.aggiornaStatoAttivo(nuovoStato)
+                }
+            }
+            _messaggio.value = "Esercizio eliminato"
+        }
+    }
+
     fun reset() {
         viewModelScope.launch {
             repo.resetAll()

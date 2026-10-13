@@ -25,7 +25,9 @@ class BackupEsecutoreTest {
             "ale" to ProfiloUtente(
                 id = "ale",
                 config = ProfiloConfig(tipo = TipoProfilo.ALESSANDRO, nomeVisualizzato = "Alessandro"),
-                stato = ProfiloStato(parole = parole)
+                stato = ProfiloStato(parole = parole),
+                creatoIl = NOW,
+                ultimoAccesso = NOW
             )
         ),
         profiloAttivoId = "ale"
@@ -55,8 +57,8 @@ class BackupEsecutoreTest {
     fun `il pacchetto conserva tutti i profili`() {
         val repo = ProfiliRepository(
             profili = mapOf(
-                "ale" to ProfiloUtente(id = "ale", config = ProfiloConfig(TipoProfilo.ALESSANDRO, "Alessandro")),
-                "emma" to ProfiloUtente(id = "emma", config = ProfiloConfig(TipoProfilo.EMMA, "Emma"))
+                "ale" to ProfiloUtente(id = "ale", config = ProfiloConfig(TipoProfilo.ALESSANDRO, "Alessandro"), creatoIl = NOW, ultimoAccesso = NOW),
+                "emma" to ProfiloUtente(id = "emma", config = ProfiloConfig(TipoProfilo.EMMA, "Emma"), creatoIl = NOW, ultimoAccesso = NOW)
             ),
             profiloAttivoId = "ale"
         )

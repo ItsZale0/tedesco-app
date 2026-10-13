@@ -2,6 +2,7 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -182,25 +184,36 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                             }
                         }
 
-                        Button(
-                            onClick = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { vm.eliminaEsercizioGenerato(TipoEsercizio.PRODUZIONE, domanda.id) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Elimina")
+                            }
+                            Button(
+                                onClick = {
+                                    val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
+                                    var next = indice + 1
+                                    while (next < elenco.size && elenco[next].id in idsCompletati) next++
+                                    if (next < elenco.size) {
+                                        indice = next
+                                        rispostaSelezionata = null
+                                        risultato = null
+                                    } else {
+                                        completato = true
+                                    }
+                                },
+                                modifier = Modifier.weight(2f)
+                            ) {
                                 val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
                                 var next = indice + 1
                                 while (next < elenco.size && elenco[next].id in idsCompletati) next++
-                                if (next < elenco.size) {
-                                    indice = next
-                                    rispostaSelezionata = null
-                                    risultato = null
-                                } else {
-                                    completato = true
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
-                            var next = indice + 1
-                            while (next < elenco.size && elenco[next].id in idsCompletati) next++
-                            Text(if (next < elenco.size) "Prossimo" else "Vedi risultato")
+                                Text(if (next < elenco.size) "Prossimo" else "Vedi risultato")
+                            }
                         }
                     }
                 } else {
