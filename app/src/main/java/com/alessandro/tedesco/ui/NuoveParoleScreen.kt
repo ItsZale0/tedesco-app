@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -244,7 +245,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = w.article?.takeIf { !w.german.startsWith(it, ignoreCase = true) }?.let { "$it ${w.german}" } ?: w.german,
+                    text = ParolaTedesca.conArticolo(w.article, w.german),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

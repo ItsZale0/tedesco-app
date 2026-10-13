@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
+import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
@@ -175,14 +176,14 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = carta.german,
+                                text = ParolaTedesca.conArticolo(carta.article, carta.german),
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Spacer(Modifier.size(12.dp))
-                            IconButton(onClick = { ttsHelper.speak(carta.german) }) {
+                            IconButton(onClick = { ttsHelper.speak(ParolaTedesca.conArticolo(carta.article, carta.german)) }) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.VolumeUp,
                                     contentDescription = "Ascolta pronuncia",

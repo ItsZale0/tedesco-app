@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.LESSICO_MEDICO
 import com.alessandro.tedesco.data.SCENARI_MEDICI
+import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.ui.theme.Spaziature
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,7 +116,7 @@ private fun TabLessico() {
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = parola.article?.takeIf { !parola.german.startsWith(it, ignoreCase = true) }?.let { "$it ${parola.german}" } ?: parola.german,
+                                    text = ParolaTedesca.conArticolo(parola.article, parola.german),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )

@@ -8,6 +8,7 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloProgresso
+import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.VerificaLessico
 import com.alessandro.tedesco.data.CalcoloStatistiche
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
@@ -398,7 +399,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val reviews: List<ReviewEntity> = repo.dueReviews()
             val tutte: List<WordEntity> = parole.first()
             val cards = reviews.mapNotNull { r -> tutte.firstOrNull { w -> w.id == r.wordId } }
-                .filter { w -> w.italian.isNotBlank() && w.italian != "(da completare)" }
+                .filter { ParolaTedesca.utilizzabile(it) }
             _sessione.value = SessionState(cards = cards)
             _caricamento.value = false
             if (cards.isEmpty()) _messaggio.value = "Niente da ripassare. Torna domani."
@@ -446,7 +447,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
      */
     fun avviaVerifica(limite: Int = 10) {
         viewModelScope.launch {
-            val parole = repo.observeWords().first().filter { !it.archived && it.italian.isNotBlank() }
+            val parole = repo.observeWords().first().filter { ParolaTedesca.utilizzabile(it) }
             val log = repo.ripassiLogFlow.first()
             val verifiche = VerificaLessico.verificheDaLog(log)
             // Prima le fragili (verificate e sbagliate), poi quelle mai verificate.
@@ -574,7 +575,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val p = profilo.stato.progresso
             val parole = repo.observeWords().first()
             val reviews = repo.reviewsFlow.first()
-            val comp = CalcoloCompetenze.calcola(parole, reviews, p, System.currentTimeMillis())
+            val log = repo.ripassiLogFlow.first()
+            // Passa il log: senza, il livello non vede le parole verificate nel quiz.
+            val comp = CalcoloCompetenze.calcola(parole, reviews, p, System.currentTimeMillis(), log)
             val stimato = comp.livelloComplessivo
             if (stimato == p.livelloCorrente) return@launch
 

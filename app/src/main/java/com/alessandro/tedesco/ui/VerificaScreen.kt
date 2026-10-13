@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.VerificaLessico
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
@@ -178,14 +179,13 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = listOfNotNull(d.parola.article, d.parola.german)
-                                        .joinToString(" "),
+                                    text = ParolaTedesca.conArticolo(d.parola.article, d.parola.german),
                                     fontSize = 28.sp, fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Spacer(Modifier.size(10.dp))
-                                IconButton(onClick = { tts.speak(d.parola.german) }) {
+                                IconButton(onClick = { tts.speak(ParolaTedesca.conArticolo(d.parola.article, d.parola.german)) }) {
                                     Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ascolta",
                                         modifier = Modifier.size(22.dp),
                                         tint = MaterialTheme.colorScheme.onPrimaryContainer)
