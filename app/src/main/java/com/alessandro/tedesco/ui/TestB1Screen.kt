@@ -64,7 +64,42 @@ fun TestB1Screen(vm: TedescoViewModel) {
                         onClick = { },
                         label = { Text(etichettaSezione(sezione)) }
                     )
-                    
+
+                    // Testo di lettura (sezione Lesen)
+                    val testo = domanda.testoLettura
+                    if (!testo.isNullOrBlank()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(Spaziature.md)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Lesen Sie den Text",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(onClick = { ttsHelper.speak(testo) }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.VolumeUp,
+                                            contentDescription = "Ascolta il testo",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Text(text = testo, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+
                     // Domanda
                     Card(
                         modifier = Modifier.fillMaxWidth(),

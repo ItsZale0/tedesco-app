@@ -28,11 +28,23 @@ data class DomandaTestB1(
     val domanda: String,
     val opzioni: List<String>,
     val rispostaCorretta: Int,
-    val spiegazione: String
+    val spiegazione: String,
+    /** Testo di lettura (tedesco) per la sezione LESEN. */
+    val testoLettura: String? = null
 )
 
 object TestB1Data {
     
+    /** Testo di lettura condiviso dalla sezione LESEN (formato Goethe Lesen). */
+    val TESTO_LESEN_B1 = """Deutschland ist ein Land mit vielen Gesichtern. Die meisten Menschen \
+        |leben in Städten, aber auch auf dem Land gibt es schöne Dörfer. Viele Deutsche \
+        |sprechen Englisch, besonders die jüngere Generation. In den Schulen lernen die \
+        |Kinder schon früh Fremdsprachen. Das Leben in Deutschland ist nicht billig, \
+        |aber die Löhne sind im Vergleich zu vielen anderen Ländern recht hoch. \
+        |Besonders beliebt sind die zahlreichen Feiertage und die Tradition, im Sommer \
+        |viel Zeit draußen zu verbringen. Viele Familien machen Urlaub in den Bergen \
+        |oder an der Nordsee.""".trimMargin()
+
     val domandeLesen: List<DomandaTestB1> = listOf(
         DomandaTestB1(
             id = "l1",
@@ -45,7 +57,8 @@ object TestB1Data {
                 "Deutschland ist klein"
             ),
             rispostaCorretta = 0,
-            spiegazione = "Der Text beschreibt die positiven Aspekte Deutschlands."
+            spiegazione = "Der Text beschreibt die positiven Aspekte Deutschlands.",
+            testoLettura = TESTO_LESEN_B1
         ),
         DomandaTestB1(
             id = "l2",
@@ -58,7 +71,8 @@ object TestB1Data {
                 "Deutsche lernen nie Englisch"
             ),
             rispostaCorretta = 1,
-            spiegazione = "Nicht alle, aber viele Deutsche sprechen Englisch."
+            spiegazione = "Nicht alle, aber viele Deutsche sprechen Englisch.",
+            testoLettura = TESTO_LESEN_B1
         ),
         DomandaTestB1(
             id = "l3",
@@ -71,7 +85,8 @@ object TestB1Data {
                 "Bildung ist unwichtig"
             ),
             rispostaCorretta = 1,
-            spiegazione = "Bildung umfasst alle Formen des Lernens."
+            spiegazione = "Bildung umfasst alle Formen des Lernens.",
+            testoLettura = TESTO_LESEN_B1
         ),
         DomandaTestB1(
             id = "l4",
@@ -79,7 +94,8 @@ object TestB1Data {
             domanda = "Welches Wort ist ein Synonym für 'schnell'?",
             opzioni = listOf("langsam", "rasch", "groß", "klein"),
             rispostaCorretta = 1,
-            spiegazione = "'Rasch' ist ein Synonym für 'schnell'."
+            spiegazione = "'Rasch' ist ein Synonym für 'schnell'.",
+            testoLettura = TESTO_LESEN_B1
         ),
         DomandaTestB1(
             id = "l5",
@@ -92,7 +108,8 @@ object TestB1Data {
                 "Beide bedeuten 'müssen'"
             ),
             rispostaCorretta = 1,
-            spiegazione = "'können' drückt Fähigkeit aus, 'dürfen' Erlaubnis."
+            spiegazione = "'können' drückt Fähigkeit aus, 'dürfen' Erlaubnis.",
+            testoLettura = TESTO_LESEN_B1
         )
     )
     

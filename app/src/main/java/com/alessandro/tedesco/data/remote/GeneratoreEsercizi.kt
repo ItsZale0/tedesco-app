@@ -28,7 +28,8 @@ private data class EsercizioAi(
     val spiegazione: String? = null,
     val livello: String? = null,
     val fraseTedesca: String? = null,
-    val traduzioneItaliana: String? = null
+    val traduzioneItaliana: String? = null,
+    val testoLettura: String? = null
 )
 
 @Serializable
@@ -55,7 +56,9 @@ data class EsercizioGenerato(
     val livello: String,
     /** Solo per ASCOLTO: la frase da far ascoltare via TTS. */
     val fraseTedesca: String? = null,
-    val traduzioneItaliana: String? = null
+    val traduzioneItaliana: String? = null,
+    /** Solo per COMPRENSIONE/Lesen: il testo tedesco da leggere prima delle domande. */
+    val testoLettura: String? = null
 )
 
 /**
@@ -154,8 +157,17 @@ class GeneratoreEsercizi {
                 Compila anche i campi "fraseTedesca" (la frase da ascoltare) e "traduzioneItaliana".
             """.trimIndent()
             TipoEsercizio.COMPRENSIONE -> """
-                Ogni esercizio è una domanda di comprensione della lettura (Lesen) a 4 opzioni:
-                traduzioni, significato di parole, comprensione di brevi frasi.
+                È una prova di COMPRENSIONE DELLA LETTURA (Lesen), come nelle certificazioni
+                Goethe/telc/ÖSD: si legge UN testo in tedesco e si rispondono domande su di esso.
+
+                REGOLE SPECIFICHE:
+                - Genera UN SOLO testo tedesco (breve: 60-120 parole per A1/A2, 120-180 per B1),
+                  coerente, su un tema quotidiano realistico, adatto al livello $livello.
+                - Ripeti lo STESSO testo nel campo "testoLettura" di OGNI esercizio del batch.
+                - Ogni esercizio è una domanda a 4 opzioni SUL testo (in italiano):
+                  chi/cosa/dove/quando/perché, vero significato di una frase del testo,
+                  inferenza semplice. NON domande isolate su singole parole.
+                - La risposta corretta deve essere deducibile SOLO leggendo il testo.
             """.trimIndent()
             TipoEsercizio.PRODUZIONE -> """
                 Ogni esercizio è una domanda di produzione/grammatica (Schreiben) a 4 opzioni:
@@ -181,7 +193,7 @@ class GeneratoreEsercizi {
             - Struttura: {"esercizi": [ ... ]}
             - Ogni esercizio ha: "tipo" ("${tipo.jsonTipo}"), "domanda", "opzioni" (array di esattamente 4 stringhe),
               "rispostaCorretta" (indice 0-3 della risposta giusta), "spiegazione" (in italiano, breve),
-              "livello" ("$livello").$contesto
+              "livello" ("$livello")${if (tipo == TipoEsercizio.COMPRENSIONE) ""","testoLettura" (il testo tedesco da leggere, IDENTICO in tutti gli esercizi del batch)""" else ""}.$contesto
             - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
             - NON usare MAI spagnolo (vietate parole come amigo, hola, gracias, senor, por favor, muy, bueno, manana), ne inglese, ne altre lingue.
             - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
@@ -267,6 +279,14 @@ class GeneratoreEsercizi {
             json.decodeFromString(RispostaEserciziAi.serializer(), jsonPulito)
         }.getOrNull() ?: return emptyList()
 
+        // Per la COMPRENSIONE: un solo testo condiviso da TUTTE le domande del batch
+        // (formato reale Goethe/telc Lesen). Uso il primo testo non vuoto generato.
+        val testoCondiviso = if (tipo == TipoEsercizio.COMPRENSIONE) {
+            parsed.esercizi.firstNotNullOfOrNull { e ->
+                e.testoLettura?.trim()?.takeIf { it.isNotEmpty() }
+            }
+        } else null
+
         return parsed.esercizi.mapIndexedNotNull { index, e ->
             val domanda = e.domanda?.trim().orEmpty()
             val opzioni = e.opzioni?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
@@ -282,6 +302,13 @@ class GeneratoreEsercizi {
             if (!e.spiegazione.isNullOrBlank() && contieneNonLatino(e.spiegazione)) return@mapIndexedNotNull null
             // ASCOLTO richiede la frase da ascoltare e la traduzione
             if (tipo == TipoEsercizio.ASCOLTO && (e.fraseTedesca.isNullOrBlank() || e.traduzioneItaliana.isNullOrBlank())) return@mapIndexedNotNull null
+            // COMPRENSIONE (Lesen) richiede il testo di lettura, e NON deve essere in alfabeto non latino
+            val testoLettura = if (tipo == TipoEsercizio.COMPRENSIONE) testoCondiviso
+                else e.testoLettura?.trim()?.takeIf { it.isNotEmpty() }
+            if (tipo == TipoEsercizio.COMPRENSIONE) {
+                if (testoLettura == null) return@mapIndexedNotNull null
+                if (contieneNonLatino(testoLettura)) return@mapIndexedNotNull null
+            }
 
             EsercizioGenerato(
                 id = "${tipo.jsonTipo}_gen_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(8)}",
@@ -292,7 +319,8 @@ class GeneratoreEsercizi {
                 spiegazione = e.spiegazione?.trim().orEmpty().ifEmpty { "Nessuna spiegazione disponibile." },
                 livello = e.livello?.trim()?.takeIf { it.isNotEmpty() } ?: livelloDefault,
                 fraseTedesca = e.fraseTedesca?.trim()?.takeIf { it.isNotEmpty() },
-                traduzioneItaliana = e.traduzioneItaliana?.trim()?.takeIf { it.isNotEmpty() }
+                traduzioneItaliana = e.traduzioneItaliana?.trim()?.takeIf { it.isNotEmpty() },
+                testoLettura = testoLettura
             )
         }
     }
