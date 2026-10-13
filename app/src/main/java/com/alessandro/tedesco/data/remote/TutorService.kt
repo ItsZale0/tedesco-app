@@ -133,6 +133,62 @@ class TutorService {
      * @param modello modello opzionale (null = automatico)
      * @return la correzione in italiano, una riga per errore
      */
+    /**
+     * Valutazione STRUTTURATA della produzione scritta, su criteri ufficiali Goethe.
+     *
+     * Il modello restituisce JSON con i tre criteri che richiedono giudizio
+     * (adempimento, coerenza, lessico) piu' l'elenco degli errori. Il quarto
+     * criterio (correttezza formale) NON viene chiesto al modello: si calcola
+     * dalla densita' di errori, cosi' un modello generoso non puo' gonfiare.
+     */
+    suspend fun valutaProduzione(
+        apiKey: String,
+        testoStudente: String,
+        livello: String,
+        lezione: Int,
+        modello: String? = null
+    ): String = withContext(Dispatchers.IO) {
+        val systemPrompt = """
+            Sei un valutatore di tedesco scritto per uno studente italiano di livello $livello.
+            Valuti secondo i criteri ufficiali Goethe/telc per la prova di Schreiben.
+
+            Restituisci SOLO un JSON valido, senza testo prima o dopo, senza ```json:
+            {
+              "erfuellung": <0-100, adempimento del compito: risponde a quanto chiesto?> ,
+              "kohaerenz": <0-100, coerenza: il testo e' collegato e ordinato?>,
+              "wortschatz": <0-100, lessico: appropriato e vario per il livello $livello?>,
+              "errori": [ {"estratto": "<parte sbagliata>", "correzione": "<forma corretta>", "spiegazione": "<perche', in italiano>"} ],
+              "correzione": "<commento in italiano, markdown semplice, che spiega gli errori principali>"
+            }
+
+            Regole:
+            - Sii PRECISO, non generoso: un testo con molti errori non puo' avere lessico 90.
+            - "errori" deve elencare TUTTI gli errori reali (grammatica, ortografia, articoli,
+              casi, preposizioni, ordine parole, maiuscole dei sostantivi).
+            - Se il testo e' corretto, "errori" e' un array vuoto.
+            - La lezione corrente e' la numero $lezione.
+            - Non inventare errori che non ci sono; non ometterne di evidenti.
+        """.trimIndent()
+
+        val messaggi = listOf(
+            ChatMessage("system", systemPrompt),
+            ChatMessage("user", testoStudente)
+        )
+        val modelli = if (!modello.isNullOrBlank()) listOf(modello)
+            else if (apiKey.isBlank()) MODELLI_NO_KEY else MODELLI_FREE
+
+        var ultimoErrore: String? = null
+        for (m in modelli) {
+            try {
+                return@withContext chiamaModello(apiKey, m, messaggi)
+            } catch (e: IOException) {
+                ultimoErrore = e.message
+                if (e.message?.contains("non valida") == true) throw e
+            }
+        }
+        throw IOException(ultimoErrore ?: "Nessun modello disponibile al momento")
+    }
+
     suspend fun correggiRisposta(
         apiKey: String,
         testoStudente: String,

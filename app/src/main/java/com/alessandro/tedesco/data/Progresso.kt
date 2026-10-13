@@ -49,6 +49,12 @@ object CalcoloProgresso {
         val paroleFragili: Int,
         /** Parole mai verificate nel quiz (nuove da dimostrare). */
         val paroleDaVerificare: Int,
+        /** Produzioni scritte valutate dal tutor (criteri Goethe). */
+        val produzioniScritte: Int,
+        /** Media dei punteggi delle produzioni scritte (0-100). */
+        val mediaProduzione: Float,
+        /** Ultimo Prädikat ottenuto nella produzione scritta. */
+        val ultimoPraedikatProduzione: String,
         val paroleDisponibili: Int,
         val ripassiTotali: Int,
         val accuratezza: Float,
@@ -151,7 +157,11 @@ object CalcoloProgresso {
             Traguardo("r100", "100 ripassi", "\u2705", ripassiTotali >= 100),
             Traguardo("r500", "500 ripassi", "\uD83D\uDCAA", ripassiTotali >= 500),
             Traguardo("c60", "Una competenza al 60%", "\uD83C\uDFAF",
-                dimensioni.any { it.second >= CertificazioniUfficiali.SOGLIA_SUPERAMENTO })
+                dimensioni.any { it.second >= CertificazioniUfficiali.SOGLIA_SUPERAMENTO }),
+            Traguardo("prod1", "Primo testo scritto", "\u270D\uFE0F",
+                progresso.valutazioniProduzione.isNotEmpty()),
+            Traguardo("prod5", "5 testi scritti", "\uD83D\uDCDD",
+                progresso.valutazioniProduzione.size >= 5)
         )
 
         return ProgressoReale(
@@ -165,6 +175,9 @@ object CalcoloProgresso {
             paroleImparate = paroleImparate,
             paroleFragili = VerificaLessico.paroleFragili(paroleAttive, log, verifiche).size,
             paroleDaVerificare = VerificaLessico.paroleDaVerificare(paroleAttive, log, verifiche, Int.MAX_VALUE).size,
+            produzioniScritte = progresso.valutazioniProduzione.size,
+            mediaProduzione = CalcoloProduzione.mediaUltime(progresso.valutazioniProduzione),
+            ultimoPraedikatProduzione = progresso.valutazioniProduzione.lastOrNull()?.praedikat ?: "",
             paroleDisponibili = paroleAttive.size,
             ripassiTotali = ripassiTotali,
             accuratezza = accuratezza,

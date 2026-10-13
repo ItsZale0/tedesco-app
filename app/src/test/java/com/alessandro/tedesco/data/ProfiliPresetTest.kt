@@ -134,7 +134,15 @@ class ProfiliPresetTest {
         val riletto = json.decodeFromString(ProfiliRepository.serializer(), stringa)
 
         assertEquals(3, riletto.profili.size)
-        assertEquals(originale, riletto)
+        // Confronto per contenuto: i timestamp (creatoIl/ultimoAccesso) possono
+        // differire di 1ms tra la creazione e la rilettura (test altrimenti flaky).
+        assertEquals(originale.profili.keys, riletto.profili.keys)
+        assertEquals(originale.profiloAttivoId, riletto.profiloAttivoId)
+        originale.profili.forEach { (id, atteso) ->
+            val ottenuto = riletto.profili[id]!!
+            assertEquals(atteso.config, ottenuto.config)
+            assertEquals(atteso.stato, ottenuto.stato)
+        }
     }
 
     @Test

@@ -60,6 +60,7 @@ fun ProgressoScreen(vm: TedescoViewModel) {
                 CardProssimoPasso(pr)
                 CardCompetenze(pr)
                 CardAttivita(pr)
+                CardProduzioneScritta(pr)
                 CardTraguardi(pr)
                 CardRiferimenti(pr)
                 Spacer(Modifier.height(24.dp))
@@ -237,6 +238,58 @@ private fun KpiBox(label: String, valore: String, sotto: String, colore: Color, 
                 fontWeight = FontWeight.Bold, color = colore)
             Text(sotto, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun CardProduzioneScritta(pr: CalcoloProgresso.ProgressoReale) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Raggi.card),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            Text("Produzione scritta", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text("Testi liberi valutati sui 4 criteri ufficiali Goethe (Erfuellung, Kohaerenz, Wortschatz, Strukturen)",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(12.dp))
+
+            if (pr.produzioniScritte == 0) {
+                Text(
+                    "Nessuna produzione scritta valutata. Scrivi un testo in Produzione Scritta " +
+                        "e premilo Verifica: il tutor lo valuta e il punteggio entra qui.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    KpiBox("Testi", "${pr.produzioniScritte}", "valutati",
+                        MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                    KpiBox("Media", "${pr.mediaProduzione.toInt()}%",
+                        if (pr.mediaProduzione >= 60f) "superato" else "da migliorare",
+                        if (pr.mediaProduzione >= 60f) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                }
+                if (pr.ultimoPraedikatProduzione.isNotBlank()) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Ultimo risultato", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(pr.ultimoPraedikatProduzione,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text("Soglia ufficiale: 60% (Goethe/telc/ÖSD)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }

@@ -105,7 +105,16 @@ object CalcoloCompetenze {
         // COMPRENSIONE / PRODUZIONE / GRAMMATICA-TEST: SOLO da test reali.
         // Se mancano i test il punteggio è 0: niente fallback che gonfia il livello.
         val comprensione = mediaUltimi(progresso.testComprensione.map { it.punteggio })
-        val produzione = mediaUltimi(progresso.testProduzione.map { it.punteggio })
+        // PRODUZIONE: unisce i quiz a scelta multipla E le produzioni scritte
+        // valutate dal tutor. La produzione scritta e' l'evidenza piu' forte
+        // (l'utente SCRIVE, non riconosce): pesa allo stesso modo dei quiz.
+        val daQuiz: List<Float> = progresso.testProduzione.map { it.punteggio }
+        val daScritti: List<Float> = progresso.valutazioniProduzione.map { it.punteggio }
+        val produzione = when {
+            daQuiz.isEmpty() && daScritti.isEmpty() -> 0f
+            else -> (mediaUltimi(daQuiz) * daQuiz.size + mediaUltimi(daScritti) * daScritti.size) /
+                (daQuiz.size + daScritti.size).toFloat()
+        }
         val grammatica = if (progresso.testGrammatica.isNotEmpty())
             mediaUltimi(progresso.testGrammatica.map { it.punteggio })
         else grammaticaReview
@@ -115,7 +124,7 @@ object CalcoloCompetenze {
         // MIN_TEST test per dimensione + un numero sufficiente di parole mature.
         val nGramm = progresso.testGrammatica.size
         val nComp = progresso.testComprensione.size
-        val nProd = progresso.testProduzione.size
+        val nProd = progresso.testProduzione.size + progresso.valutazioniProduzione.size
 
         /**
          * Criterio UFFICIALE: tutte le dimensioni devono superare la Bestehensgrenze

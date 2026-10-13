@@ -348,10 +348,10 @@ fun ProduzioneScrittaScreen(
                                     }
                                 }
                                 ultimaCorrezione != null -> {
-                                    // CORREZIONE REALE dal tutor AI
-                                    Text(
-                                        text = ultimaCorrezione,
-                                        style = MaterialTheme.typography.bodyMedium
+                                    // CORREZIONE REALE dal tutor AI, con markdown renderizzato
+                                    MarkdownText(
+                                        markdown = ultimaCorrezione,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                     Spacer(Modifier.height(Spaziature.sm))
                                     TextButton(onClick = onVaiACorrezioni) {

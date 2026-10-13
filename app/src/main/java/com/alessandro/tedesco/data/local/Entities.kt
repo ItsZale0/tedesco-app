@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data.local
 
 import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.data.TestB1
+import com.alessandro.tedesco.data.ValutazioneProduzione
 import com.alessandro.tedesco.data.remote.VoceGlossario
 import kotlinx.serialization.Serializable
 
@@ -119,6 +120,8 @@ data class ProgressoUtente(
     val testGrammatica: List<TestGrammatica> = emptyList(),
     val testComprensione: List<TestComprensione> = emptyList(),
     val testProduzione: List<TestProduzione> = emptyList(),
+    /** Valutazioni della PRODUZIONE SCRITTA libera (criteri ufficiali Goethe). */
+    val valutazioniProduzione: List<ValutazioneProduzione> = emptyList(),
     val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList(),
     val testAdattivi: List<TestAdattivo> = emptyList(),
     val testAscolto: List<TestAscolto> = emptyList(),

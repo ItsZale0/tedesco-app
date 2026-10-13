@@ -8,6 +8,8 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloProgresso
+import com.alessandro.tedesco.data.ParserValutazione
+import com.alessandro.tedesco.data.CalcoloProduzione
 import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.VerificaLessico
 import com.alessandro.tedesco.data.CalcoloStatistiche
@@ -1016,12 +1018,47 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 val profilo = profileManager.profiloAttivo() ?: return@launch
                 val livello = profilo.stato.progresso.livelloCorrente.label.substringBefore(" ")
                 val lezione = lezioneCorrente.value
-                val correzione = app.tutorServiceInstance.correggiRisposta(
+                // Valutazione STRUTTURATA (criteri ufficiali Goethe), non solo testo.
+                val rispostaGrezza = app.tutorServiceInstance.valutaProduzione(
                     apiKey = chiave,
                     testoStudente = testo,
                     livello = livello,
                     lezione = lezione,
                     modello = _modelloTutor.value
+                )
+                val valutazione = ParserValutazione.parse(rispostaGrezza)
+                val numParole = CalcoloProduzione.contaParole(testo)
+                val v = CalcoloProduzione.costruisci(
+                    numErrori = valutazione.numErrori,
+                    numParole = numParole,
+                    livello = livello,
+                    erfuellungTutor = valutazione.erfuellung,
+                    kohaerenzTutor = valutazione.kohaerenz,
+                    wortschatzTutor = valutazione.wortschatz,
+                    correzione = valutazione.correzione,
+                    now = System.currentTimeMillis()
+                )
+                // Testo leggibile degli errori + commento, per la schermata
+                val erroriLetti = ParserValutazione.elencaErrori(rispostaGrezza)
+                val correzione = buildString {
+                    if (erroriLetti.isNotEmpty()) {
+                        append("**Errori trovati (${erroriLetti.size})**\n\n")
+                        append(erroriLetti.joinToString("\n\n"))
+                    } else {
+                        append("**Nessun errore trovato. Ottimo lavoro!**\n")
+                    }
+                    if (valutazione.correzione.isNotBlank()) {
+                        append("\n\n").append(valutazione.correzione)
+                    }
+                }
+                // Salva la valutazione nel profilo (entra nelle statistiche)
+                val statoCorrente = profileManager.statoAttivo()
+                profileManager.aggiornaStatoAttivo(
+                    statoCorrente.copy(
+                        progresso = statoCorrente.progresso.copy(
+                            valutazioniProduzione = statoCorrente.progresso.valutazioniProduzione + v
+                        )
+                    )
                 )
                 val entry = FeedbackEntry(
                     id = "fb_${System.currentTimeMillis()}",
