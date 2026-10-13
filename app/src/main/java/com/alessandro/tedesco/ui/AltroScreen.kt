@@ -138,16 +138,10 @@ fun AltroScreen(
                     onClick = onVaiASessioni
                 ))
                 add(ElementoAltro(
-                    titolo = "Statistiche",
-                    descrizione = "Progressi e statistiche",
+                    titolo = "Progresso",
+                    descrizione = "Livello, competenze, streak, traguardi",
                     icona = Icons.Filled.BarChart,
                     onClick = onVaiAStats
-                ))
-                add(ElementoAltro(
-                    titolo = "Competenze",
-                    descrizione = "Punteggi e livello complessivo",
-                    icona = Icons.Filled.School,
-                    onClick = onVaiACompetenze
                 ))
                 // Contesto medico solo per profili che lo richiedono (Alessandro)
                 if (profilo?.config?.mostraContestoMedico == true) {

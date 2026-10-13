@@ -109,6 +109,7 @@ fun HomeScreen(
     onNavigate: (String) -> Unit = {},
     onCompletaPasso: (String) -> Unit = {}
 ) {
+    val progresso by vm.progressoReale.collectAsStateWithLifecycle(null)
     val daRipassare by vm.daRipassare.collectAsStateWithLifecycle(0)
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
     val lezioni by vm.lezioni.collectAsStateWithLifecycle(emptyList())
@@ -163,46 +164,40 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(Spaziature.lg))
 
-                // Gamification: Streak e Badge
-                val streakGiorni = profilo?.stato?.streakGiorni ?: 0
-                val streakRecord = profilo?.stato?.streakRecord ?: 0
-                val badgeSbloccati = profilo?.stato?.badgeSbloccati ?: emptyList()
-                val puntiTotali = profilo?.stato?.puntiTotali ?: 0
-
-                GlassSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Spaziature.md)
+                // Progresso REALE: streak dal log, livello e traguardi calcolati.
+                val pr = progresso
+                if (pr != null) {
+                    GlassSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Column(modifier = Modifier.padding(Spaziature.md)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🔥 Streak: ${pr.streakGiorni} ${if (pr.streakGiorni == 1) "giorno" else "giorni"}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = pr.livello.label.substringBefore(" "),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "🔥 Streak: $streakGiorni giorni",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "🏆 $puntiTotali punti",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        if (streakRecord > 0) {
-                            Text(
-                                text = "Record: $streakRecord giorni",
+                                text = "${pr.paroleImparate} parole imparate · ${pr.ripassiTotali} ripassi · ${(pr.accuratezza * 100).toInt()}% precisione",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
-                        }
-                        if (badgeSbloccati.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(2.dp))
                             Text(
-                                text = "Badge: ${badgeSbloccati.size} sbloccati",
+                                text = "Traguardi: ${pr.traguardiRaggiunti}/${pr.traguardi.size} · Record: ${pr.streakRecord} ${if (pr.streakRecord == 1) "giorno" else "giorni"}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )

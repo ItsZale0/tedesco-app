@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
+import com.alessandro.tedesco.data.CalcoloProgresso
 import com.alessandro.tedesco.data.CalcoloStatistiche
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
 import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
@@ -110,6 +111,27 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
     /** Statistiche complete per la schermata Progressi. */
+    /**
+     * Progresso REALE: unica fonte di verità per livello, streak, parole, traguardi.
+     * Tutto derivato da dati reali (parole, log ripassi, test) — mai valori inventati.
+     */
+    val progressoReale: StateFlow<CalcoloProgresso.ProgressoReale?> = combine(
+        repo.observeWords(),
+        repo.reviewsFlow,
+        profileManager.repositoryFlow,
+        repo.ripassiLogFlow
+    ) { parole, reviews, repoState, log ->
+        val profilo = repoState.profiloAttivoId?.let { repoState.profili[it] } ?: return@combine null
+        CalcoloProgresso.calcola(
+            parole = parole,
+            reviews = reviews,
+            progresso = profilo.stato.progresso,
+            log = log,
+            obiettivo = profilo.stato.progresso.obiettivoLivello,
+            now = System.currentTimeMillis()
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
         repo.reviewsFlow,

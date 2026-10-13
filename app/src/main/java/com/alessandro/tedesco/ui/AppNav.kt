@@ -185,9 +185,7 @@ private fun ContenutoApp(
     val schermataCorrente = backStack?.destination?.route
     val mostraBarra = schermataCorrente?.startsWith("ripasso") != true
 
-    // Su schermi compatti accorcia "Statistiche" in "Progressi" per evitare troncamenti
-    val configuration = LocalConfiguration.current
-    val labelStats = if (configuration.screenWidthDp < 360) "Progressi" else "Statistiche"
+    val labelStats = "Progresso"
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -277,14 +275,14 @@ private fun ContenutoApp(
             }
             // Piano di studio
             composable("piano") {
-                val stats by vm.statistiche.collectAsStateWithLifecycle(null)
+                val pr by vm.progressoReale.collectAsStateWithLifecycle(null)
                 PianoScreen(
                     onIndietro = { nav.popBackStack() },
                     piano = vm.piano.collectAsStateWithLifecycle().value,
                     progresso = vm.progressoFeed.collectAsStateWithLifecycle().value,
                     lezioneCorrente = vm.lezioneCorrente.collectAsStateWithLifecycle().value,
-                    paroleApprese = stats?.paroleApprese ?: 0,
-                    livelloCorrente = stats?.livelloStimato?.label?.substringBefore(" ") ?: "A0"
+                    paroleApprese = pr?.paroleImparate ?: 0,
+                    livelloCorrente = pr?.livello?.label?.substringBefore(" ") ?: "A0"
                 )
             }
             // Sessioni strutturate
@@ -325,7 +323,7 @@ private fun ContenutoApp(
             composable("grammatica") { GrammaticaScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("testb1") { TestB1Screen(vm) }
             composable("test-adattivi") { TestAdattiviScreen(vm) }
-            composable("stats") { StatsScreen(vm) }
+            composable("stats") { ProgressoScreen(vm) }
             composable("traduttore") { TraduttoreScreen(vm) }
             composable("tutor") { TutorChatScreen(vm) }
             composable("speaking") {
@@ -335,7 +333,7 @@ private fun ContenutoApp(
             composable("roleplay") { RoleplayScreen(vm) }
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }, onVaiANuove = { nav.navigate("nuove") }) }
-            composable("competenze") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); CompetenzeScreen(vm, profilo = profilo) }
+            composable("competenze") { ProgressoScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("quiz-produzione") { ProduzioneScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo, onFatto = { nav.popBackStack() }) }

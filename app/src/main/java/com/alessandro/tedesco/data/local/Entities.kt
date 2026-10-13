@@ -99,6 +99,11 @@ data class TestLivello(
 @Serializable
 data class ProgressoUtente(
     val livelloCorrente: LivelloCEFR = LivelloCEFR.A0,
+    // NOTA: xpTotale / paroleApprese / paroleInCorso / lezioniCompletate /
+    // accuratezzaMedia / streakGiorni NON sono piu' la fonte di verita': erano campi
+    // mai scritti (valori sempre 0, mostrati come "0 punti / 0 giorni").
+    // I valori reali vengono calcolati da CalcoloProgresso (dati reali).
+    // Restano per compatibilita' di deserializzazione dei profili salvati.
     val xpTotale: Int = 0,
     val paroleApprese: Int = 0,
     val paroleInCorso: Int = 0,
