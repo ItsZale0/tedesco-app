@@ -56,6 +56,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +99,8 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                 spiegazione = it.spiegazione,
                 livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
                 tagGrammatica = null,
-                testoLettura = it.testoLettura
+                testoLettura = it.testoLettura,
+                glossario = it.glossario
             )
         }
         if (elenco.isEmpty()) elenco = statiche
@@ -164,6 +166,55 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                     text = testo,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
+
+                                // Glossario: parole difficili del testo con traduzione,
+                                // ognuna aggiungibile al dizionario con un tap.
+                                if (domanda.glossario.isNotEmpty()) {
+                                    Spacer(Modifier.height(12.dp))
+                                    Text(
+                                        text = "Parole nuove (tocca per aggiungerle al dizionario)",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    domanda.glossario.forEach { voce ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = voce.tedesco,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Text(
+                                                text = "= ${voce.italiano}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            IconButton(
+                                                onClick = {
+                                                    vm.aggiungiParolaCustom(
+                                                        german = voce.tedesco,
+                                                        italian = voce.italiano,
+                                                        example = "",
+                                                        article = null,
+                                                        pronunciation = null,
+                                                        lesson = 0,
+                                                        tags = "lesen"
+                                                    )
+                                                }
+                                            ) {
+                                                Icon(
+                                                    Icons.Filled.Add,
+                                                    contentDescription = "Aggiungi al dizionario",
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

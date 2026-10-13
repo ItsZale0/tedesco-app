@@ -751,7 +751,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 opzioni = e.opzioni, rispostaCorretta = e.rispostaCorretta,
                 spiegazione = e.spiegazione, livello = e.livello,
                 fraseTedesca = e.fraseTedesca, traduzioneItaliana = e.traduzioneItaliana,
-                testoLettura = e.testoLettura
+                testoLettura = e.testoLettura, glossario = e.glossario
             )
         }
         val profilo = profileManager.profiloAttivo()

@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data.local
 
 import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.data.TestB1
+import com.alessandro.tedesco.data.remote.VoceGlossario
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -189,7 +190,9 @@ data class DomandaTest(
     val livelloRichiesto: LivelloCEFR,
     val tagGrammatica: String? = null,
     /** Testo di lettura (tedesco) da mostrare prima delle domande. */
-    val testoLettura: String? = null
+    val testoLettura: String? = null,
+    /** Parole nuove del testo con traduzione (glossario). */
+    val glossario: List<VoceGlossario> = emptyList()
 )
 
 enum class TipoDomanda {
@@ -383,6 +386,8 @@ data class EsercizioGenEntity(
     val traduzioneItaliana: String? = null,
     /** Solo per COMPRENSIONE/Lesen: il testo tedesco da leggere. */
     val testoLettura: String? = null,
+    /** Solo per COMPRENSIONE: parole nuove del testo con traduzione italiana. */
+    val glossario: List<VoceGlossario> = emptyList(),
     /** true = lo studente ha già completato questo esercizio (non riproporlo a breve). */
     val completato: Boolean = false,
     /** timestamp completamento (per futuro cooldown/riproposta). */

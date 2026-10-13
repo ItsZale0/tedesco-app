@@ -29,7 +29,15 @@ private data class EsercizioAi(
     val livello: String? = null,
     val fraseTedesca: String? = null,
     val traduzioneItaliana: String? = null,
-    val testoLettura: String? = null
+    val testoLettura: String? = null,
+    /** Solo per COMPRENSIONE: parole nuove del testo + traduzione italiana. */
+    val glossario: List<VoceGlossarioAi>? = null
+)
+
+@Serializable
+private data class VoceGlossarioAi(
+    val tedesco: String? = null,
+    val italiano: String? = null
 )
 
 @Serializable
@@ -58,7 +66,16 @@ data class EsercizioGenerato(
     val fraseTedesca: String? = null,
     val traduzioneItaliana: String? = null,
     /** Solo per COMPRENSIONE/Lesen: il testo tedesco da leggere prima delle domande. */
-    val testoLettura: String? = null
+    val testoLettura: String? = null,
+    /** Solo per COMPRENSIONE: parole nuove del testo con la traduzione italiana. */
+    val glossario: List<VoceGlossario> = emptyList()
+)
+
+/** Una parola nuova del testo di lettura con la sua traduzione italiana. */
+@Serializable
+data class VoceGlossario(
+    val tedesco: String,
+    val italiano: String
 )
 
 /**
@@ -161,9 +178,21 @@ class GeneratoreEsercizi {
                 Goethe/telc/ÖSD: si legge UN testo in tedesco e si rispondono domande su di esso.
 
                 REGOLE SPECIFICHE:
-                - Genera UN SOLO testo tedesco (breve: 60-120 parole per A1/A2, 120-180 per B1),
-                  coerente, su un tema quotidiano realistico, adatto al livello $livello.
+                - Genera UN SOLO testo tedesco, coerente, su un tema quotidiano realistico,
+                  CALIBRATO ESATTAMENTE sul livello $livello:
+                  * A0/A1: 40-70 parole, presente indicativo, frasi semplicissime (soggetto-verbo-oggetto),
+                    vocabolario di base (famiglia, cibo, casa, giorni, numeri). NIENTE passato,
+                    niente subordinate, niente congiuntivo, niente lessico astratto.
+                  * A2: 70-110 parole, presente + Perfetto, frasi coordinate semplici,
+                    vocabolario quotidiano. Evita subordinate complesse e passivo.
+                  * B1: 110-160 parole, tempi passati, subordinate (weil/dass/wenn), passivo semplice.
+                  * B2: 160-220 parole, strutture complesse, lessico astratto, congiuntivo.
+                  USA SOLO grammatica e vocabolario CHE UN LIVELLO $livello GIÀ CONOSCE.
                 - Ripeti lo STESSO testo nel campo "testoLettura" di OGNI esercizio del batch.
+                - Compila "glossario": un array con le 3-6 parole PIÙ DIFFICILI del testo
+                  (le più utili da imparare per il livello), ognuna come
+                  {"tedesco": "<parola con articolo se sostantivo>", "italiano": "<traduzione>"}.
+                  Traduci in italiano ESATTO e naturale. Ripeti lo STESSO glossario in ogni esercizio.
                 - Ogni esercizio è una domanda a 4 opzioni SUL testo (in italiano):
                   chi/cosa/dove/quando/perché, vero significato di una frase del testo,
                   inferenza semplice. NON domande isolate su singole parole.
@@ -193,7 +222,7 @@ class GeneratoreEsercizi {
             - Struttura: {"esercizi": [ ... ]}
             - Ogni esercizio ha: "tipo" ("${tipo.jsonTipo}"), "domanda", "opzioni" (array di esattamente 4 stringhe),
               "rispostaCorretta" (indice 0-3 della risposta giusta), "spiegazione" (in italiano, breve),
-              "livello" ("$livello")${if (tipo == TipoEsercizio.COMPRENSIONE) ""","testoLettura" (il testo tedesco da leggere, IDENTICO in tutti gli esercizi del batch)""" else ""}.$contesto
+              "livello" ("$livello")${if (tipo == TipoEsercizio.COMPRENSIONE) ""","testoLettura" (il testo tedesco da leggere, IDENTICO in tutti gli esercizi del batch), "glossario" (array di {"tedesco","italiano"} delle parole difficili, IDENTICO in tutti gli esercizi)""" else ""}.$contesto
             - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
             - NON usare MAI spagnolo (vietate parole come amigo, hola, gracias, senor, por favor, muy, bueno, manana), ne inglese, ne altre lingue.
             - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
@@ -287,6 +316,22 @@ class GeneratoreEsercizi {
             }
         } else null
 
+        // Glossario condiviso (parole difficili del testo + traduzione italiana).
+        val glossarioCondiviso: List<VoceGlossario> = if (tipo == TipoEsercizio.COMPRENSIONE) {
+            parsed.esercizi.asSequence()
+                .flatMap { it.glossario?.asSequence() ?: emptySequence() }
+                .mapNotNull { v ->
+                    val ted = v.tedesco?.trim().orEmpty()
+                    val ita = v.italiano?.trim().orEmpty()
+                    if (ted.isEmpty() || ita.isEmpty()) null
+                    else if (contieneNonLatino(ted) || contieneNonLatino(ita)) null
+                    else VoceGlossario(ted, ita)
+                }
+                .distinctBy { it.tedesco.lowercase() }
+                .take(8)
+                .toList()
+        } else emptyList()
+
         return parsed.esercizi.mapIndexedNotNull { index, e ->
             val domanda = e.domanda?.trim().orEmpty()
             val opzioni = e.opzioni?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
@@ -320,7 +365,8 @@ class GeneratoreEsercizi {
                 livello = e.livello?.trim()?.takeIf { it.isNotEmpty() } ?: livelloDefault,
                 fraseTedesca = e.fraseTedesca?.trim()?.takeIf { it.isNotEmpty() },
                 traduzioneItaliana = e.traduzioneItaliana?.trim()?.takeIf { it.isNotEmpty() },
-                testoLettura = testoLettura
+                testoLettura = testoLettura,
+                glossario = glossarioCondiviso
             )
         }
     }
