@@ -3,6 +3,7 @@ package com.alessandro.tedesco.data
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.WordEntity
 
 /**
@@ -76,17 +77,17 @@ object CalcoloCompetenze {
         parole: List<WordEntity>,
         reviews: Map<String, ReviewEntity>,
         progresso: ProgressoUtente,
-        now: Long
+        now: Long,
+        log: List<RipassoLogEntity> = emptyList()
     ): PunteggiCompetenze {
         val paroleAttive = parole.filter { !it.archived }
 
-        // LESSICO: parole mature / 2000 * 100
-        val paroleMature = paroleAttive.count { w ->
-            val r = reviews[w.id]
-            r != null && r.repetitions >= 4
-        }
-        val lessico = if (paroleAttive.isEmpty()) 0f
-            else (paroleMature.toFloat() / paroleAttive.size * 100).coerceAtMost(100f)
+        // LESSICO: parole VERIFICATE (evidenza oggettiva), non "quante volte viste".
+        // Il conteggio `repetitions >= 4` misurava solo quante volte la parola era
+        // stata mostrata: si poteva dire "lo so" senza saperlo. Ora conta solo cio'
+        // che l'utente ha DIMOSTRATO nel quiz a scelta multipla (VerificaLessico).
+        val verifiche = VerificaLessico.verificheDaLog(log)
+        val lessico = VerificaLessico.punteggioLessico(paroleAttive.size, verifiche)
 
         // GRAMMATICA: accuratezza delle review (SM-2). Nessun fallback gonfiato.
         val tutteReviews = paroleAttive.mapNotNull { reviews[it.id] }

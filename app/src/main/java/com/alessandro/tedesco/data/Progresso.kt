@@ -45,6 +45,8 @@ object CalcoloProgresso {
 
         // --- Cosa ho fatto (tutto REALE) ---
         val paroleImparate: Int,
+        /** Parole sbagliate almeno una volta e non ancora verificate. */
+        val paroleFragili: Int,
         val paroleDisponibili: Int,
         val ripassiTotali: Int,
         val accuratezza: Float,
@@ -76,13 +78,12 @@ object CalcoloProgresso {
         obiettivo: LivelloCEFR,
         now: Long
     ): ProgressoReale {
-        val competenze = CalcoloCompetenze.calcola(parole, reviews, progresso, now)
+        val competenze = CalcoloCompetenze.calcola(parole, reviews, progresso, now, log)
         val livello = competenze.livelloComplessivo
         val paroleAttive = parole.filter { !it.archived }
-        val paroleImparate = paroleAttive.count { w ->
-            val r = reviews[w.id]
-            r != null && r.repetitions >= 4
-        }
+        // Parole VERIFICATE: dimostrate nel quiz oggettivo (non "viste N volte").
+        val verifiche = VerificaLessico.verificheDaLog(log)
+        val paroleImparate = verifiche.count { it.value }
 
         // --- Streak REALE dal log (giorni consecutivi con almeno un ripasso) ---
         val giorni = log.map { LocalDate.ofEpochDay(it.timestamp / 86_400_000L) }.toSet()
@@ -159,6 +160,7 @@ object CalcoloProgresso {
             dimensioneDeboleValore = valoreDebole,
             azioneConsigliata = azione,
             paroleImparate = paroleImparate,
+            paroleFragili = VerificaLessico.paroleFragili(paroleAttive, log, verifiche).size,
             paroleDisponibili = paroleAttive.size,
             ripassiTotali = ripassiTotali,
             accuratezza = accuratezza,

@@ -201,6 +201,26 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = { onNavigate("verifica") },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Filled.CheckCircle, contentDescription = null,
+                                    modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.size(8.dp))
+                                Text(
+                                    if (pr.paroleFragili > 0)
+                                        "Verifica il lessico (${pr.paroleFragili} da rivedere)"
+                                    else "Verifica il lessico"
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Dimostra di sapere le parole: scelta multipla, non un semplice \"lo so\".",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         }
                     }
                 }

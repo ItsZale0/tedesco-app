@@ -333,6 +333,7 @@ private fun ContenutoApp(
             composable("roleplay") { RoleplayScreen(vm) }
             composable("voicechat") { VoiceChatScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("ripasso") { RipassoScreen(vm, onIndietro = { nav.popBackStack() }, onVaiANuove = { nav.navigate("nuove") }) }
+            composable("verifica") { VerificaScreen(vm, onIndietro = { nav.popBackStack() }) }
             composable("competenze") { ProgressoScreen(vm) }
             composable("quiz-comprensione") { ComprensioneScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("quiz-produzione") { ProduzioneScreen(vm, onFatto = { nav.popBackStack() }) }

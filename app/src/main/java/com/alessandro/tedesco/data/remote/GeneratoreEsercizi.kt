@@ -170,8 +170,21 @@ class GeneratoreEsercizi {
 
         val istruzioniTipo = when (tipo) {
             TipoEsercizio.ASCOLTO -> """
-                Ogni esercizio è una frase tedesca da ascoltare + una domanda di comprensione a 4 opzioni.
-                Compila anche i campi "fraseTedesca" (la frase da ascoltare) e "traduzioneItaliana".
+                Prova di ASCOLTO (Hören), come nelle certificazioni: si ascolta UNA frase
+                tedesca e si risponde a una domanda di comprensione.
+
+                REGOLE SPECIFICHE:
+                - "fraseTedesca": una frase tedesca REALISTICA e COMPLETA, calibrata sul livello:
+                  * A0/A1: 5-9 parole, presente, vocabolario quotidiano (orari, prezzi, luoghi).
+                  * A2: 8-14 parole, presente + Perfetto, un'informazione da cogliere.
+                  * B1: 12-20 parole, tempi passati, subordinate semplici, un dettaglio da inferire.
+                  * B2: 18-28 parole, strutture complesse, informazione implicita.
+                - "traduzioneItaliana": la traduzione esatta della frase.
+                - La domanda (in italiano) deve richiedere di AVER CAPITO la frase, non di
+                  indovinare: chi/cosa/dove/quando/perché/come.
+                - Distrattori PLAUSIBILI ma sbagliati: numeri vicini, luoghi simili, tempi diversi.
+                  Mai opzioni assurde o facilmente eliminabili.
+                - Se la frase contiene un numero/ora/prezzo, una domanda su quello è ottima.
             """.trimIndent()
             TipoEsercizio.COMPRENSIONE -> """
                 È una prova di COMPRENSIONE DELLA LETTURA (Lesen), come nelle certificazioni
@@ -199,11 +212,38 @@ class GeneratoreEsercizi {
                 - La risposta corretta deve essere deducibile SOLO leggendo il testo.
             """.trimIndent()
             TipoEsercizio.PRODUZIONE -> """
-                Ogni esercizio è una domanda di produzione/grammatica (Schreiben) a 4 opzioni:
-                completare una frase, scegliere l'articolo, coniugare un verbo, ordinare parole.
+                Prova di PRODUZIONE SCRITTA (Schreiben): si sceglie la frase tedesca CORRETTA
+                per esprimere un contenuto dato (la domanda è in italiano, la risposta è tedesca).
+
+                REGOLE SPECIFICHE:
+                - La domanda chiede di ESPRIMERE qualcosa in tedesco
+                  (es. "Come si dice: 'Ho mal di testa da tre giorni'?").
+                - Le 4 opzioni sono TUTTE frasi tedesche complete: una corretta, tre con
+                  errori REALI e tipici (articolo sbagliato, caso sbagliato, verbo non coniugato,
+                  tempo sbagliato, ordine parole sbagliato) — errori che uno studente farebbe davvero.
+                - Calibratura sul livello $livello:
+                  * A0/A1: frasi brevi al presente, argomenti quotidiani.
+                  * A2: presente + Perfetto, frasi coordinate.
+                  * B1: subordinate (weil/dass/wenn), passato, casi con preposizioni.
+                  * B2: strutture complesse, congiuntivo, registro formale.
+                - La spiegazione (in italiano) deve dire PERCHÉ le altre sono sbagliate.
             """.trimIndent()
             TipoEsercizio.GRAMMATICA -> """
-                Ogni esercizio è un punto di grammatica a 4 opzioni (articoli, casi, verbi, plurali).
+                Prova di GRAMMATICA: si applica una REGOLA precisa (articoli, casi, declinazioni,
+                verbi, preposizioni, plurali, ordine delle parole).
+
+                REGOLE SPECIFICHE:
+                - Ogni esercizio testa UNA regola chiara, calibrata sul livello $livello:
+                  * A0/A1: articoli der/die/das, presente dei verbi comuni, plurale, negazione (nicht/kein).
+                  * A2: accusativo/dativo, Perfetto (haben/sein + participio), preposizioni di luogo,
+                    verbi modali (können/müssen/wollen).
+                  * B1: subordinate (weil, dass, wenn), Präteritum, passivo semplice,
+                    preposizioni con caso, aggettivi possessivi.
+                  * B2: Konjunktiv II, participio attributivo, verbi con preposizione fissa,
+                    costruzioni complesse.
+                - La domanda è in italiano e indica la regola (es. "Quale articolo? — ___ Krankenhaus ist neu.").
+                - Distrattori plausibili che testano confusioni REALI (der/die/das, den/dem, mir/mich).
+                - La spiegazione (in italiano) spiega la REGOLA in una riga.
             """.trimIndent()
         }
 
@@ -229,7 +269,18 @@ class GeneratoreEsercizi {
             - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
             - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
             - Le 4 opzioni devono essere plausibili ma con UNA sola risposta corretta.
-            - DIFFICOLTÀ: genera esercizi SFIDANTI e UTILI per il livello $livello. Evita domande banali su parole singole elementari (es. il significato di "Hallo", "ciao", "grazie"). Privilegia frasi complete, vocabulario pratico e contesto realistico.
+            - DIFFICOLTÀ: genera esercizi SFIDANTI e UTILI per il livello $livello. Evita domande banali su parole singole elementari (es. il significato di "Hallo", "ciao", "grazie"). Privilegia frasi complete, vocabolario pratico e contesto realistico.
+            - ANTI-INFLATIONE (REGOLA FONDAMENTALE): ogni domanda deve TESTARE una capacita' reale,
+              non gonfiare il punteggio. Vietato:
+              * domande con risposta ovvia o deducibile dalla forma della domanda;
+              * distrattori assurdi, ridicoli o facilmente eliminabili (es. la risposta giusta e'
+                l'unica in tedesco mentre le altre sono in italiano);
+              * la stessa domanda riformulata;
+              * opzioni dove una contiene la parola della domanda e le altre no.
+              I distrattori devono essere SBAGLIATI ma PLAUSIBILI: chi non conosce la regola
+              deve poter sbagliare davvero.
+            - Le domande devono verificare APPLICAZIONE di una regola o COMPRENSIONE reale,
+              non riconoscimento di parole elementari.
             - VARIETÀ: alterna schemi diversi (completare una frase, scegliere l'articolo/caso, coniugare un verbo, tradurre una frase utile, comprensione di una breve frase). Non proporre sempre lo stesso tipo.
             - I sostantivi tedeschi vanno sempre con l'articolo (der/die/das).
             - Non inventare esercizi con meno di 4 opzioni o senza rispostaCorretta.$evitaTesto

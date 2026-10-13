@@ -8,6 +8,7 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloProgresso
+import com.alessandro.tedesco.data.VerificaLessico
 import com.alessandro.tedesco.data.CalcoloStatistiche
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
 import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
@@ -425,6 +426,69 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     fun nuovaSessione() {
         _sessione.value = SessionState()
         caricaSessione()
+    }
+
+    // ---- Verifica oggettiva del lessico (scelta multipla) ----
+
+    private val _domandeVerifica = MutableStateFlow<List<VerificaLessico.Domanda>>(emptyList())
+    val domandeVerifica: StateFlow<List<VerificaLessico.Domanda>> = _domandeVerifica
+    private val _indiceVerifica = MutableStateFlow(0)
+    val indiceVerifica: StateFlow<Int> = _indiceVerifica
+    private val _sceltaVerifica = MutableStateFlow<String?>(null)
+    val sceltaVerifica: StateFlow<String?> = _sceltaVerifica
+    private val _esitoVerifica = MutableStateFlow<VerificaLessico.Esito?>(null)
+    val esitoVerifica: StateFlow<VerificaLessico.Esito?> = _esitoVerifica
+    private var risposteVerifica = mutableListOf<Pair<VerificaLessico.Domanda, String>>()
+
+    /**
+     * Avvia il quiz di verifica: prende le parole da verificare (fragili prima),
+     * costruisce domande a scelta multipla con distrattori reali dal vocabolario.
+     */
+    fun avviaVerifica(limite: Int = 10) {
+        viewModelScope.launch {
+            val parole = repo.observeWords().first().filter { !it.archived && it.italian.isNotBlank() }
+            val log = repo.ripassiLogFlow.first()
+            val verifiche = VerificaLessico.verificheDaLog(log)
+            // Prima le fragili (sbagliate), poi le mai verificate
+            val fragili = VerificaLessico.paroleFragili(parole, log, verifiche)
+            val daVerificare = VerificaLessico.paroleDaVerificare(parole, log, verifiche, limite)
+            val scelte = (fragili + daVerificare).distinctBy { it.id }.take(limite)
+            val base = if (scelte.size >= 2) scelte else parole.take(limite)
+            _domandeVerifica.value = VerificaLessico.costruisciDomande(base)
+            _indiceVerifica.value = 0
+            _sceltaVerifica.value = null
+            _esitoVerifica.value = null
+            risposteVerifica = mutableListOf()
+        }
+    }
+
+    /** Registra la risposta scelta e la logga come ripasso reale (evidenza). */
+    fun rispondiVerifica(opzione: String) {
+        val d = _domandeVerifica.value.getOrNull(_indiceVerifica.value) ?: return
+        if (_sceltaVerifica.value != null) return
+        val corretta = opzione == d.corretta
+        _sceltaVerifica.value = opzione
+        risposteVerifica.add(d to opzione)
+        // Logga l'evidenza: la verifica e' un ripasso oggettivo, non self-report
+        viewModelScope.launch { repo.registraVerifica(d.parola.id, corretta) }
+    }
+
+    fun prossimaVerifica() {
+        val domande = _domandeVerifica.value
+        val i = _indiceVerifica.value
+        if (i + 1 >= domande.size) {
+            val verificate = risposteVerifica.filter { (d, r) -> r == d.corretta }.map { it.first.parola.id }
+            val daRivedere = risposteVerifica.filter { (d, r) -> r != d.corretta }.map { it.first.parola.id }
+            _esitoVerifica.value = VerificaLessico.Esito(
+                totale = domande.size,
+                corrette = verificate.size,
+                paroleVerificate = verificate,
+                paroleDaRivedere = daRivedere
+            )
+        } else {
+            _indiceVerifica.value = i + 1
+            _sceltaVerifica.value = null
+        }
     }
 
     // ---- Parole ----

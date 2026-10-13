@@ -17,8 +17,13 @@ class CalcoloProgressoTest {
 
     private fun parola(id: String) = WordEntity(id = id, german = "w$id", italian = "i$id")
     private fun review(id: String, rep: Int) = ReviewEntity(wordId = id, repetitions = rep)
-    private fun log(giorniFa: Long, corretta: Boolean = true) =
-        RipassoLogEntity(wordId = "w", timestamp = NOW - giorniFa * GIORNO, corretta = corretta)
+    private fun log(giorniFa: Long, corretta: Boolean = true, wordId: String = "w") =
+        RipassoLogEntity(wordId = wordId, timestamp = NOW - giorniFa * GIORNO, corretta = corretta)
+
+    /** Log che VERIFICA le parole indicate (2 corrette, ultima corretta). */
+    private fun logVerificate(ids: Collection<String>) = ids.flatMap { id ->
+        listOf(log(2, true, id), log(1, true, id))
+    }
 
     @Test
     fun `progresso vuoto non inventa numeri`() {
@@ -61,7 +66,8 @@ class CalcoloProgressoTest {
         // Solo lessico (parole mature), nessun test -> grammatica/comprensione/produzione = 0
         val parole = (1..40).map { parola("p$it") }
         val reviews = (1..40).associate { "p$it" to review("p$it", 5) }
-        val p = CalcoloProgresso.calcola(parole, reviews, ProgressoUtente(), emptyList(), LivelloCEFR.B1, NOW)
+        val log = logVerificate((1..40).map { "p$it" })
+        val p = CalcoloProgresso.calcola(parole, reviews, ProgressoUtente(), log, LivelloCEFR.B1, NOW)
         assertTrue(p.dimensioneDeboleValore <= 100f)
         assertTrue(p.azioneConsigliata.isNotBlank())
     }
@@ -70,7 +76,9 @@ class CalcoloProgressoTest {
     fun `traguardi si sbloccano con i dati reali`() {
         val parole = (1..10).map { parola("p$it") }
         val reviews = (1..10).associate { "p$it" to review("p$it", 5) }
-        val p = CalcoloProgresso.calcola(parole, reviews, ProgressoUtente(), emptyList(), LivelloCEFR.B1, NOW)
+        // Le parole contano solo se VERIFICATE nel quiz (non per repetitions)
+        val log = logVerificate((1..10).map { "p$it" })
+        val p = CalcoloProgresso.calcola(parole, reviews, ProgressoUtente(), log, LivelloCEFR.B1, NOW)
         assertEquals(10, p.paroleImparate)
         assertTrue(p.traguardiRaggiunti >= 2)  // "Prima parola" + "10 parole"
     }

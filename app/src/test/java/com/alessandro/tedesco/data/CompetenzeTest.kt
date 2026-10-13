@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data
 
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.TestComprensione
 import com.alessandro.tedesco.data.local.TestGrammatica
@@ -23,6 +24,10 @@ class CompetenzeTest {
         wordId = wordId, repetitions = repetitions, lapses = lapses
     )
 
+    /** Log che VERIFICA le parole indicate (2 risposte corrette = verificata). */
+    private fun logVerificate(ids: Collection<String>) = ids.flatMapIndexed { i, id ->
+        listOf(RipassoLogEntity(id, NOW - 1000L + i, true), RipassoLogEntity(id, NOW + i, true))
+    }
     private fun testGramm(p: Float) = TestGrammatica(data = NOW, punteggio = p, errori = 0, totale = 10)
     private fun testComp(p: Float) = TestComprensione(data = NOW, punteggio = p, errori = 0, totale = 10)
     private fun testProd(p: Float) = TestProduzione(data = NOW, punteggio = p, errori = 0, totale = 10)
@@ -89,7 +94,8 @@ class CompetenzeTest {
             testComprensione = List(3) { testComp(75f) },
             testProduzione = List(3) { testProd(75f) }
         )
-        val r = CalcoloCompetenze.calcola(parole, reviews, prog, NOW)
+        val log = logVerificate((1..40).map { it.toString() })
+        val r = CalcoloCompetenze.calcola(parole, reviews, prog, NOW, log)
         assertEquals(LivelloCEFR.A1, r.livelloComplessivo)
     }
 

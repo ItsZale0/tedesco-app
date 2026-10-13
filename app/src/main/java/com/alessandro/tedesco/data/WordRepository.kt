@@ -359,6 +359,38 @@ class WordRepository(
         salvaSuProfilo()
     }
 
+    /**
+     * Registra l'esito di una VERIFICA oggettiva (quiz a scelta multipla).
+     * E' l'evidenza forte: aggiorna anche la SRS come un ripasso riuscito/fallito,
+     * cosi' le parole verificate non tornano subito nel ripasso.
+     */
+    suspend fun registraVerifica(wordId: String, corretta: Boolean) = withContext(io) {
+        val reviews = _reviews.value.toMutableMap()
+        val r = reviews[wordId] ?: ReviewEntity(wordId = wordId)
+        reviews[wordId] = if (corretta) {
+            val next = INTERVALS.getOrElse(r.repetitions) { INTERVALS.last() }
+            r.copy(
+                repetitions = r.repetitions + 1,
+                intervalDays = next,
+                easeFactor = (r.easeFactor + 0.05f).coerceAtMost(3.0f),
+                dueAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(next.toLong()),
+                lastReviewedAt = System.currentTimeMillis()
+            )
+        } else {
+            r.copy(
+                repetitions = 0,
+                intervalDays = 1,
+                lapses = r.lapses + 1,
+                easeFactor = max(1.3f, r.easeFactor - 0.2f),
+                dueAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1),
+                lastReviewedAt = System.currentTimeMillis()
+            )
+        }
+        _reviews.value = reviews
+        registraRipasso(wordId, corretta)
+        salvaSuProfilo()
+    }
+
     /** Registra un evento di ripasso reale (per statistiche accurate nel tempo). */
     private fun registraRipasso(wordId: String, corretta: Boolean) {
         // Cap a 5000 eventi (~ultimi mesi) per non gonfiare il DataStore.

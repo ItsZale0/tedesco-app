@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data
 
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
+import com.alessandro.tedesco.data.local.RipassoLogEntity
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.TestComprensione
 import com.alessandro.tedesco.data.local.TestGrammatica
@@ -26,6 +27,10 @@ class CompetenzeScreenTest {
     private fun review(wordId: String, repetitions: Int, lapses: Int = 0) = ReviewEntity(
         wordId = wordId, repetitions = repetitions, lapses = lapses
     )
+    /** Log che VERIFICA le parole indicate (2 risposte corrette = verificata). */
+    private fun logVerificate(ids: Collection<String>) = ids.flatMapIndexed { i, id ->
+        listOf(RipassoLogEntity(id, NOW - 1000L + i, true), RipassoLogEntity(id, NOW + i, true))
+    }
     private fun tGramm(p: Float) = TestGrammatica(NOW, p, 0, 10)
     private fun tComp(p: Float) = TestComprensione(NOW, p, 0, 10)
     private fun tProd(p: Float) = TestProduzione(NOW, p, 0, 10)
@@ -42,15 +47,17 @@ class CompetenzeScreenTest {
     fun `lessico capped at 100`() {
         val parole = (1..3000).map { parola("p$it") }
         val reviews = (1..3000).associate { "p$it" to review("p$it", 5) }
-        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW)
+        val log = logVerificate((1..3000).map { "p$it" })
+        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW, log)
         assertEquals(100f, r.lessico, 0.01f)
     }
 
     @Test
     fun `lessico is 0 when no mature words`() {
+        // repetitions alte NON bastano: il lessico conta solo le parole VERIFICATE.
         val parole = listOf(parola("1"), parola("2"))
-        val reviews = mapOf("1" to review("1", 2), "2" to review("2", 1))
-        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW)
+        val reviews = mapOf("1" to review("1", 5), "2" to review("2", 5))
+        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW, emptyList())
         assertEquals(0f, r.lessico, 0.01f)
     }
 
@@ -108,12 +115,13 @@ class CompetenzeScreenTest {
     fun `A1 quando tutte le dimensioni superano la soglia A1`() {
         val parole = (1..40).map { parola("p$it") }
         val reviews = (1..40).associate { "p$it" to review("p$it", 5) }
+        val log = logVerificate((1..40).map { "p$it" })  // 40/40 verificate = 100% lessico
         val prog = ProgressoUtente(
             testGrammatica = List(3) { tGramm(75f) },
             testComprensione = List(3) { tComp(75f) },
             testProduzione = List(3) { tProd(75f) }
         )
-        assertEquals(LivelloCEFR.A1, CalcoloCompetenze.calcola(parole, reviews, prog, NOW).livelloComplessivo)
+        assertEquals(LivelloCEFR.A1, CalcoloCompetenze.calcola(parole, reviews, prog, NOW, log).livelloComplessivo)
     }
 
     @Test
@@ -133,8 +141,9 @@ class CompetenzeScreenTest {
     fun `archived words excluded from lessico`() {
         val parole = listOf(parola("1"), parola("2", archived = true), parola("3", archived = true))
         val reviews = mapOf("1" to review("1", 5), "2" to review("2", 5), "3" to review("3", 5))
-        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW)
-        // Solo 1 parola attiva (matura) -> lessico = 100% delle attive
+        // Solo la parola 1 e' attiva e verificata -> lessico = 100% delle attive
+        val log = logVerificate(listOf("1", "2", "3"))
+        val r = CalcoloCompetenze.calcola(parole, reviews, ProgressoUtente(), NOW, log)
         assertEquals(100f, r.lessico, 0.01f)
     }
 
