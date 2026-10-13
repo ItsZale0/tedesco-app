@@ -87,13 +87,19 @@ fun getEserciziScrittura(profilo: ProfiloUtente?): List<EsercizioScrittura> {
 fun ProduzioneScrittaScreen(
     vm: TedescoViewModel,
     onIndietro: () -> Unit,
-    profilo: ProfiloUtente? = null
+    profilo: ProfiloUtente? = null,
+    onVaiACorrezioni: () -> Unit = {}
 ) {
     // Esercizi generati dall'AI (persistiti nel profilo)
     val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
     var esercizioSelezionato by remember { mutableStateOf<EsercizioScrittura?>(null) }
     var testoUtente by remember { mutableStateOf("") }
     var mostraCorrezione by remember { mutableStateOf(false) }
+    val correzioneInCorso by vm.correzioneInCorso.collectAsStateWithLifecycle(false)
+    val risposte by vm.risposte.collectAsStateWithLifecycle()
+    val apiKey by vm.tutorApiKey.collectAsStateWithLifecycle("")
+    // Ultima correzione ricevuta dal tutor per il testo inviato da questa schermata
+    val ultimaCorrezione = risposte.firstOrNull { it.testo.trim() == testoUtente.trim() }?.correzione
     var generaInCorso by remember { mutableStateOf(false) }
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -295,11 +301,16 @@ fun ProduzioneScrittaScreen(
                         Text("Indietro")
                     }
                     Button(
-                        onClick = { mostraCorrezione = true },
+                        onClick = {
+                            mostraCorrezione = true
+                            // Invia DAVVERO il testo al tutor per la correzione
+                            // (prima si limitava a mostrare un messaggio fisso).
+                            vm.inviaRisposta(testoUtente)
+                        },
                         modifier = Modifier.weight(1f),
-                        enabled = testoUtente.isNotBlank()
+                        enabled = testoUtente.isNotBlank() && !correzioneInCorso
                     ) {
-                        Text("Verifica")
+                        Text(if (correzioneInCorso) "Correggo…" else "Verifica")
                     }
                 }
 
@@ -327,10 +338,42 @@ fun ProduzioneScrittaScreen(
                                 )
                             }
                             Spacer(Modifier.height(Spaziature.sm))
-                            Text(
-                                text = "Il tuo testo è stato salvato. Riceverai una correzione dettagliata dal tutor.",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            when {
+                                correzioneInCorso -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(Spaziature.sm))
+                                        Text("Il tutor sta correggendo il tuo testo…",
+                                            style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                }
+                                ultimaCorrezione != null -> {
+                                    // CORREZIONE REALE dal tutor AI
+                                    Text(
+                                        text = ultimaCorrezione,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(Modifier.height(Spaziature.sm))
+                                    TextButton(onClick = onVaiACorrezioni) {
+                                        Text("Vedi tutte le correzioni")
+                                    }
+                                }
+                                apiKey.isBlank() -> {
+                                    Text(
+                                        text = "Per ricevere la correzione serve una chiave API Groq gratuita " +
+                                            "(Profilo → Tutor AI). Il testo e' stato salvato.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                else -> {
+                                    Text(
+                                        text = "Correzione non disponibile al momento. Riprova.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(Spaziature.sm))
                             Text(
                                 text = "Suggerimento: rileggi il testo ad alta voce per trovare errori.",

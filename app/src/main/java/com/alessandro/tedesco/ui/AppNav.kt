@@ -339,7 +339,7 @@ private fun ContenutoApp(
             composable("quiz-produzione") { ProduzioneScreen(vm, onFatto = { nav.popBackStack() }) }
             composable("ascolto") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); AscoltoScreen(vm, profilo = profilo, onFatto = { nav.popBackStack() }) }
             composable("contestoMedico") { ContestoMedicoScreen(vm, onIndietro = { nav.popBackStack() }) }
-            composable("produzioneScritta") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }, profilo = profilo) }
+            composable("produzioneScritta") { val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null); ProduzioneScrittaScreen(vm, onIndietro = { nav.popBackStack() }, onVaiACorrezioni = { nav.navigate("feedback") }, profilo = profilo) }
         }
     }
 }

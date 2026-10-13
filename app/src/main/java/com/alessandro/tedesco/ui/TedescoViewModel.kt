@@ -1009,10 +1009,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     /** Invia una risposta in tedesco e riceve la correzione dal tutor AI. */
     fun inviaRisposta(testo: String) {
         viewModelScope.launch {
+            // In free mode la chiave puo' essere vuota: TutorService usa l'endpoint free.
             val chiave = tutorApiKey.value
-            if (chiave.isBlank()) {
-                _messaggio.value = "Inserisci una chiave API Groq gratuita in Profilo → Tutor AI."
-            }
             _correzioneInCorso.value = true
             try {
                 val profilo = profileManager.profiloAttivo() ?: return@launch
