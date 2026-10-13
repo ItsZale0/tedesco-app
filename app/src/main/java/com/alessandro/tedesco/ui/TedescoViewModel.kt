@@ -984,6 +984,10 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     ) {
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
+            // Goethe B1 e' MODULARE: ogni modulo e' superato con >= 60% (Bestehensgrenze
+            // ufficiale). Il "complessivo" NON e' una media che salva un modulo debole:
+            // e' il minimo tra i moduli, cosi' riflette il criterio reale "tutti >= 60".
+            val moduli = listOf(punteggioLesen, punteggioHoeren, punteggioSchreiben, punteggioSprechen)
             val nuovoTest = com.alessandro.tedesco.data.TestB1(
                 id = "test_${System.currentTimeMillis()}",
                 data = System.currentTimeMillis(),
@@ -991,7 +995,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 punteggioHoeren = punteggioHoeren,
                 punteggioSchreiben = punteggioSchreiben,
                 punteggioSprechen = punteggioSprechen,
-                punteggioComplessivo = (punteggioLesen + punteggioHoeren + punteggioSchreiben + punteggioSprechen) / 4
+                punteggioComplessivo = moduli.min()  // criterio "maglia piu' debole" (ufficiale)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(

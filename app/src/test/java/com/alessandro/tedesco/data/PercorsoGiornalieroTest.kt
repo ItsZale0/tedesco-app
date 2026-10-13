@@ -62,6 +62,10 @@ class PercorsoGiornalieroTest {
                 produzione = accuratezza * 100f,
                 livelloComplessivo = LivelloCEFR.A0
             ),
+            wortlisteUfficiale = 0,
+            vocabolarioAttivoUfficiale = 0,
+            oreGuidaCumulate = 0..0,
+            praedikatVersoObiettivo = CertificazioniUfficiali.Prädikat.NICHT_BESTANDEN,
             progresso = emptyList()
         )
     }

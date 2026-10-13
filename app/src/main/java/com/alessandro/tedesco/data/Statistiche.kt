@@ -52,7 +52,16 @@ data class Statistiche(
     val perLezione: List<ConteggioLezione>,
     val ultimi7giorni: List<AttivitaGiorno>,
     val punteggiCompetenze: CalcoloCompetenze.PunteggiCompetenze?,
-    val progresso: List<ProgressPoint>
+    val progresso: List<ProgressPoint>,
+    // --- Valori UFFICIALI delle certificazioni (Goethe/telc/ÖSD) ---
+    /** Unita lessicali RICETTIVE della Wortliste Goethe per il livello corrente. */
+    val wortlisteUfficiale: Int,
+    /** Vocabolario ATTIVO richiesto (circa meta' della Wortliste) per il livello. */
+    val vocabolarioAttivoUfficiale: Int,
+    /** Guided learning hours cumulate da zero (Cambridge English) per il livello. */
+    val oreGuidaCumulate: IntRange,
+    /** Prädikat ufficiale Goethe sul progresso verso il livello obiettivo. */
+    val praedikatVersoObiettivo: CertificazioniUfficiali.Prädikat
 )
 
 /**
@@ -61,9 +70,10 @@ data class Statistiche(
  */
 object CalcoloStatistiche {
 
-    // Obiettivo di parole MATURE (SRS) per il traguardo B1 del corso.
-    // 2000 e il vocabolario passivo teorico: irraggiungibile e demotivante.
-    const val OBIETTIVO_B1 = 1000
+    // Obiettivo di parole MATURE (SRS) per il traguardo B1: vocabolario ATTIVO
+    // ufficiale Goethe per il B1 = Wortliste 2400 / 2 = 1200 parole attive.
+    // (Fonte: Wortliste Goethe B1 ~2400 unita; "attivo = circa meta'").
+    const val OBIETTIVO_B1 = 1200
 
     private val FORMATTER_GIORNO = DateTimeFormatter.ofPattern("EEE", Locale.ITALIAN)
 
@@ -195,7 +205,20 @@ object CalcoloStatistiche {
             perLezione = perLezione,
             ultimi7giorni = ultimi7giorni,
             punteggiCompetenze = punteggiCompetenze,
-            progresso = progresso30gg
+            progresso = progresso30gg,
+            wortlisteUfficiale = CertificazioniUfficiali.wortlisteRicettiva(punteggiCompetenze.livelloComplessivo),
+            vocabolarioAttivoUfficiale = CertificazioniUfficiali.vocabolarioAttivoRichiesto(punteggiCompetenze.livelloComplessivo),
+            oreGuidaCumulate = CertificazioniUfficiali.oreGuidaCumulate(punteggiCompetenze.livelloComplessivo),
+            praedikatVersoObiettivo = CertificazioniUfficiali.praedikat(
+                // Progresso verso il livello obiettivo misurato col criterio ufficiale 60%:
+                // media delle 4 competenze (0-100).
+                listOf(
+                    punteggiCompetenze.lessico,
+                    punteggiCompetenze.grammatica,
+                    punteggiCompetenze.comprensione,
+                    punteggiCompetenze.produzione
+                ).average().toFloat()
+            )
         )
     }
 

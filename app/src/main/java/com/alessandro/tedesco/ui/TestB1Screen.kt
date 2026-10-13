@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.TestB1
+import com.alessandro.tedesco.data.CertificazioniUfficiali
 import com.alessandro.tedesco.data.TestB1Data
 import com.alessandro.tedesco.data.SezioneTestB1
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -179,13 +180,33 @@ fun TestB1Screen(vm: TedescoViewModel) {
                             modifier = Modifier.padding(Spaziature.lg),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            val percento = if (domande.isEmpty()) 0f
+                                else punteggio * 100f / domande.size
                             Text(
                                 text = "Punteggio: $punteggio/${domande.size}",
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             Text(
-                                text = "${(punteggio * 100 / domande.size)}%",
+                                text = "${percento.toInt()}%",
                                 style = MaterialTheme.typography.displaySmall
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            // Esito con criterio UFFICIALE Goethe: soglia 60% + Prädikat.
+                            val superato = CertificazioniUfficiali.supera(percento)
+                            Text(
+                                text = if (superato) "Superato (≥ 60%)" else "Non superato (< 60%)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (superato) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Valutazione: ${CertificazioniUfficiali.praedikat(percento).etichetta}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Soglia ufficiale Goethe/telc/ÖSD: 60% per modulo",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

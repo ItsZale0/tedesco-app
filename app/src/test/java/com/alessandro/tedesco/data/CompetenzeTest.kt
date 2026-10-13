@@ -72,7 +72,7 @@ class CompetenzeTest {
         val reviews = (1..50).associate { it.toString() to review(it.toString(), 5, 0) }
         val prog = ProgressoUtente(
             testGrammatica = List(3) { testGramm(80f) },
-            testComprensione = List(3) { testComp(45f) },   // sotto soglia A1 (70)
+            testComprensione = List(3) { testComp(45f) },   // sotto la soglia ufficiale 60%
             testProduzione = List(3) { testProd(80f) }
         )
         val r = CalcoloCompetenze.calcola(parole, reviews, prog, NOW)
@@ -93,6 +93,38 @@ class CompetenzeTest {
         assertEquals(LivelloCEFR.A1, r.livelloComplessivo)
     }
 
+    // 7b. Valori ufficiali delle certificazioni
+    @Test
+    fun `soglia ufficiale Goethe telc OSD e 60 percento`() {
+        assertEquals(60f, CertificazioniUfficiali.SOGLIA_SUPERAMENTO, 0.01f)
+        assertTrue(CertificazioniUfficiali.supera(60f))
+        assertTrue(!CertificazioniUfficiali.supera(59.9f))
+    }
+
+    @Test
+    fun `Praedikat segue la scala ufficiale Goethe`() {
+        assertEquals(CertificazioniUfficiali.Prädikat.SEHR_GUT, CertificazioniUfficiali.praedikat(95f))
+        assertEquals(CertificazioniUfficiali.Prädikat.GUT, CertificazioniUfficiali.praedikat(85f))
+        assertEquals(CertificazioniUfficiali.Prädikat.BEFRIEDIGEND, CertificazioniUfficiali.praedikat(75f))
+        assertEquals(CertificazioniUfficiali.Prädikat.AUSREICHEND, CertificazioniUfficiali.praedikat(60f))
+        assertEquals(CertificazioniUfficiali.Prädikat.NICHT_BESTANDEN, CertificazioniUfficiali.praedikat(59f))
+    }
+
+    @Test
+    fun `Wortliste e vocabolario attivo ufficiale per livello`() {
+        assertEquals(650, CertificazioniUfficiali.wortlisteRicettiva(LivelloCEFR.A1))
+        assertEquals(1300, CertificazioniUfficiali.wortlisteRicettiva(LivelloCEFR.A2))
+        assertEquals(2400, CertificazioniUfficiali.wortlisteRicettiva(LivelloCEFR.B1))
+        // attivo = circa meta' della Wortliste (Goethe)
+        assertEquals(1200, CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.B1))
+    }
+
+    @Test
+    fun `ore guida ufficiali cumulate`() {
+        assertEquals(90..100, CertificazioniUfficiali.oreGuidaCumulate(LivelloCEFR.A1))
+        assertEquals(350..400, CertificazioniUfficiali.oreGuidaCumulate(LivelloCEFR.B1))
+    }
+
     // 7. Maglia piu debole: una dimensione sotto soglia blocca il livello
     @Test
     fun `una dimensione debole blocca la promozione`() {
@@ -101,7 +133,7 @@ class CompetenzeTest {
         val prog = ProgressoUtente(
             testGrammatica = List(3) { testGramm(95f) },
             testComprensione = List(3) { testComp(95f) },
-            testProduzione = List(3) { testProd(60f) }   // sotto 70
+            testProduzione = List(3) { testProd(59f) }   // sotto la soglia ufficiale 60%
         )
         val r = CalcoloCompetenze.calcola(parole, reviews, prog, NOW)
         assertEquals(LivelloCEFR.A0, r.livelloComplessivo)

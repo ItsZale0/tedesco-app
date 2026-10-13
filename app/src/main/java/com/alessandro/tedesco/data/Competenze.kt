@@ -26,20 +26,32 @@ object CalcoloCompetenze {
         else -> 8
     }
 
-    /** Requisiti per raggiungere un livello (criteri CEFR/Goethe, conservativi). */
+    /**
+     * Requisiti per raggiungere un livello: criterio UFFICIALE delle certificazioni.
+     *
+     * La Bestehensgrenze ufficiale Goethe / telc / ÖSD e' il **60%** per ogni modulo
+     * (fonte: Durchfuehrungsbestimmungen Goethe B1/B2, telc, ÖSD ZB1). Non esistono
+     * soglie piu' alte: si passa con 60. Quindi la soglia applicata e' 60%, non i
+     * valori "inventati" (70/78/82/85) usati prima.
+     *
+     * Lessico: percentuale di parole ATTIVE del livello che sono mature. Il target
+     * assoluto ufficiale (Wortliste) e' mostrato nelle statistiche via
+     * CertificazioniUfficiali; qui si misura il progresso reale sulle parole
+     * disponibili nel feed (raggiungibile anche con un vocabolario piccolo).
+     */
     private data class Requisito(
-        val paroleMature: Int,
+        val percentualeParole: Float,
         val grammatica: Float,
         val comprensione: Float,
         val produzione: Float
     )
 
-    // Parole "mature" = ripassate con successo almeno 4 volte.
-    // Soglie volutamente più alte del minimo CEFR per evitare promozioni facili.
-    private val REQ_A1 = Requisito(30, 70f, 70f, 70f)
-    private val REQ_A2 = Requisito(60, 78f, 78f, 78f)
-    private val REQ_B1 = Requisito(110, 82f, 82f, 82f)
-    private val REQ_B2 = Requisito(300, 85f, 85f, 85f)
+    // Tutte le soglie = 60% (Bestehensgrenze ufficiale Goethe/telc/ÖSD).
+    private val SOGLIA = CertificazioniUfficiali.SOGLIA_SUPERAMENTO
+    private val REQ_A1 = Requisito(SOGLIA, SOGLIA, SOGLIA, SOGLIA)
+    private val REQ_A2 = Requisito(SOGLIA, SOGLIA, SOGLIA, SOGLIA)
+    private val REQ_B1 = Requisito(SOGLIA, SOGLIA, SOGLIA, SOGLIA)
+    private val REQ_B2 = Requisito(SOGLIA, SOGLIA, SOGLIA, SOGLIA)
 
     private fun mediaUltimi(punteggi: List<Float>): Float =
         if (punteggi.isEmpty()) 0f else punteggi.takeLast(5).average().toFloat()
@@ -100,9 +112,14 @@ object CalcoloCompetenze {
         val nComp = progresso.testComprensione.size
         val nProd = progresso.testProduzione.size
 
+        /**
+         * Criterio UFFICIALE: tutte le dimensioni devono superare la Bestehensgrenze
+         * del 60% (Goethe/telc/ÖSD) e serve un minimo di evidenza (test svolti),
+         * perche' il 60% ufficiale vale su una prova completa, non su una domanda.
+         */
         fun raggiunge(r: Requisito, livello: LivelloCEFR): Boolean {
             val min = minTest(livello)
-            return paroleMature >= r.paroleMature &&
+            return lessico >= r.percentualeParole &&
                 nGramm >= min && grammatica >= r.grammatica &&
                 nComp >= min && comprensione >= r.comprensione &&
                 nProd >= min && produzione >= r.produzione

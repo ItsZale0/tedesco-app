@@ -86,6 +86,11 @@ fun StatsScreen(vm: TedescoViewModel) {
 
                     Spacer(Modifier.height(16.dp))
 
+                    // 2b. Valori ufficiali delle certificazioni
+                    CardValoriUfficiali(statsCorrenti)
+
+                    Spacer(Modifier.height(16.dp))
+
                     // 3. Riga di 3 StatCard compatte
                     RigaStatCardCompatte(statsCorrenti)
 
@@ -166,13 +171,13 @@ private fun CardProgressoB1(stats: Statistiche) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Progresso verso B1",
+                text = "Progresso verso B1 (Goethe-Zertifikat)",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Obiettivo: ${stats.obiettivoB1} parole",
+                text = "Obiettivo ufficiale (vocabolario attivo Goethe): ${stats.obiettivoB1} parole",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -203,11 +208,84 @@ private fun CardProgressoB1(stats: Statistiche) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Ti mancano $mancano parole per raggiungere B1.",
+                text = "Ti mancano $mancano parole attive per raggiungere il B1.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Valutazione (Prädikat Goethe): ${stats.praedikatVersoObiettivo.etichetta}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
         }
+    }
+}
+
+@Composable
+private fun CardValoriUfficiali(stats: Statistiche) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Raggi.card),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Valori ufficiali delle certificazioni",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "Goethe-Institut / telc / ÖSD — criteri di superamento",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+
+            RigaUfficiale(
+                "Soglia di superamento",
+                "60% per modulo (Goethe, telc, ÖSD)"
+            )
+            RigaUfficiale(
+                "Scala di valutazione",
+                "90+ sehr gut · 80+ gut · 70+ befriedigend · 60+ ausreichend"
+            )
+            RigaUfficiale(
+                "Vocabolario del tuo livello",
+                "${stats.wortlisteUfficiale} parole (Wortliste Goethe, ricettive)"
+            )
+            RigaUfficiale(
+                "Vocabolario attivo richiesto",
+                "${stats.vocabolarioAttivoUfficiale} parole"
+            )
+            RigaUfficiale(
+                "Ore di studio stimate",
+                "${stats.oreGuidaCumulate.first}–${stats.oreGuidaCumulate.last} ore (Cambridge, cumulate)"
+            )
+        }
+    }
+}
+
+@Composable
+private fun RigaUfficiale(etichetta: String, valore: String) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = etichetta,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = valore,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

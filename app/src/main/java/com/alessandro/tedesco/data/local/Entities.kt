@@ -70,11 +70,12 @@ data class GuidaEntity(
 /** Livelli CEFR supportati */
 enum class LivelloCEFR(val ordine: Int, val label: String, val descrizione: String) {
     A0(0, "A0 — Principiante assoluto", "Nessuna conoscenza, si inizia da zero"),
-    A1(1, "A1 — Elementare", "Frasi semplici, presente, articoli, ~500 parole"),
-    A2(2, "A2 — Base", "Passato (Perfetto), dativo, separabili, modali, ~1000 parole"),
-    B1(3, "B1 — Intermedio", "Congiuntivo, passivo, frasi complesse, vita quotidiana, ~2000 parole"),
-    B2(4, "B2 — Avanzato", "Lavorativo, testi complessi, sfumature, ~4000 parole"),
-    C1(5, "C1 — Autonomo", "Fluente, accademico/professionale, ~8000 parole"),
+    // Conteggi parole = Wortliste UFFICIALE Goethe (unità lessicali ricettive).
+    A1(1, "A1 — Elementare", "Frasi semplici, presente, articoli · Wortliste 650 parole (attive ~325)"),
+    A2(2, "A2 — Base", "Perfetto, dativo, separabili, modali · Wortliste 1300 parole (attive ~650)"),
+    B1(3, "B1 — Intermedio", "Congiuntivo, passivo, frasi complesse · Wortliste 2400 parole (attive ~1200)"),
+    B2(4, "B2 — Avanzato", "Lavorativo, testi complessi, sfumature · ~4000 parole"),
+    C1(5, "C1 — Autonomo", "Fluente, accademico/professionale · ~8000 parole"),
     C2(6, "C2 — Madrelingua", "Nativo, tutte le sfumature")
 }
 

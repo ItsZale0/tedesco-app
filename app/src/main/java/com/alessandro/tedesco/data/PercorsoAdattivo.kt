@@ -157,7 +157,7 @@ object CalcoloPercorsoAdattivo {
         }
 
         // 7. VOCABOLARIO: se il lessico è sotto la soglia
-        if (competenze.lessico < 50f) {
+        if (competenze.lessico < CertificazioniUfficiali.SOGLIA_SUPERAMENTO) {
             raccomandazioni.add(
                 Raccomandazione(
                     priorita = prioritaCounter++,
@@ -194,12 +194,18 @@ object CalcoloPercorsoAdattivo {
             else -> "Prosegui così, stai facendo ottimi progressi."
         }
 
+        // Obiettivi con il vocabolario ATTIVO ufficiale (Wortliste Goethe / 2).
         val prossimoObiettivo = when {
-            livelloCorrente < LivelloCEFR.A1 -> "Raggiungere A1 con 50 parole"
-            livelloCorrente < LivelloCEFR.A2 -> "Raggiungere A2 con 150 parole"
-            livelloCorrente < LivelloCEFR.B1 -> "Raggiungere B1 con 900 parole"
-            livelloCorrente < LivelloCEFR.B2 -> "Raggiungere B2 con 1800 parole"
-            else -> "Raggiungere C1 con 3500 parole"
+            livelloCorrente < LivelloCEFR.A1 ->
+                "Raggiungere A1: ${CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.A1)} parole attive"
+            livelloCorrente < LivelloCEFR.A2 ->
+                "Raggiungere A2: ${CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.A2)} parole attive"
+            livelloCorrente < LivelloCEFR.B1 ->
+                "Raggiungere B1: ${CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.B1)} parole attive"
+            livelloCorrente < LivelloCEFR.B2 ->
+                "Raggiungere B2: ${CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.B2)} parole attive"
+            else ->
+                "Raggiungere C1: ${CertificazioniUfficiali.vocabolarioAttivoRichiesto(LivelloCEFR.C1)} parole attive"
         }
 
         return PercorsoAdattivo(
