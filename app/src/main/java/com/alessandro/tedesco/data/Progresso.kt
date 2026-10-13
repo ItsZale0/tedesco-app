@@ -1,5 +1,6 @@
 package com.alessandro.tedesco.data
 
+import com.alessandro.tedesco.data.ProduzioneStorico
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
@@ -55,6 +56,23 @@ object CalcoloProgresso {
         val mediaProduzione: Float,
         /** Ultimo Prädikat ottenuto nella produzione scritta. */
         val ultimoPraedikatProduzione: String,
+        /** Storico completo delle produzioni (data, punteggio totale, per criterio). */
+        val storicoProduzione: List<ProduzioneStorico>,
+        /** Trend: positivo = sta migliorando, negativo = peggiorando. */
+        val trendProduzione: Float,
+        /** Correlazione con le altre competenze (0-1). */
+        val correlazioneProduzione: Float,
+        /** Obiettivo settimanale: quante produzioni fatte / quante servono. */
+        val produzioniSettimana: Int,
+        val obiettivoSettimanaleProduzione: Int,
+        /** Criterio Goethe più debole (nome + valore). */
+        val criterioDeboleProduzione: String,
+        val criterioDeboleValore: Float,
+        /** Evoluzione per criterio (ultimi 10 testi). */
+        val evoluzioneErfuellung: List<Float>,
+        val evoluzioneKohaerenz: List<Float>,
+        val evoluzioneWortschatz: List<Float>,
+        val evoluzioneStrukturen: List<Float>,
         val paroleDisponibili: Int,
         val ripassiTotali: Int,
         val accuratezza: Float,
@@ -178,6 +196,19 @@ object CalcoloProgresso {
             produzioniScritte = progresso.valutazioniProduzione.size,
             mediaProduzione = CalcoloProduzione.mediaUltime(progresso.valutazioniProduzione),
             ultimoPraedikatProduzione = progresso.valutazioniProduzione.lastOrNull()?.praedikat ?: "",
+            storicoProduzione = progresso.valutazioniProduzione.map {
+                ProduzioneStorico(it.data, it.erfuellung, it.kohaerenz, it.wortschatz, it.strukturen, it.numErrori, it.numParole, it.livello, it.praedikat)
+            },
+            trendProduzione = CalcoloProduzione.calcolaTrend(progresso.valutazioniProduzione),
+            correlazioneProduzione = CalcoloProduzione.calcolaCorrelazione(progresso.valutazioniProduzione, competenze),
+            produzioniSettimana = CalcoloProduzione.contaSettimana(progresso.valutazioniProduzione),
+            obiettivoSettimanaleProduzione = CalcoloProduzione.obiettivoSettimanale(livello),
+            criterioDeboleProduzione = CalcoloProduzione.criterioDebole(progresso.valutazioniProduzione)?.first ?: "N/A",
+            criterioDeboleValore = CalcoloProduzione.criterioDebole(progresso.valutazioniProduzione)?.second ?: 0f,
+            evoluzioneErfuellung = progresso.valutazioniProduzione.map { it.erfuellung },
+            evoluzioneKohaerenz = progresso.valutazioniProduzione.map { it.kohaerenz },
+            evoluzioneWortschatz = progresso.valutazioniProduzione.map { it.wortschatz },
+            evoluzioneStrukturen = progresso.valutazioniProduzione.map { it.strukturen },
             paroleDisponibili = paroleAttive.size,
             ripassiTotali = ripassiTotali,
             accuratezza = accuratezza,

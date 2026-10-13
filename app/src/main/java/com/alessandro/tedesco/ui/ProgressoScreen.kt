@@ -31,6 +31,10 @@ import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
 
 /**
  * Schermata di progresso UNIFICATA: un solo posto, un solo racconto.
@@ -266,6 +270,7 @@ private fun CardProduzioneScritta(pr: CalcoloProgresso.ProgressoReale) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
+                // KPI principali
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     KpiBox("Testi", "${pr.produzioniScritte}", "valutati",
                         MaterialTheme.colorScheme.primary, Modifier.weight(1f))
@@ -274,6 +279,72 @@ private fun CardProduzioneScritta(pr: CalcoloProgresso.ProgressoReale) {
                         if (pr.mediaProduzione >= 60f) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.error, Modifier.weight(1f))
                 }
+
+                // Trend
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Trend", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val trend = pr.trendProduzione
+                    val trendText = when {
+                        trend > 0.5f -> "↑ migliorando"
+                        trend < -0.5f -> "↓ peggiorando"
+                        else -> "→ stabile"
+                    }
+                    val trendColor = when {
+                        trend > 0.5f -> MaterialTheme.colorScheme.primary
+                        trend < -0.5f -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    Text(trendText, style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold, color = trendColor)
+                }
+
+                // Correlazione con altre competenze
+                Spacer(Modifier.height(6.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Correlazione con altre competenze", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${(pr.correlazioneProduzione * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary)
+                }
+
+                // Obiettivo settimanale
+                Spacer(Modifier.height(6.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Questa settimana", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${pr.produzioniSettimana}/${pr.obiettivoSettimanaleProduzione} testi",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (pr.produzioniSettimana >= pr.obiettivoSettimanaleProduzione)
+                            MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                // Criterio più debole
+                if (pr.criterioDeboleProduzione != "N/A") {
+                    Spacer(Modifier.height(6.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Criterio più debole", style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${pr.criterioDeboleProduzione} (${pr.criterioDeboleValore.toInt()}%)",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                // Grafico evoluzione
+                if (pr.storicoProduzione.size >= 2) {
+                    Spacer(Modifier.height(12.dp))
+                    Text("Evoluzione", style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(4.dp))
+                    GraficoEvoluzione(pr)
+                }
+
+                // Ultimo Prädikat
                 if (pr.ultimoPraedikatProduzione.isNotBlank()) {
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -290,6 +361,40 @@ private fun CardProduzioneScritta(pr: CalcoloProgresso.ProgressoReale) {
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+        }
+    }
+}
+
+@Composable
+private fun GraficoEvoluzione(pr: CalcoloProgresso.ProgressoReale) {
+    val punteggi = pr.storicoProduzione.map { it.punteggioTotale }
+    val maxP = punteggi.maxOrNull() ?: 100f
+    val minP = punteggi.minOrNull() ?: 0f
+    val range = (maxP - minP).coerceAtLeast(1f)
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+    ) {
+        val w = size.width
+        val h = size.height
+        val step = if (punteggi.size > 1) w / (punteggi.size - 1) else w
+
+        // Linea del grafico
+        val path = androidx.compose.ui.graphics.Path()
+        punteggi.forEachIndexed { i, p ->
+            val x = i * step
+            val y = h - ((p - minP) / range * h)
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(path, color = androidx.compose.ui.graphics.Color(0xFF6750A4), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
+
+        // Punti
+        punteggi.forEachIndexed { i, p ->
+            val x = i * step
+            val y = h - ((p - minP) / range * h)
+            drawCircle(color = androidx.compose.ui.graphics.Color(0xFF6750A4), radius = 4f, center = androidx.compose.ui.geometry.Offset(x, y))
         }
     }
 }
