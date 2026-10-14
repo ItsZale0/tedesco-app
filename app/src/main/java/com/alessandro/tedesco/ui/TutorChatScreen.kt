@@ -2,6 +2,7 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -187,8 +188,8 @@ fun TutorChatScreen(vm: TedescoViewModel) {
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
+                .statusBarsPadding()
         ) {
             // Selettore modello
             ModelloSelector(
