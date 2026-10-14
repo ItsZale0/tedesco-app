@@ -301,6 +301,12 @@ data class ProfiloStato(
     val guida: GuidaEntity? = null,
     val progresso: ProgressoUtente = ProgressoUtente(),
     val lezioneContenuto: String = "",
+    /**
+     * Lezioni GENERATE dall'AI, per numero (chiave stringa per la serializzazione).
+     * Persistite qui perche' il sync dal feed sovrascrive [lezioneContenuto]: senza
+     * questa mappa una lezione generata sparirebbe al primo sync (ogni 15 min).
+     */
+    val lezioniGenerate: Map<String, String> = emptyMap(),
     val etag: String = "",
     val lastSync: Long = 0L,
     val risposte: List<FeedbackEntry> = emptyList(),

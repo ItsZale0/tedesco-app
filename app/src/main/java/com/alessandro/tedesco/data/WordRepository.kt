@@ -99,9 +99,19 @@ class WordRepository(
         _ripassiLog.value = stato.ripassiLog
     }
 
+    /**
+     * Salva sul profilo i campi posseduti da questo repository.
+     *
+     * USA .copy() — NON ricostruire un ProfiloStato da zero: il costruttore
+     * azzera ogni campo non elencato, e questo metodo viene chiamato a ogni
+     * risposta di ripasso, parola aggiunta o sync fallito. Costruirlo da zero
+     * cancellava conversazioni del tutor, correzioni, esercizi generati,
+     * lezioni generate e le streak ("la chat non ha memoria", "la streak e' 0").
+     */
     private suspend fun salvaSuProfilo() {
+        val corrente = profileManager.statoAttivo()
         profileManager.aggiornaStatoAttivo(
-            ProfiloStato(
+            corrente.copy(
                 parole = _words.value,
                 reviews = _reviews.value,
                 feedLog = _feedLog.value,
@@ -110,8 +120,6 @@ class WordRepository(
                 progressoFeed = _progressoFeed.value,
                 sessioni = _sessioni.value,
                 ripassiLog = _ripassiLog.value,
-                progresso = profileManager.statoAttivo().progresso,
-                etag = profileManager.statoAttivo().etag,
                 lastSync = System.currentTimeMillis()
             )
         )
@@ -123,9 +131,83 @@ class WordRepository(
 
     /** Aggiorna il contenuto mostrato quando l'utente cambia lezione. */
     fun aggiornaLezioneContenuto(numero: Int) {
+        // La lezione GENERATA ha priorita' su quella del feed: il feed puo' essere
+        // vuoto (profilo Emma) o avere buchi (lezioni 1,2,3,5 - mancava la 4).
+        val generata = profileManager.statoAttivo().lezioniGenerate[numero.toString()]
+        if (!generata.isNullOrBlank()) {
+            _lezioneContenuto.value = generata
+            return
+        }
         val lezione = _lezioni.value.firstOrNull { it.numero == numero }
             ?: _lezioni.value.firstOrNull()
-        lezione?.let { _lezioneContenuto.value = it.contenuto }
+        _lezioneContenuto.value = lezione?.contenuto.orEmpty()
+    }
+
+    /** Salva una lezione generata dall'AI cosi' sopravvive ai sync del feed. */
+    suspend fun salvaLezioneGenerata(numero: Int, contenuto: String) = withContext(io) {
+        val profilo = profileManager.profiloAttivo() ?: return@withContext
+        val mappa = profilo.stato.lezioniGenerate.toMutableMap()
+        mappa[numero.toString()] = contenuto
+        profileManager.aggiornaStatoAttivo(
+            profilo.stato.copy(lezioneContenuto = contenuto, lezioniGenerate = mappa)
+        )
+        _lezioneContenuto.value = contenuto
+    }
+
+    /**
+     * Aggiunge le parole di una lezione generata al vocabolario del profilo.
+     *
+     * NON passa da [addCustomWord]: quelle sono parole dell'utente e dipendono dal
+     * flag enableCustomWords. Le parole di una lezione sono contenuto del corso,
+     * quindi entrano sempre (altrimenti la lezione "non aggiorna il lessico").
+     *
+     * @return quante parole sono state effettivamente aggiunte
+     */
+    suspend fun aggiungiParoleLezione(
+        parole: List<com.alessandro.tedesco.data.remote.ParolaLezione>,
+        numero: Int,
+        livello: String
+    ): Int = withContext(io) {
+        if (parole.isEmpty()) return@withContext 0
+        val now = System.currentTimeMillis()
+        val esistenti = _words.value.map { it.german.trim().lowercase() }.toSet()
+        val nuove = parole
+            .filter { it.tedesco.trim().lowercase() !in esistenti }
+            .mapIndexed { i, p ->
+                WordEntity(
+                    id = "lezione_${numero}_${now}_${i}_${p.tedesco.hashCode()}",
+                    german = p.tedesco.trim(),
+                    italian = p.italiano.trim(),
+                    example = p.esempio.trim(),
+                    article = p.articolo?.trim()?.ifBlank { null },
+                    pronunciation = null,
+                    level = livello,
+                    lesson = numero,
+                    tags = "lezione",
+                    archived = false,
+                    createdAt = now + i,
+                    source = WordSource.CUSTOM
+                )
+            }
+        if (nuove.isEmpty()) return@withContext 0
+
+        _words.value = _words.value + nuove
+
+        val reviews = _reviews.value.toMutableMap()
+        nuove.forEach { w ->
+            reviews[w.id] = ReviewEntity(
+                wordId = w.id,
+                easeFactor = 2.5f,
+                intervalDays = 0,
+                repetitions = 0,
+                lapses = 0,
+                dueAt = now,
+                lastReviewedAt = null
+            )
+        }
+        _reviews.value = reviews
+        salvaSuProfilo()
+        nuove.size
     }
 
     fun observeWords() = wordsFlow
@@ -180,9 +262,9 @@ class WordRepository(
 
             _lezioni.value = feed.lessons.map { LessonEntity(it.numero, it.titolo, it.contenuto, it.audioUrl) }
             val lezioneCorrente = profileManager.statoAttivo().progresso.lezioneCorrente
-            val lezione = feed.lessons.firstOrNull { it.numero == lezioneCorrente }
-                ?: feed.lessons.firstOrNull()
-            lezione?.let { _lezioneContenuto.value = it.contenuto }
+            // Non assegnare il contenuto direttamente: aggiornaLezioneContenuto
+            // preferisce la versione GENERATA e non la fa sparire al sync.
+            aggiornaLezioneContenuto(lezioneCorrente)
             feed.guida?.let { g ->
                 _guida.value = GuidaEntity(
                     titolo = g.titolo,

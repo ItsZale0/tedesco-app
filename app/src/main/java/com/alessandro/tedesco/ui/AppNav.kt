@@ -67,6 +67,9 @@ import com.alessandro.tedesco.ui.PianoScreen
 import com.alessandro.tedesco.ui.RoleplayScreen
 import com.alessandro.tedesco.ui.SessioniScreen
 import com.alessandro.tedesco.ui.TestAdattiviScreen
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBars
 
 private sealed class Dest(
     val route: String,
@@ -232,7 +235,12 @@ private fun ContenutoApp(
         NavHost(
             navController = nav,
             startDestination = Dest.Home.route,
-            modifier = Modifier.padding(bottom = inner.calculateBottomPadding())
+            // Consuma la navigation bar: l'inset è già applicato come padding qui,
+            // quindi imePadding() nelle schermate NON deve riaggiungerlo (era il buco
+            // tra tastiera e casella di input nel Tutor AI).
+            modifier = Modifier
+                .padding(bottom = inner.calculateBottomPadding())
+                .consumeWindowInsets(WindowInsets.navigationBars)
         ) {
             composable(Dest.Home.route) {
                 HomeScreen(

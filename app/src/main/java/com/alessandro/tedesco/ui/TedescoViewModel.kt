@@ -31,6 +31,7 @@ import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.TestGrammatica
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.data.remote.GeneratoreLezioni
 import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.data.remote.EsercizioGenerato
 import com.alessandro.tedesco.data.remote.TipoEsercizio
@@ -694,6 +695,71 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ---- Lezione dinamica (generata dall'AI) ----
+
+    private val _lezioneStato = MutableStateFlow<StatoLezione>(StatoLezione.Idle)
+    val lezioneStato: StateFlow<StatoLezione> = _lezioneStato.asStateFlow()
+
+    private val generatoreLezioni = GeneratoreLezioni()
+
+    /** Tema della lezione: titolo dal feed se c'e', altrimenti dalla scaletta base. */
+    private fun argomentoLezione(numero: Int, titoloFeed: String?): String {
+        if (!titoloFeed.isNullOrBlank()) {
+            val pulito = titoloFeed.substringAfter("—", titoloFeed)
+                .substringAfter(" - ", titoloFeed)
+                .substringAfter(": ", titoloFeed)
+                .trim()
+            if (pulito.length > 2) return pulito
+        }
+        val temi = listOf(
+            "Presentarsi e salutare", "Numeri, eta' e date", "La famiglia",
+            "Citta' e paese", "Cibo e bevande", "La giornata e le ore",
+            "Tempo libero e hobby", "Casa e stanze", "Vestiti e colori",
+            "Salute e corpo", "Viaggi e mezzi", "Lavoro e professioni",
+            "Tempo atmosferico", "Animali", "Soldi, negozi e prezzi",
+            "Al telefono", "Al ristorante", "In farmacia"
+        )
+        return temi[(numero - 1).mod(temi.size)]
+    }
+
+    /**
+     * Genera la lezione [numero] (o quella corrente) con l'AI: contenuto completo +
+     * 12 parole nuove che entrano nel VOCABOLARIO del profilo.
+     *
+     * Perche' serve: il feed puo' non avere la lezione (profilo Emma: 0 lezioni) o
+     * averla senza parole (Alessandro: lezione 5 con 0 parole) -> la lezione non
+     * usciva e non aggiornava il lessico.
+     */
+    fun generaLezioneDinamica(numero: Int = -1) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val n = if (numero > 0) numero else profilo.stato.progresso.lezioneCorrente
+            val livello = profilo.stato.progresso.livelloCorrente.label.substringBefore(" ")
+            if (_lezioneStato.value is StatoLezione.InCorso) return@launch
+
+            _lezioneStato.value = StatoLezione.InCorso
+            try {
+                val titoloFeed = repo.observeLessons().first().firstOrNull { it.numero == n }?.titolo
+                val paroleNote = repo.observeWords().first().map { it.german }
+                val lezione = generatoreLezioni.genera(
+                    apiKey = tutorApiKey.value,
+                    numero = n,
+                    livello = livello,
+                    argomento = argomentoLezione(n, titoloFeed),
+                    paroleNote = paroleNote
+                )
+                repo.salvaLezioneGenerata(n, lezione.contenuto)
+                val aggiunte = repo.aggiungiParoleLezione(lezione.parole, n, livello)
+                _lezioneStato.value = StatoLezione.Fatto(aggiunte)
+                _messaggio.value = "Lezione $n generata: $aggiunte parole nuove nel lessico"
+            } catch (e: Exception) {
+                _lezioneStato.value = StatoLezione.Errore(e.message ?: "Generazione non riuscita")
+            }
+        }
+    }
+
+    fun resetLezioneStato() { _lezioneStato.value = StatoLezione.Idle }
+
     fun aggiornaFeedUrl(nuovoUrl: String) {
         viewModelScope.launch {
             profileManager.aggiornaFeedUrl(nuovoUrl)
@@ -1224,4 +1290,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             return SimpleDateFormat("d/M HH:mm", Locale.ITALIAN).format(Date(ts))
         }
     }
+}
+
+/** Stato della generazione dinamica di una lezione. */
+sealed interface StatoLezione {
+    data object Idle : StatoLezione
+    data object InCorso : StatoLezione
+    data class Fatto(val paroleAggiunte: Int) : StatoLezione
+    data class Errore(val messaggio: String) : StatoLezione
 }

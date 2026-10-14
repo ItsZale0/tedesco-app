@@ -80,6 +80,7 @@ import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
+import androidx.compose.material3.OutlinedButton
 
 private const val URL_DOC_DEFAULT = "https://docs.google.com/document/d/12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g/edit"
 
@@ -234,7 +235,18 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     var mostraSelettore by remember { mutableStateOf(false) }
     val ttsHelper = rememberTtsHelper(context)
     val giorniProssima by vm.giorniProssimaLezione.collectAsStateWithLifecycle(2)
+    val lezioneStato by vm.lezioneStato.collectAsStateWithLifecycle<StatoLezione>(StatoLezione.Idle)
     LaunchedEffect(Unit) { vm.inizializzaDataLezione() }
+
+    // LEZIONE DINAMICA: se il feed non ha il contenuto o non ha parole per questa
+    // lezione (profilo Emma: 0 lezioni; Alessandro: lezione 5 senza parole),
+    // la genera l'AI. Le parole entrano nel vocabolario.
+    LaunchedEffect(lezioneCorrente, contenuto.isBlank(), paroleLezione.isEmpty()) {
+        val manca = contenuto.isBlank() || paroleLezione.isEmpty()
+        if (manca && lezioneStato !is StatoLezione.InCorso) {
+            vm.generaLezioneDinamica(lezioneCorrente)
+        }
+    }
 
     // Banner: una lezione ogni 2 giorni
     if (giorniProssima > 0) {
@@ -429,19 +441,85 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             } else {
-                Text(
-                    text = "Contenuto della lezione non ancora disponibile. Verrà aggiornato al prossimo sync.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                when (val s = lezioneStato) {
+                    is StatoLezione.InCorso -> Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "Genero la lezione per il tuo livello…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    is StatoLezione.Errore -> Column {
+                        Text(
+                            "Non riesco a generare la lezione: ${s.messaggio}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { vm.generaLezioneDinamica(lezioneCorrente) }) {
+                            Text("Riprova")
+                        }
+                    }
+                    else -> Column {
+                        Text(
+                            "Questa lezione non è nel materiale. Posso generarla io sul tuo livello: " +
+                                "spiegazione, esempi e 12 parole nuove che entrano nel tuo vocabolario.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Button(onClick = { vm.generaLezioneDinamica(lezioneCorrente) }) {
+                            Text("Genera la lezione")
+                        }
+                    }
+                }
             }
             if (paroleLezione.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(14.dp))
                 Text(
-                    text = "Parole di questa lezione: ${paroleLezione.size}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "Vocabolario della lezione (${paroleLezione.size} parole)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+                Spacer(Modifier.height(6.dp))
+                paroleLezione.forEach { w ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = com.alessandro.tedesco.data.ParolaTedesca.conArticolo(w.article, w.german),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = w.italian,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Queste parole sono già nel tuo vocabolario: le trovi in Parole e nel ripasso.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            } else if (lezioneStato !is StatoLezione.InCorso) {
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = { vm.generaLezioneDinamica(lezioneCorrente) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Genera 12 parole per questa lezione") }
             }
         }
     }

@@ -190,8 +190,9 @@ fun TutorChatScreen(vm: TedescoViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .imePadding()
+                // Solo il padding superiore (per stare sotto la topBar).
+                // Il fondo lo gestiscono NavHost (nav bar) + imePadding (tastiera).
+                .padding(top = padding.calculateTopPadding())
         ) {
             // Selettore modello
             ModelloSelector(
@@ -241,6 +242,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
+                    .imePadding()
             ) {
                 Row(
                     modifier = Modifier
