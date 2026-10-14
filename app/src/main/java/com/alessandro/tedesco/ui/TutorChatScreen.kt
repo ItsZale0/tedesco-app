@@ -1,8 +1,10 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -190,6 +192,7 @@ fun TutorChatScreen(vm: TedescoViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
             // Selettore modello
             ModelloSelector(
@@ -235,11 +238,16 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                 }
             }
 
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth().imePadding()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .imePadding()
+            ) {
                 Row(
                     modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
