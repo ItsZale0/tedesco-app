@@ -681,10 +681,26 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 _messaggio.value = "Prossima lezione tra $giorniMancanti $unita. Nel frattempo ripassa!"
                 return@launch
             }
+            // Salta alle lezioni REALI: quelle con parole nel vocabolario
+            // oppure con contenuto (feed). Escluso: lezioni con 0 parole e
+            // 0 contenuto (es. lezione 5, se il feed non ha parole e la
+            // generazione non è ancora avvenuta).
+            // Salta alle lezioni REALI: quelle con parole nel vocabolario
+            // oppure con contenuto (feed). Escluso: lezioni con 0 parole e
+            // 0 contenuto (es. lezione 5, se il feed non ha parole e la
+            // generazione non è ancora avvenuta).
+            val parole = repo.observeWords().first().filter { !it.archived }
+            val lezioniFeed = repo.observeLessons().first()
+            val reali = (parole.map { it.lesson }.distinct() + lezioniFeed.map { it.numero })
+                .distinct()
+                .sorted()
             val nuova = p.lezioneCorrente + 1
+            val prossima = (nuova..reali.last()).firstOrNull { it in reali } ?: nuova
+            if (prossima == nuova && prossima > reali.last()) return@launch
+            if (prossima == nuova && prossima > reali.last()) return@launch
             val nuovoStato = profilo.stato.copy(
                 progresso = p.copy(
-                    lezioneCorrente = nuova,
+                    lezioneCorrente = prossima,
                     dataInizioLezione = System.currentTimeMillis(),
                     lezioniCompletate = p.lezioniCompletate + 1
                 )

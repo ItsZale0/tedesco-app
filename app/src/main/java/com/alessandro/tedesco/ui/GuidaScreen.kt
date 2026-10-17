@@ -225,22 +225,51 @@ fun GuidaScreen(vm: TedescoViewModel) {
 
 @Composable
 private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
-    val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
+    val lezioneCorrenteRaw by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val lezioni by vm.lezioni.collectAsStateWithLifecycle(emptyList())
     val context = androidx.compose.ui.platform.LocalContext.current
     val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
     val audioUrl by vm.lezioneAudioUrl.collectAsStateWithLifecycle("")
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
-    val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
-    var mostraSelettore by remember { mutableStateOf(false) }
+    val lezioneStato by vm.lezioneStato.collectAsStateWithLifecycle<StatoLezione>(StatoLezione.Idle)
     val ttsHelper = rememberTtsHelper(context)
     val giorniProssima by vm.giorniProssimaLezione.collectAsStateWithLifecycle(2)
-    val lezioneStato by vm.lezioneStato.collectAsStateWithLifecycle<StatoLezione>(StatoLezione.Idle)
     LaunchedEffect(Unit) { vm.inizializzaDataLezione() }
 
-    // LEZIONE DINAMICA: se il feed non ha il contenuto o non ha parole per questa
-    // lezione (profilo Emma: 0 lezioni; Alessandro: lezione 5 senza parole),
-    // la genera l'AI. Le parole entrano nel vocabolario.
+    // LEZIONI REALI: una lezione è REALE se ha parole NEL VOCABOLARIO oppure
+    // ha contenuto DAL FEED. Il filtro unico è sulla parole + contenuto.
+    // Nel feed Alessando: lezione 4 ha 48 parole ma manca in `lessons[]`,
+    // lezione 5 esiste ma ha 0 parole e 0 contenuto. Senza questo filtro
+    // la UI mostra lezioni vuote o parole orfane (es. lezione 4 scomparsa).
+        // LEZIONI REALI: una lezione è REALE se ha parole NEL VOCABOLARIO oppure
+    // ha contenuto DAL FEED. Il filtro unico è sulla parole + contenuto.
+    // Nel feed Alessand: lezione 4 ha 48 parole ma manca in `lessons[]`,
+    // lezione 5 esiste ma ha 0 parole e 0 contenuto. Senza questo filtro
+    // la UI mostra lezioni vuote o parole orfane (es. lezione 4 scomparsa).
+    // LEZIONI REALI: una lezione è REALE se ha parole NEL VOCABOLARIO oppure
+    // ha contenuto DAL FEED.
+        // LEZIONI REALI: una lezione è REALE se ha parole NEL VOCABOLARIO oppure
+    // ha contenuto DAL FEED (es. lezione 4 ha parole ma manca in `lessons[]`;
+    // lezione 5 ha contenuto ma 0 parole).
+    val lezioniReali = buildList {
+            lezioni.forEach { add(it) }
+        parole.map { it.lesson }.distinct().forEach { numero ->
+            add(LessonEntity(numero, "Lezione generata", "", ""))
+        }
+    }.distinctBy { it.numero }
+      .filter { w -> parole.any { v -> v.lesson == w.numero } || w.contenuto.isNotBlank() }
+      .sortedBy { it.numero }
+
+    // La lezione corrente: usa quella reale se possibile, altrimenti la prima.
+    val lezioneCorrente = if (lezioniReali.any { it.numero == lezioneCorrenteRaw }) lezioneCorrenteRaw
+        else lezioniReali.firstOrNull()?.numero ?: lezioneCorrenteRaw
+
+    val paroleLezione = parole.filter { it.lesson == lezioneCorrente }
+    var mostraSelettore by remember { mutableStateOf(false) }
+
+    // LEZIONE DINAMICA: se il feed non ha il contenuto o non ha parole per
+    // quella lezione (profilo Emma: 0 lezioni; Alessandro: lezione 5 senza
+    // parole), la genera l'AI. Le parole vengono aggiunte al vocabolario.
     LaunchedEffect(lezioneCorrente, contenuto.isBlank(), paroleLezione.isEmpty()) {
         val manca = contenuto.isBlank() || paroleLezione.isEmpty()
         if (manca && lezioneStato !is StatoLezione.InCorso) {
@@ -331,7 +360,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                     Spacer(Modifier.height(8.dp))
                     LezioniDisponibili(
                         lezioneCorrente = lezioneCorrente,
-                        lezioni = lezioni,
+                        lezioni = lezioniReali,
                         onLezioneSelezionata = { nuovaLezione ->
                             vm.cambiaLezione(nuovaLezione)
                             mostraSelettore = false
@@ -508,18 +537,30 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                         )
                     }
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { /* TODO: aggiungi le parole alla lista fiscale */ },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Aggiungi al dizionario")
+                    }
+                    OutlinedButton(
+                        onClick = { /* TODO: metti in evidenza le parole rimanenti */ },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Ripassa le parole")
+                    }
+                }
+            } else if (contenuto.isEmpty()) {
                 Text(
-                    text = "Queste parole sono già nel tuo vocabolario: le trovi in Parole e nel ripasso.",
-                    style = MaterialTheme.typography.labelSmall,
+                    "Nessuna parola per questa lezione. Premi \"Genera la lezione\" per creare il vocabolario.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-            } else if (lezioneStato !is StatoLezione.InCorso) {
-                Spacer(Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = { vm.generaLezioneDinamica(lezioneCorrente) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Genera 12 parole per questa lezione") }
             }
         }
     }
