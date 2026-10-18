@@ -1,7 +1,7 @@
 {
-  "versionCode": 174,
-  "versionName": "1.36.7",
-  "changelog": "Fix crash: corretto utilizzo del ViewModel",
+  "versionCode": 175,
+  "versionName": "1.36.10",
+  "changelog": "Fix crash: AppNav crea ViewModel con viewModel()+AndroidViewModelFactory, MainActivity chiama AppNav() senza parametri",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.36.7/Tedesco-v1.36.7.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.36.10/Tedesco-v1.36.10.apk"
 }

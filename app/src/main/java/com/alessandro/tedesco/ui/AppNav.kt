@@ -1,6 +1,5 @@
 package com.alessandro.tedesco.ui
 
-import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,13 +8,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.StudioVeloceScreen
 import com.alessandro.tedesco.ui.TedescoViewModel
-import com.alessandro.tedesco.ui.TedescoViewModelFactory
 
 /**
  * V2 — Solo una schermata: Studio Veloce.
@@ -25,9 +24,9 @@ import com.alessandro.tedesco.ui.TedescoViewModelFactory
 fun AppNav(
     modifier: Modifier = Modifier
 ) {
-    val application = LocalContext.current.applicationContext as TedescoApp
-    val vmFactory = remember { TedescoViewModelFactory(application) }
-    val vm = viewModel<TedescoViewModel>(factory = vmFactory)
+    val app = LocalContext.current.applicationContext as TedescoApp
+    val factory = remember { ViewModelProvider.AndroidViewModelFactory(app) }
+    val vm = viewModel<TedescoViewModel>(factory = factory)
 
     val nav = rememberNavController()
 
