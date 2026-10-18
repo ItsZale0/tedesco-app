@@ -20,9 +20,21 @@ android {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 176
-        versionName = "1.36.11"
+        versionCode = 177
+        versionName = "1.36.12"
         buildConfigField("String", "FREE_API_KEY", "\"$freeApiKey\"")
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("/opt/data/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+        }
     }
 
     buildTypes {
@@ -116,3 +128,41 @@ tasks.register("generateVersionJson") {
         println("generateVersionJson: wrote versionCode=$vc versionName=$vn to version.json")
     }
 }
+
+// ── Verifica automatica della firma APK ──────────────────────────────
+// Android pretende i certificati "at entry AndroidManifest.xml": quella e' la
+// firma v1 (JAR). Un APK con la sola v2/v3 viene rifiutato come
+// "missing certificates" se il file subisce una minima modifica in transito.
+// Questo task fa fallire la build se la v1 non c'e': mai piu' APK non
+// installabili per firma mancante.
+val androidSdkDir: String = System.getenv("ANDROID_HOME")
+    ?: System.getenv("ANDROID_SDK_ROOT")
+    ?: "/opt/data/toolchain/android-sdk"
+
+val apksignerPath: String? = fileTree("$androidSdkDir/build-tools") { include("*/apksigner") }
+    .files
+    .maxByOrNull { it.parentFile.name }
+    ?.absolutePath
+
+tasks.register<Exec>("verificaFirmaApk") {
+    group = "verification"
+    description = "Verifica che l'APK debug sia firmato v1 (JAR) + v2 + v3"
+    dependsOn("assembleDebug")
+    val apk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk").get().asFile
+    val signer = apksignerPath
+    doFirst {
+        if (signer == null) throw GradleException("apksigner non trovato in $androidSdkDir/build-tools")
+        if (!apk.exists()) throw GradleException("APK non trovato: ${apk.absolutePath}")
+    }
+    commandLine(
+        signer ?: "apksigner",
+        "verify",
+        "--min-sdk-version", "23",
+        "--verbose",
+        apk.absolutePath
+    )
+    doLast { println("Firma APK verificata: v1 (JAR) + v2 + v3 presenti") }
+}
+
+// matching() e' lazy: assembleDebug lo registra AGP piu' tardi, named() fallirebbe.
+tasks.matching { it.name == "assembleDebug" }.configureEach { finalizedBy("verificaFirmaApk") }
