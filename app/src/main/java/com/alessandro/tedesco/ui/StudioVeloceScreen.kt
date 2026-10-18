@@ -22,6 +22,13 @@ import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 /**
  * Modalità Studio Veloce — una schermata unica con lezione + esercizi integrati.
@@ -32,7 +39,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun StudioVeloceScreen(
     vm: TedescoViewModel,
-    onVaiATutor: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -95,14 +101,6 @@ fun StudioVeloceScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onVaiATutor) {
-                        Icon(
-                            imageVector = Icons.Default.VolumeUp,
-                            contentDescription = "Tutor AI"
-                        )
                     }
                 }
             )
@@ -426,7 +424,54 @@ fun StudioVeloceScreen(
             }
         }
     }
+
+    // Menu nascosto per impostazioni
+    var mostraMenu by remember { mutableStateOf(false) }
+    
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        if (mostraMenu) {
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .widthIn(max = 200.dp),
+                shape = RoundedCornerShape(Raggi.card),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    TextButton(
+                        onClick = { /* nav a impostazioni */ },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Impostazioni")
+                    }
+                    TextButton(
+                        onClick = { /* nav a altro */ },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Altro")
+                    }
+                }
+            }
+        }
+        
+        FloatingActionButton(
+            onClick = { mostraMenu = !mostraMenu },
+            modifier = Modifier.padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Menu"
+            )
+        }
+    }
 }
+
 
 /**
  * Genera esercizi da parole della lezione.
@@ -458,6 +503,7 @@ private fun generaEserciziDaParole(
     
     return esercizi
 }
+
 
 data class EsercizioStudio(
     val domanda: String,

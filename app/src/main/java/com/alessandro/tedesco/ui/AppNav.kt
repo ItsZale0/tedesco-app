@@ -243,10 +243,7 @@ private fun ContenutoApp(
                 .consumeWindowInsets(WindowInsets.navigationBars)
         ) {
             composable("studio") {
-                StudioVeloceScreen(
-                    vm = vm,
-                    onVaiATutor = { nav.navigate("tutor") }
-                )
+                StudioVeloceScreen(vm = vm)
             }
             composable(Dest.Home.route) {
                 HomeScreen(
