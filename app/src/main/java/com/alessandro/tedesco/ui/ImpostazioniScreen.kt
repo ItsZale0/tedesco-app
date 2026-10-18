@@ -245,7 +245,8 @@ internal fun GlassTopBar(title: String) {
 fun ImpostazioniScreen(
     vm: TedescoViewModel,
     updater: UpdaterViewModel,
-    onVaiABackup: () -> Unit = {}
+    onVaiABackup: () -> Unit = {},
+    onIndietro: (() -> Unit)? = null
 ) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val profili by vm.profiliDisponibili.collectAsStateWithLifecycle(emptyList())
@@ -264,7 +265,7 @@ fun ImpostazioniScreen(
     var guidaDocId by rememberSaveable { mutableStateOf(profilo?.config?.guidaDocId ?: "") }
     var chiaveTutor by rememberSaveable { mutableStateOf(profilo?.config?.tutorApiKey ?: "") }
 
-    Scaffold(topBar = { CompactTopBar("Impostazioni") }, contentWindowInsets = WindowInsets(0)) { inner ->
+    Scaffold(topBar = { CompactTopBar("Impostazioni", onBack = onIndietro) }, contentWindowInsets = WindowInsets(0)) { inner ->
         Column(
             modifier = Modifier
                 .padding(inner)

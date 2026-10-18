@@ -42,10 +42,10 @@ import androidx.compose.ui.geometry.Offset
  * Tutti i numeri derivano da CalcoloProgresso (dati reali).
  */
 @Composable
-fun ProgressoScreen(vm: TedescoViewModel) {
+fun ProgressoScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
     val p by vm.progressoReale.collectAsStateWithLifecycle(null)
 
-    ScreenScaffold("Progresso") {
+    ScreenScaffold("Progresso", onBack = onIndietro) {
         val pr = p
         if (pr == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

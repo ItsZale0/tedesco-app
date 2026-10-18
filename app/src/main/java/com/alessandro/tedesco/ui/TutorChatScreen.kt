@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
@@ -50,7 +51,7 @@ data class MessaggioTutor(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TutorChatScreen(vm: TedescoViewModel) {
+fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
@@ -164,6 +165,12 @@ fun TutorChatScreen(vm: TedescoViewModel) {
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (onIndietro != null) {
+                        IconButton(onClick = onIndietro, modifier = Modifier.size(40.dp)) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        }
+                        Spacer(Modifier.width(4.dp))
+                    }
                     Icon(
                         Icons.Filled.School,
                         contentDescription = null,
