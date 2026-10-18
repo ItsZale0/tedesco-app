@@ -234,7 +234,7 @@ private fun ContenutoApp(
     ) { inner ->
         NavHost(
             navController = nav,
-            startDestination = Dest.Home.route,
+            startDestination = "studio",
             // Consuma la navigation bar: l'inset è già applicato come padding qui,
             // quindi imePadding() nelle schermate NON deve riaggiungerlo (era il buco
             // tra tastiera e casella di input nel Tutor AI).
@@ -242,6 +242,12 @@ private fun ContenutoApp(
                 .padding(bottom = inner.calculateBottomPadding())
                 .consumeWindowInsets(WindowInsets.navigationBars)
         ) {
+            composable("studio") {
+                StudioVeloceScreen(
+                    vm = vm,
+                    onVaiATutor = { nav.navigate("tutor") }
+                )
+            }
             composable(Dest.Home.route) {
                 HomeScreen(
                     vm,
