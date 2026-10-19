@@ -26,6 +26,10 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VolumeUp
@@ -42,7 +46,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.ParolaTedesca
@@ -106,6 +113,10 @@ fun StudioVeloceScreen(
 
     val pr by vm.progressoReale.collectAsStateWithLifecycle(null)
     val consiglio = remember(pr) { ConsigliEsercizi.consiglio(pr) }
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+    val inizialeProfilo = remember(profilo) {
+        (profilo?.config?.nomeVisualizzato?.trim()?.firstOrNull()?.uppercase() ?: "A")
+    }
 
     var esercizi by remember { mutableStateOf<List<EsercizioStudio>>(emptyList()) }
     var indice by remember { mutableStateOf(0) }
@@ -191,32 +202,20 @@ fun StudioVeloceScreen(
                             }
                         }
                     }
-                    // ---- Menu nascosto: impostazioni ed extra ----
-                    Box {
-                        IconButton(onClick = { mostraMenu = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
-                        }
-                        DropdownMenu(expanded = mostraMenu, onDismissRequest = { mostraMenu = false }) {
-                            DropdownMenuItem(
-                                text = { Text("Esercizi") },
-                                onClick = { mostraMenu = false; onVaiAEsercizi() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Progresso") },
-                                onClick = { mostraMenu = false; onVaiAProgresso() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Tutor AI") },
-                                onClick = { mostraMenu = false; onVaiATutor() }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Backup") },
-                                onClick = { mostraMenu = false; onVaiABackup() }
-                            )
-                            HorizontalDivider()
-                            DropdownMenuItem(
-                                text = { Text("Impostazioni") },
-                                onClick = { mostraMenu = false; onVaiAImpostazioni() }
+                    // ---- Profilo ed extra: avatar tondo -> pannello dal basso ----
+                    // Niente tre puntini: un solo tocco apre un pannello ordinato.
+                    Surface(
+                        onClick = { mostraMenu = true },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                inizialeProfilo,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
@@ -769,6 +768,38 @@ fun StudioVeloceScreen(
             }
         }
     }
+
+    // Pannello "profilo ed extra": dal basso, con icone e descrizioni.
+    if (mostraMenu) {
+        ModalBottomSheet(
+            onDismissRequest = { mostraMenu = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(modifier = Modifier.padding(bottom = Spaziature.xl)) {
+                Text(
+                    profilo?.config?.nomeVisualizzato?.takeIf { it.isNotBlank() } ?: "Il tuo profilo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = Spaziature.md, vertical = Spaziature.sm)
+                )
+                VocePannello(Icons.Filled.Quiz, "Esercizi", "Tutti i tipi, sempre nuovi") {
+                    mostraMenu = false; onVaiAEsercizi()
+                }
+                VocePannello(Icons.Filled.EmojiEvents, "Progresso", "Livello, competenze, numeri") {
+                    mostraMenu = false; onVaiAProgresso()
+                }
+                VocePannello(Icons.Filled.SmartToy, "Tutor AI", "Chiedi, correggi, esercitati") {
+                    mostraMenu = false; onVaiATutor()
+                }
+                VocePannello(Icons.Filled.CloudUpload, "Backup", "Salva e ripristina i dati") {
+                    mostraMenu = false; onVaiABackup()
+                }
+                VocePannello(Icons.Filled.Settings, "Impostazioni", "Profilo, chiave, aggiornamenti") {
+                    mostraMenu = false; onVaiAImpostazioni()
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -833,6 +864,54 @@ private fun CardParola(
                 )
             }
         }
+    }
+
+}
+
+/** Una riga del pannello dal basso: icona tonda + titolo + descrizione + freccia. */
+@Composable
+private fun VocePannello(
+    icona: ImageVector,
+    titolo: String,
+    descrizione: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = Spaziature.md, vertical = Spaziature.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spaziature.sm)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icona,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(titolo, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(
+                descrizione,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 

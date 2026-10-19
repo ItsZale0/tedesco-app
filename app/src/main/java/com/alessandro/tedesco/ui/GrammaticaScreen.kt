@@ -65,30 +65,39 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     var esercizi by remember { mutableStateOf<List<EsercizioGrammatica>>(emptyList()) }
     var caricato by remember { mutableStateOf(false) }
     var indice by remember { mutableStateOf(0) }
+    var tentativo by remember { mutableIntStateOf(0) }
 
-    // Carica e ricostruisce la lista quando arrivano nuovi esercizi generati
-    // Genera un batch FRESCO ad ogni ingresso (i salvati servono solo per 'evita')
-    LaunchedEffect(Unit) {
+    // Batch SEMPRE fresco: nessun set statico riciclato. Se la generazione fallisce
+    // si riusa l'ultimo batch AI non ancora completato, altrimenti si mostra "Riprova".
+    LaunchedEffect(tentativo) {
+        caricato = false
+        erroreGen = null
+        esercizi = emptyList()
         vm.caricaEserciziGenerati()
         val freschi = try {
             vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10)
         } catch (e: Exception) {
+            erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        esercizi = freschi.map {
-            EsercizioGrammatica(
-                id = it.id,
-                categoria = CategoriaGrammatica.perLivello(livello).firstOrNull() ?: CategoriaGrammatica.VERBI_TEMPI,
-                lezione = lezioneCorrente,
-                domanda = it.domanda,
-                opzioni = it.opzioni,
-                rispostaCorretta = it.rispostaCorretta,
-                spiegazione = it.spiegazione,
-                esempio = it.spiegazione
-            )
+        esercizi = if (freschi.isNotEmpty()) {
+            freschi.map {
+                EsercizioGrammatica(
+                    id = it.id,
+                    categoria = CategoriaGrammatica.perLivello(livello).firstOrNull() ?: CategoriaGrammatica.VERBI_TEMPI,
+                    lezione = lezioneCorrente,
+                    domanda = it.domanda,
+                    opzioni = it.opzioni,
+                    rispostaCorretta = it.rispostaCorretta,
+                    spiegazione = it.spiegazione,
+                    esempio = it.spiegazione
+                )
+            }
+        } else {
+            eserciziGen.filterNot { it.completato }
+                .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
         }
-        if (esercizi.isEmpty()) esercizi = GrammaticaB1.eserciziPerLezione(lezioneCorrente, 5)
-        if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
+        indice = 0
         caricato = true
     }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
@@ -118,7 +127,26 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                             Text("Genero esercizi nuovi...")
                         }
                     }
-                } else if (!completato) {
+                } else if (esercizi.isEmpty() && !completato) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(24.dp)
+                        ) {
+                            Text("Nessun esercizio generato", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                erroreGen ?: "Controlla la connessione e riprova.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(onClick = { tentativo++ }) { Text("Riprova") }
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(onClick = onFatto) { Text("Torna indietro") }
+                        }
+                    }
+                } else if (!completato && indice in esercizi.indices) {
                     val esercizio = esercizi[indice]
 
                     // Categoria

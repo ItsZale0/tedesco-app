@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.TextButton
-import com.alessandro.tedesco.data.QuizData
 import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.DomandaTest
 import com.alessandro.tedesco.data.local.LivelloCEFR
@@ -54,6 +53,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Add
@@ -66,9 +66,9 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     val eserciziGen by vm.eserciziGenComprensione.collectAsStateWithLifecycle()
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
-    val statiche = remember(livelloUtente) { QuizData.domandeComprensione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
     var elenco by remember { mutableStateOf<List<DomandaTest>>(emptyList()) }
     var caricato by remember { mutableStateOf(false) }
+    var tentativo by remember { mutableIntStateOf(0) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
@@ -81,30 +81,51 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     val ttsHelper = rememberTtsHelper(context)
     val scope = rememberCoroutineScope()
 
-    // Genera un batch FRESCO ad ogni ingresso (i salvati servono solo per 'evita')
-    LaunchedEffect(Unit) {
+    // Batch SEMPRE fresco: nessun set statico riciclato. Se la generazione fallisce
+    // si riusa l'ultimo batch AI non ancora completato, altrimenti si mostra "Riprova".
+    LaunchedEffect(tentativo) {
+        caricato = false
+        erroreGen = null
+        elenco = emptyList()
         vm.caricaEserciziGenerati()
         val freschi = try {
             vm.generaEsercizi(TipoEsercizio.COMPRENSIONE, quanti = 10)
         } catch (e: Exception) {
+            erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        elenco = freschi.map {
-            DomandaTest(
-                id = it.id,
-                tipo = TipoDomanda.GRAMMATICA,
-                domanda = it.domanda,
-                opzioni = it.opzioni,
-                rispostaCorretta = it.rispostaCorretta,
-                spiegazione = it.spiegazione,
-                livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
-                tagGrammatica = null,
-                testoLettura = it.testoLettura,
-                glossario = it.glossario
-            )
+        elenco = if (freschi.isNotEmpty()) {
+            freschi.map {
+                DomandaTest(
+                    id = it.id,
+                    tipo = TipoDomanda.GRAMMATICA,
+                    domanda = it.domanda,
+                    opzioni = it.opzioni,
+                    rispostaCorretta = it.rispostaCorretta,
+                    spiegazione = it.spiegazione,
+                    livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
+                    tagGrammatica = null,
+                    testoLettura = it.testoLettura,
+                    glossario = it.glossario
+                )
+            }
+        } else {
+            eserciziGen.filterNot { it.completato }.map {
+                DomandaTest(
+                    id = it.id,
+                    tipo = TipoDomanda.GRAMMATICA,
+                    domanda = it.domanda,
+                    opzioni = it.opzioni,
+                    rispostaCorretta = it.rispostaCorretta.coerceIn(0, it.opzioni.lastIndex.coerceAtLeast(0)),
+                    spiegazione = it.spiegazione,
+                    livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
+                    tagGrammatica = null,
+                    testoLettura = it.testoLettura,
+                    glossario = it.glossario
+                )
+            }
         }
-        if (elenco.isEmpty()) elenco = statiche
-        if (indice >= elenco.size) indice = (elenco.size - 1).coerceAtLeast(0)
+        indice = 0
         caricato = true
     }
 
@@ -122,12 +143,31 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                             Text("Genero esercizi nuovi...")
                         }
                     }
-                } else if (!completato) {
-                    val domanda = elenco.getOrElse(indice) { elenco.first() }
+                } else if (elenco.isEmpty() && !completato) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(24.dp)
+                        ) {
+                            Text("Nessun esercizio generato", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                erroreGen ?: "Controlla la connessione e riprova.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Button(onClick = { tentativo++ }) { Text("Riprova") }
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(onClick = onFatto) { Text("Torna indietro") }
+                        }
+                    }
+                } else if (!completato && indice in elenco.indices) {
+                    val domanda = elenco[indice]
 
                     // Progress
                     Text(
-                        text = "Domanda ${indice + 1}/${elenco.size} · ${statiche.size} base + ${eserciziGen.size} generati",
+                        text = "Domanda ${indice + 1}/${elenco.size} · ${eserciziGen.size} generati",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

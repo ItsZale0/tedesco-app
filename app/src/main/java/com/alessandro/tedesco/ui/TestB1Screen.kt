@@ -56,7 +56,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                 modifier = Modifier.widthIn(max = dimensioneContenuto()),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
-                if (!completato) {
+                if (!completato && indice in domande.indices) {
                     val domanda = domande[indice]
                     
                     // Sezione

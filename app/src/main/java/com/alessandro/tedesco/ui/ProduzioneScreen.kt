@@ -35,7 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.alessandro.tedesco.data.QuizData
+import com.alessandro.tedesco.data.local.DomandaTest
+import com.alessandro.tedesco.data.remote.EsercizioGenerato
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
@@ -49,7 +50,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import com.alessandro.tedesco.data.local.DomandaTest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 
@@ -59,48 +59,106 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
     val eserciziGen by vm.eserciziGenProduzione.collectAsStateWithLifecycle()
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle()
     val livelloUtente = profilo?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
-    val statiche = remember(livelloUtente) { QuizData.domandeProduzione.filter { it.livelloRichiesto.ordine <= livelloUtente.ordine } }
     var elenco by remember { mutableStateOf<List<DomandaTest>>(emptyList()) }
     var caricato by remember { mutableStateOf(false) }
+    var tentativo by remember { mutableIntStateOf(0) }
+    var completato by remember { mutableStateOf(false) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableIntStateOf(0) }
-    var completato by remember { mutableStateOf(false) }
-    var generaInCorso by remember { mutableStateOf(false) }
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    // Genera un batch FRESCO ad ogni ingresso (i salvati servono solo per 'evita')
-    LaunchedEffect(Unit) {
+    // Batch SEMPRE fresco: nessun set statico riciclato. Se la generazione fallisce
+    // si riusa l'ultimo batch generato dall'AI non ancora completato; se non c'e'
+    // nemmeno quello, si mostra l'errore con "Riprova".
+    LaunchedEffect(tentativo) {
+        caricato = false
+        erroreGen = null
+        elenco = emptyList()
         vm.caricaEserciziGenerati()
-        val freschi = try {
+        val freschi: List<EsercizioGenerato> = try {
             vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 10)
         } catch (e: Exception) {
+            erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        elenco = freschi.map {
-            DomandaTest(
-                id = it.id,
-                tipo = TipoDomanda.GRAMMATICA,
-                domanda = it.domanda,
-                opzioni = it.opzioni,
-                rispostaCorretta = it.rispostaCorretta,
-                spiegazione = it.spiegazione,
-                livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
-                tagGrammatica = null
-            )
+        elenco = if (freschi.isNotEmpty()) {
+            freschi.map {
+                DomandaTest(
+                    id = it.id,
+                    tipo = TipoDomanda.GRAMMATICA,
+                    domanda = it.domanda,
+                    opzioni = it.opzioni,
+                    rispostaCorretta = it.rispostaCorretta,
+                    spiegazione = it.spiegazione,
+                    livelloRichiesto = LivelloCEFR.entries.firstOrNull { l -> l.label == it.livello } ?: LivelloCEFR.A0,
+                    tagGrammatica = null
+                )
+            }
+        } else {
+            eserciziGen.filterNot { it.completato }.map { it.toDomandaTest() }
         }
-        if (elenco.isEmpty()) elenco = statiche
-        if (indice >= elenco.size) indice = (elenco.size - 1).coerceAtLeast(0)
+        indice = 0
+        rispostaSelezionata = null
+        risultato = null
         caricato = true
     }
 
-    ScreenScaffold("Produzione") {
-
+    // Stato vuoto: la generazione non ha prodotto nulla. Niente fallback statico.
+    if (elenco.isEmpty() && caricato && !completato) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Column(
-                modifier = Modifier.widthIn(max = dimensioneContenuto()),
-                verticalArrangement = Arrangement.spacedBy(Spaziature.md)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text("Nessun esercizio generato", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    erroreGen ?: "Controlla la connessione e riprova.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { tentativo++ }) { Text("Riprova") }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onFatto) { Text("Torna indietro") }
+            }
+        }
+    }
+
+    if (caricato && !completato && elenco.isNotEmpty() && indice in elenco.indices) {
+        val domanda = elenco[indice]
+        val totaleGen = eserciziGen.size
+
+        // Spiegazione + pulsanti (solo quando la risposta e' fatta)
+        val mostraSpiegazione = risultato != null
+
+        // Prossimo: salta quelli gia' completati (in banco)
+        val idsCompletati = remember(eserciziGen, domanda.id) {
+            eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
+        }
+        var prossimoIdx by remember { mutableIntStateOf(0) }
+        val puoiPassare = remember(indice, elenco, idsCompletati) {
+            var next = indice + 1
+            while (next < elenco.size && elenco[next].id in idsCompletati) next++
+            next
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (!caricato) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -111,15 +169,13 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                         }
                     }
                 } else if (!completato) {
-                    val domanda = elenco[indice]
-
                     // Progress
-                    val totaleGen = eserciziGen.size
                     Text(
-                        text = "Domanda ${indice + 1}/${elenco.size} · ${statiche.size} base + $totaleGen generati",
+                        text = "Domanda ${indice + 1}/${elenco.size}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(Modifier.height(14.dp))
 
                     // Domanda
                     Card(
@@ -148,9 +204,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                 if (risultato == null) {
                                     rispostaSelezionata = index
                                     risultato = index == domanda.rispostaCorretta
-                                    if (risultato == true) {
-                                        punteggio++
-                                    }
+                                    if (risultato == true) punteggio++
                                     vm.segnaEsercizioCompletato(TipoEsercizio.PRODUZIONE, domanda.id)
                                 }
                             },
@@ -165,7 +219,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                     }
 
                     // Spiegazione
-                    if (risultato != null) {
+                    if (mostraSpiegazione) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
@@ -180,6 +234,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                     text = if (risultato == true) "✓ Corretto!" else "✗ Sbagliato",
                                     fontWeight = FontWeight.Bold
                                 )
+                                Spacer(Modifier.height(4.dp))
                                 Text(text = domanda.spiegazione)
                             }
                         }
@@ -189,18 +244,21 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             OutlinedButton(
-                                onClick = { vm.eliminaEsercizioGenerato(TipoEsercizio.PRODUZIONE, domanda.id) },
+                                onClick = {
+                                    vm.eliminaEsercizioGenerato(TipoEsercizio.PRODUZIONE, domanda.id)
+                                    elenco = elenco.filterNot { it.id == domanda.id }
+                                    rispostaSelezionata = null
+                                    risultato = null
+                                    if (indice >= elenco.size) indice = (elenco.size - 1).coerceAtLeast(0)
+                                },
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text("Elimina")
                             }
                             Button(
                                 onClick = {
-                                    val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
-                                    var next = indice + 1
-                                    while (next < elenco.size && elenco[next].id in idsCompletati) next++
-                                    if (next < elenco.size) {
-                                        indice = next
+                                    if (puoiPassare < elenco.size) {
+                                        indice = puoiPassare
                                         rispostaSelezionata = null
                                         risultato = null
                                     } else {
@@ -209,10 +267,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                 },
                                 modifier = Modifier.weight(2f)
                             ) {
-                                val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + domanda.id
-                                var next = indice + 1
-                                while (next < elenco.size && elenco[next].id in idsCompletati) next++
-                                Text(if (next < elenco.size) "Prossimo" else "Vedi risultato")
+                                Text(if (puoiPassare < elenco.size) "Prossimo" else "Vedi risultato")
                             }
                         }
                     }
@@ -248,7 +303,6 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                         }
                     }
 
-                    // Salva risultato
                     LaunchedEffect(completato) {
                         if (completato) {
                             vm.salvaTestProduzione(
@@ -261,7 +315,6 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Fine sessione: torna ad Altro; rientrando si generano 10 esercizi nuovi.
                     Button(
                         onClick = onFatto,
                         modifier = Modifier.fillMaxWidth()
@@ -272,7 +325,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                     }
                 }
             }
-
+        }
     }
 
     // Dialogo errore chiave API per generazione esercizi infiniti
@@ -281,6 +334,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
             onDismissRequest = { erroreGen = null },
             title = { Text("Chiave API necessaria") },
             text = { Text("Per generare esercizi infiniti inserisci una chiave Groq gratuita in Profilo → Tutor AI.") },
+
             confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
         )
     }
