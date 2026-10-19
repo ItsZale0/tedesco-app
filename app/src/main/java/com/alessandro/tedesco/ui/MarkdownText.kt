@@ -1,21 +1,25 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -23,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
@@ -36,12 +41,22 @@ import androidx.compose.ui.unit.dp
  * Le righe sono precalcolate una volta sola (un `remember`), così non si costruiscono
  * AnnotatedString a ogni ricomposizione.
  */
-private enum class TipoRiga { TITOLO1, TITOLO2, TITOLO3, TITOLO4, PUNTATO, NUMERATO, CITAZIONE, SEPARATORE, VUOTO, PARAGRAFO }
+private enum class TipoRiga { TITOLO1, TITOLO2, TITOLO3, TITOLO4, PUNTATO, NUMERATO, CITAZIONE, SEPARATORE, TABELLA, VUOTO, PARAGRAFO }
+
+internal enum class Allineamento { SX, CENTRO, DX }
+
+/** Tabella markdown già parsata: intestazioni, corpo e allineamenti per colonna. */
+internal data class TabellaMd(
+    val intestazioni: List<AnnotatedString>,
+    val righe: List<List<AnnotatedString>>,
+    val allineamenti: List<Allineamento>
+)
 
 private data class RigaMd(
     val tipo: TipoRiga,
     val testo: AnnotatedString = AnnotatedString(""),
-    val numero: String = ""
+    val numero: String = "",
+    val tabella: TabellaMd? = null
 )
 
 private val REGEX_INLINE = Regex("""\*\*(.+?)\*\*|__(.+?)__|`(.+?)`|\*(.+?)\*|_(.+?)_""")
@@ -72,10 +87,84 @@ private fun inline(testo: String): AnnotatedString {
     return builder.toAnnotatedString()
 }
 
+// ---- Tabelle (| a | b |  +  |---|---| ) ----
+
+/**
+ * Riga che può appartenere a una tabella. Basta UN pipe: il markdown ammette anche
+ * `Wort | Bedeutung` senza pipe esterni (i modelli lo scrivono così).
+ */
+internal fun eRigaTabella(riga: String): Boolean = riga.contains('|')
+
+/** Riga separatrice dell'intestazione: solo -, :, | e spazi, con almeno un -. */
+internal fun eSeparatoreTabella(riga: String): Boolean {
+    if (!riga.contains('|')) return false
+    val pulita = riga.replace("|", "").trim()
+    if (pulita.isEmpty() || !pulita.contains('-')) return false
+    return pulita.all { it == '-' || it == ':' || it == ' ' }
+}
+
+/** Celle di una riga di tabella, senza i pipe esterni. */
+internal fun celleTabella(riga: String): List<String> {
+    var r = riga.trim()
+    if (r.startsWith("|")) r = r.substring(1)
+    if (r.endsWith("|")) r = r.dropLast(1)
+    return r.split("|").map { it.trim() }
+}
+
+private fun allineamentoCella(cella: String): Allineamento {
+    val c = cella.trim()
+    val sx = c.startsWith(":")
+    val dx = c.endsWith(":")
+    return when {
+        sx && dx -> Allineamento.CENTRO
+        dx -> Allineamento.DX
+        else -> Allineamento.SX
+    }
+}
+
+/**
+ * Se in `righe[indice]` inizia una tabella markdown (intestazione + separatore),
+ * la costruisce e ritorna anche l'indice della prima riga DOPO la tabella.
+ * Altrimenti null: la riga va trattata come testo normale.
+ */
+internal fun rilevaTabella(righe: List<String>, indice: Int): Pair<TabellaMd, Int>? {
+    if (indice + 1 >= righe.size) return null
+    val testa = righe[indice].trim()
+    val sep = righe[indice + 1].trim()
+    if (!eRigaTabella(testa) || !eSeparatoreTabella(sep)) return null
+
+    val intestazioni = celleTabella(testa).map { inline(it) }
+    val allineamenti = List(intestazioni.size) { k ->
+        allineamentoCella(celleTabella(sep).getOrElse(k) { "---" })
+    }
+    val corpo = mutableListOf<List<AnnotatedString>>()
+    var j = indice + 2
+    while (j < righe.size && eRigaTabella(righe[j].trim())) {
+        val celle = celleTabella(righe[j].trim())
+            .take(intestazioni.size)
+            .map { inline(it) }
+        // Riempi le righe corte: senza padding le colonne non restano allineate.
+        corpo.add(celle + List(intestazioni.size - celle.size) { AnnotatedString("") })
+        j++
+    }
+    return TabellaMd(intestazioni, corpo, allineamenti) to j
+}
+
 private fun parseRighe(markdown: String): List<RigaMd> {
     val risultato = mutableListOf<RigaMd>()
-    markdown.replace("\r\n", "\n").split("\n").forEach { grezza ->
-        val riga = grezza.trim()
+    val righeGrezze = markdown.replace("\r\n", "\n").split("\n")
+    var indice = 0
+    while (indice < righeGrezze.size) {
+        val riga = righeGrezze[indice].trim()
+
+        // Tabella: consuma tutte le righe che le appartengono in un blocco solo.
+        val tabella = rilevaTabella(righeGrezze, indice)
+        if (tabella != null) {
+            risultato.add(RigaMd(TipoRiga.TABELLA, tabella = tabella.first))
+            indice = tabella.second
+            continue
+        }
+
         when {
             riga.isEmpty() -> risultato.add(RigaMd(TipoRiga.VUOTO))
             REGEX_SEPARATORE.matches(riga) -> risultato.add(RigaMd(TipoRiga.SEPARATORE))
@@ -103,6 +192,7 @@ private fun parseRighe(markdown: String): List<RigaMd> {
             }
             else -> risultato.add(RigaMd(TipoRiga.PARAGRAFO, inline(riga)))
         }
+        indice++
     }
     // Rimuove le righe vuote consecutive e quelle in testa/fondo
     val compattate = mutableListOf<RigaMd>()
@@ -182,6 +272,9 @@ fun MarkdownText(
                         fontStyle = FontStyle.Italic
                     )
                 }
+                TipoRiga.TABELLA -> riga.tabella?.let { t ->
+                    TabellaMarkdown(t, color, stile)
+                }
                 TipoRiga.SEPARATORE -> HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = color.copy(alpha = 0.2f)
@@ -194,6 +287,75 @@ fun MarkdownText(
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Tabella markdown: intestazione su fondo attenuato, bordi, colonne a peso uguale
+ * e allineamento per colonna (|:---|:---:|---:|).
+ */
+@Composable
+private fun TabellaMarkdown(tabella: TabellaMd, color: Color, stile: TextStyle) {
+    val bordi = MaterialTheme.colorScheme.outlineVariant
+    val forma = RoundedCornerShape(8.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clip(forma)
+            .border(1.dp, bordi, forma)
+    ) {
+        RigaTabella(
+            celle = tabella.intestazioni,
+            allineamenti = tabella.allineamenti,
+            color = color,
+            stile = stile,
+            grassetto = true,
+            sfondo = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        )
+        HorizontalDivider(color = bordi)
+        tabella.righe.forEachIndexed { i, riga ->
+            RigaTabella(
+                celle = riga,
+                allineamenti = tabella.allineamenti,
+                color = color,
+                stile = stile,
+                grassetto = false,
+                sfondo = Color.Transparent
+            )
+            if (i < tabella.righe.lastIndex) {
+                HorizontalDivider(color = bordi.copy(alpha = 0.5f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun RigaTabella(
+    celle: List<AnnotatedString>,
+    allineamenti: List<Allineamento>,
+    color: Color,
+    stile: TextStyle,
+    grassetto: Boolean,
+    sfondo: Color
+) {
+    Row(modifier = Modifier.fillMaxWidth().background(sfondo)) {
+        celle.forEachIndexed { i, cella ->
+            Text(
+                text = cella,
+                style = stile,
+                color = color,
+                fontWeight = if (grassetto) FontWeight.SemiBold else null,
+                textAlign = when (allineamenti.getOrNull(i)) {
+                    Allineamento.CENTRO -> TextAlign.Center
+                    Allineamento.DX -> TextAlign.End
+                    else -> TextAlign.Start
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 7.dp)
+            )
         }
     }
 }

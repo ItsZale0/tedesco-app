@@ -79,6 +79,10 @@ import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.animation.AnimatedVisibility
 
 /**
  * V2 - schermata unica: lezione + parole + esercizi, in un flusso lineare.
@@ -330,11 +334,10 @@ fun StudioVeloceScreen(
                 }
             }
 
-            // ---- Teoria (markdown) ----
+            // ---- Teoria (markdown) - espandibile: chiusa, la home resta corta ----
             if (contenuto.isNotBlank()) {
                 item {
-                    SezioneTitolo("Teoria", "Leggi la spiegazione in italiano")
-                    Spacer(Modifier.height(Spaziature.sm))
+                    var teoriaAperta by rememberSaveable { mutableStateOf(true) }
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(Raggi.card),
@@ -343,19 +346,61 @@ fun StudioVeloceScreen(
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Column(modifier = Modifier.padding(Spaziature.md)) {
-                            MarkdownText(
-                                markdown = contenuto,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                stile = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(Modifier.height(Spaziature.sm))
-                            TextButton(
-                                onClick = { ttsHelper.speak(contenuto.replace(Regex("[#*`>_\\-]"), " ")) }
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            // Intestazione cliccabile: apre/chiude la lezione
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { teoriaAperta = !teoriaAperta }
+                                    .padding(Spaziature.md),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Filled.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Ascolta")
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Teoria",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        if (teoriaAperta) "Tocca per chiudere"
+                                        else "Tocca per leggere la spiegazione",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (teoriaAperta) Icons.Filled.ExpandLess
+                                    else Icons.Filled.ExpandMore,
+                                    contentDescription = if (teoriaAperta) "Chiudi la lezione" else "Apri la lezione",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            AnimatedVisibility(visible = teoriaAperta) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        start = Spaziature.md,
+                                        end = Spaziature.md,
+                                        bottom = Spaziature.md
+                                    )
+                                ) {
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                                    )
+                                    Spacer(Modifier.height(Spaziature.sm))
+                                    MarkdownText(
+                                        markdown = contenuto,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        stile = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(Modifier.height(Spaziature.sm))
+                                    TextButton(
+                                        onClick = { ttsHelper.speak(contenuto.replace(Regex("[#*`>_\\-]"), " ")) }
+                                    ) {
+                                        Icon(Icons.Filled.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Ascolta")
+                                    }
+                                }
                             }
                         }
                     }
