@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AssistChip
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
@@ -101,6 +103,9 @@ fun StudioVeloceScreen(
     }
     val titoliLezioni = remember(lezioniFeed) { lezioniFeed.associate { it.numero to it.titolo } }
     val paroleLezione = remember(parole, lezioneCorrente) { parole.filter { it.lesson == lezioneCorrente } }
+
+    val pr by vm.progressoReale.collectAsStateWithLifecycle(null)
+    val consiglio = remember(pr) { ConsigliEsercizi.consiglio(pr) }
 
     var esercizi by remember { mutableStateOf<List<EsercizioStudio>>(emptyList()) }
     var indice by remember { mutableStateOf(0) }
@@ -374,6 +379,66 @@ fun StudioVeloceScreen(
                             )
                         }
                         if (riga.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // ---- Sezione Esercizi: sempre visibile, con consiglio dinamico ----
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onVaiAEsercizi() },
+                    shape = RoundedCornerShape(Raggi.card),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Filled.Quiz,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "Esercizi",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Consiglio: ${consiglio.titolo}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Grammatica, Lettura, Produzione, Lessico, Ascolto, Ripasso",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
