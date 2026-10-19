@@ -90,7 +90,11 @@ object VerificaLessico {
         // pretendere "2 corrette" la renderebbe non verificabile per sempre.
         val perParola = log.filter { it.verifica }.groupBy { it.wordId }
         return perParola.mapValues { (_, eventi) ->
-            eventi.maxByOrNull { it.timestamp }?.corretta == true
+            // In caso di timestamp identici vale l'ULTIMO evento della lista:
+            // maxByOrNull ne prenderebbe il primo, e una verifica appena superata
+            // resterebbe sbagliata per sempre.
+            val max = eventi.maxOfOrNull { it.timestamp } ?: return@mapValues false
+            eventi.lastOrNull { it.timestamp == max }?.corretta == true
         }
     }
 
@@ -107,6 +111,35 @@ object VerificaLessico {
         // nel flashcard non e' un errore dimostrato.
         val sbagliate = log.filter { it.verifica && !it.corretta }.map { it.wordId }.toSet()
         return parole.filter { w -> !w.archived && sbagliate.contains(w.id) && verifiche[w.id] != true }
+    }
+
+    /**
+     * Parole da ripassare: UNICA fonte di verita' — la usano sia il contatore
+     * ("N da ripassare" in home/hub) sia le carte della sessione di ripasso.
+     * Con due insiemi diversi l'app mostrava "niente da ripassare" a schermo aperto
+     * ma "2 da ripassare" a schermo chiuso: l'utente non capiva cosa fosse successo.
+     * Unisce:
+     *  - fragili: sbagliate in una verifica e non ancora verificate;
+     *  - scadute: review di ripetizione spaziata con dueAt <= now.
+     * Le fragili vengono per prime: sono quelle da riprendere subito.
+     */
+    fun paroleDaRipassare(
+        parole: List<WordEntity>,
+        log: List<RipassoLogEntity>,
+        verifiche: Map<String, Boolean>,
+        reviews: Map<String, ReviewEntity>,
+        now: Long
+    ): List<WordEntity> {
+        val fragili = paroleFragili(parole, log, verifiche).map { it.id }.toSet()
+        val scadute = reviews.values.filter { it.dueAt <= now }.map { it.wordId }.toSet()
+        val daRipassare = fragili + scadute
+        return parole
+            .filter { !it.archived && daRipassare.contains(it.id) }
+            .filter { ParolaTedesca.utilizzabile(it) }
+            .sortedWith(
+                compareByDescending<WordEntity> { fragili.contains(it.id) }
+                    .thenBy { reviews[it.id]?.dueAt ?: Long.MAX_VALUE }
+            )
     }
 
     /** Parole mai verificate (nuove o deboli), priorita' a quelle con piu' errori. */

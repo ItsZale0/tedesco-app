@@ -75,7 +75,6 @@ import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.TedescoApp
-import com.alessandro.tedesco.ui.theme.PaletteApp
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
@@ -84,16 +83,13 @@ private const val URL_VOCAB_DEFAULT =
     "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
 private const val GUIDA_DOC_DEFAULT = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
 
-private val GlassShape: Shape = RoundedCornerShape(Raggi.card)
+/** Forma card Material 3. */
+private val GlassShape: Shape
+    @Composable get() = MaterialTheme.shapes.medium
 
+/** Superficie dei contenitori: token Material 3. */
 @Composable
-private fun settingsGlassColor(): Color {
-    val base = MaterialTheme.colorScheme.surface
-    return if (isSystemInDarkTheme()) base.copy(alpha = 0.36f) else base.copy(alpha = 0.52f)
-}
-
-private val borderColor: Color
-    @Composable get() = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+private fun settingsGlassColor(): Color = MaterialTheme.colorScheme.surfaceContainer
 
 /** Superficie "liquid glass": trasparente, sottile bordo theme-tint, leggera ombra. */
 @Composable
@@ -107,7 +103,6 @@ fun GlassCard(
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = settingsGlassColor()),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, borderColor)
     ) { Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), content = { content() }) }
 }
 
@@ -126,7 +121,6 @@ private fun SettingsExpandableSection(
         shape = GlassShape,
         colors = CardDefaults.cardColors(containerColor = settingsGlassColor()),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, borderColor)
     ) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
             Row(
@@ -206,8 +200,7 @@ private fun <T : Any> DropdownSelector(
             onDismissRequest = { expanded = false },
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
             shape = GlassShape,
-            border = BorderStroke(1.dp, borderColor)
-        ) {
+            ) {
             options.forEach { (value, name) ->
                 DropdownMenuItem(
                     onClick = { onSelect(value); expanded = false },
@@ -263,7 +256,6 @@ fun ImpostazioniScreen(
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
     val ultimoControllo by updater.ultimoControllo.collectAsStateWithLifecycle("")
-    val paletteId by vm.palette.collectAsStateWithLifecycle("uber")
 
     var cambiaProfilo by remember { mutableStateOf(false) }
     var esciSelezione by remember { mutableStateOf(false) }
@@ -582,20 +574,6 @@ fun ImpostazioniScreen(
                         Spacer(Modifier.height(8.dp))
                     }
                     SettingsButton(onClick = { vm.sincronizza() }) { Text("Sincronizza adesso") }
-                }
-                Spacer(Modifier.height(16.dp))
-
-                // --- COLORE DELL'APP (menu a tendina) ---
-                SettingsExpandableSection(
-                    title = "Colore dell'app",
-                    description = "Scegli il colore dell'interfaccia."
-                ) {
-                    DropdownSelector(
-                        label = "Palette",
-                        options = PaletteApp.entries.map { it.id to it.nome },
-                        selected = paletteId,
-                        onSelect = { vm.cambiaPalette(it) }
-                    )
                 }
                 Spacer(Modifier.height(16.dp))
 

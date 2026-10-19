@@ -196,7 +196,11 @@ object CalcoloProgresso {
             dimensioneDeboleValore = valoreDebole,
             azioneConsigliata = if (valoreDebole >= soglia) "Tutte le competenze superano la soglia. Continua così!" else azione,
             paroleImparate = paroleImparate,
-            paroleFragili = VerificaLessico.paroleFragili(paroleAttive, log, verifiche).size,
+            // STESSA definizione usata dalla sessione di ripasso (paroleDaRipassare):
+            // cosi' il contatore e le carte proposte non possono divergere.
+            paroleFragili = VerificaLessico.paroleDaRipassare(
+                paroleAttive, log, verifiche, reviews, now
+            ).size,
             paroleDaVerificare = VerificaLessico.paroleDaVerificare(paroleAttive, log, verifiche, Int.MAX_VALUE).size,
             produzioniScritte = progresso.valutazioniProduzione.size,
             mediaProduzione = CalcoloProduzione.mediaUltime(progresso.valutazioniProduzione),

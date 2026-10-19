@@ -435,6 +435,8 @@ private fun GraficoEvoluzione(pr: CalcoloProgresso.ProgressoReale) {
     val maxP = punteggi.maxOrNull() ?: 100f
     val minP = punteggi.minOrNull() ?: 0f
     val range = (maxP - minP).coerceAtLeast(1f)
+    // Colore del grafico dal tema Material 3 (prima era un viola fisso).
+    val coloreLinea = MaterialTheme.colorScheme.primary
 
     Canvas(
         modifier = Modifier
@@ -451,12 +453,12 @@ private fun GraficoEvoluzione(pr: CalcoloProgresso.ProgressoReale) {
             val y = h - ((p - minP) / range * h)
             if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
         }
-        drawPath(path, color = Color(0xFF6750A4), style = Stroke(width = 3f))
+        drawPath(path, color = coloreLinea, style = Stroke(width = 3f))
 
         punteggi.forEachIndexed { i, p ->
             val x = i * step
             val y = h - ((p - minP) / range * h)
-            drawCircle(color = Color(0xFF6750A4), radius = 4f, center = Offset(x, y))
+            drawCircle(color = coloreLinea, radius = 4f, center = Offset(x, y))
         }
     }
 }

@@ -105,7 +105,11 @@ fun AppNav(
                 AscoltoScreen(vm = vm, onFatto = { nav.popBackStack() })
             }
             composable("ripasso") {
-                RipassoScreen(vm = vm, onIndietro = { nav.popBackStack() })
+                RipassoScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() },
+                    onVaiANuove = { nav.popBackStack() }
+                )
             }
             composable("progresso") {
                 ProgressoScreen(vm = vm, onIndietro = { nav.popBackStack() })

@@ -65,7 +65,7 @@ private val REGEX_TITOLO = Regex("""^(#{1,6})\s*(.*)$""")
 private val REGEX_NUMERATO = Regex("""^(\d{1,2})[.)]\s+(.*)$""")
 private val REGEX_SEPARATORE = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
 
-private fun inline(testo: String): AnnotatedString {
+private fun inline(testo: String, coloreCodice: Color): AnnotatedString {
     val pulito = REGEX_LINK.replace(testo, "$1")
     val builder = AnnotatedString.Builder()
     var ultimo = 0
@@ -76,7 +76,7 @@ private fun inline(testo: String): AnnotatedString {
             g[1].isNotEmpty() -> builder.withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(g[1]) }
             g[2].isNotEmpty() -> builder.withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(g[2]) }
             g[3].isNotEmpty() -> builder.withStyle(
-                SpanStyle(fontFamily = FontFamily.Monospace, background = Color(0x22000000))
+                SpanStyle(fontFamily = FontFamily.Monospace, background = coloreCodice)
             ) { append(g[3]) }
             g[4].isNotEmpty() -> builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(g[4]) }
             g[5].isNotEmpty() -> builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(g[5]) }
@@ -127,13 +127,17 @@ private fun allineamentoCella(cella: String): Allineamento {
  * la costruisce e ritorna anche l'indice della prima riga DOPO la tabella.
  * Altrimenti null: la riga va trattata come testo normale.
  */
-internal fun rilevaTabella(righe: List<String>, indice: Int): Pair<TabellaMd, Int>? {
+internal fun rilevaTabella(
+    righe: List<String>,
+    indice: Int,
+    coloreCodice: Color = Color.Unspecified
+): Pair<TabellaMd, Int>? {
     if (indice + 1 >= righe.size) return null
     val testa = righe[indice].trim()
     val sep = righe[indice + 1].trim()
     if (!eRigaTabella(testa) || !eSeparatoreTabella(sep)) return null
 
-    val intestazioni = celleTabella(testa).map { inline(it) }
+    val intestazioni = celleTabella(testa).map { inline(it, coloreCodice) }
     val allineamenti = List(intestazioni.size) { k ->
         allineamentoCella(celleTabella(sep).getOrElse(k) { "---" })
     }
@@ -142,7 +146,7 @@ internal fun rilevaTabella(righe: List<String>, indice: Int): Pair<TabellaMd, In
     while (j < righe.size && eRigaTabella(righe[j].trim())) {
         val celle = celleTabella(righe[j].trim())
             .take(intestazioni.size)
-            .map { inline(it) }
+            .map { inline(it, coloreCodice) }
         // Riempi le righe corte: senza padding le colonne non restano allineate.
         corpo.add(celle + List(intestazioni.size - celle.size) { AnnotatedString("") })
         j++
@@ -150,7 +154,7 @@ internal fun rilevaTabella(righe: List<String>, indice: Int): Pair<TabellaMd, In
     return TabellaMd(intestazioni, corpo, allineamenti) to j
 }
 
-private fun parseRighe(markdown: String): List<RigaMd> {
+private fun parseRighe(markdown: String, coloreCodice: Color): List<RigaMd> {
     val risultato = mutableListOf<RigaMd>()
     val righeGrezze = markdown.replace("\r\n", "\n").split("\n")
     var indice = 0
@@ -158,7 +162,7 @@ private fun parseRighe(markdown: String): List<RigaMd> {
         val riga = righeGrezze[indice].trim()
 
         // Tabella: consuma tutte le righe che le appartengono in un blocco solo.
-        val tabella = rilevaTabella(righeGrezze, indice)
+        val tabella = rilevaTabella(righeGrezze, indice, coloreCodice)
         if (tabella != null) {
             risultato.add(RigaMd(TipoRiga.TABELLA, tabella = tabella.first))
             indice = tabella.second
@@ -171,7 +175,7 @@ private fun parseRighe(markdown: String): List<RigaMd> {
             REGEX_TITOLO.matches(riga) -> {
                 val m = REGEX_TITOLO.find(riga)!!
                 val livello = m.groupValues[1].length
-                val testo = inline(m.groupValues[2])
+                val testo = inline(m.groupValues[2], coloreCodice)
                 val tipo = when (livello) {
                     1 -> TipoRiga.TITOLO1
                     2 -> TipoRiga.TITOLO2
@@ -181,16 +185,16 @@ private fun parseRighe(markdown: String): List<RigaMd> {
                 risultato.add(RigaMd(tipo, testo))
             }
             riga.startsWith("> ") || riga == ">" -> {
-                risultato.add(RigaMd(TipoRiga.CITAZIONE, inline(riga.removePrefix(">").trim())))
+                risultato.add(RigaMd(TipoRiga.CITAZIONE, inline(riga.removePrefix(">").trim(), coloreCodice)))
             }
             REGEX_NUMERATO.matches(riga) -> {
                 val m = REGEX_NUMERATO.find(riga)!!
-                risultato.add(RigaMd(TipoRiga.NUMERATO, inline(m.groupValues[2]), m.groupValues[1]))
+                risultato.add(RigaMd(TipoRiga.NUMERATO, inline(m.groupValues[2], coloreCodice), m.groupValues[1]))
             }
             riga.startsWith("- ") || riga.startsWith("* ") || riga.startsWith("\u2022 ") -> {
-                risultato.add(RigaMd(TipoRiga.PUNTATO, inline(riga.drop(2).trim())))
+                risultato.add(RigaMd(TipoRiga.PUNTATO, inline(riga.drop(2).trim(), coloreCodice)))
             }
-            else -> risultato.add(RigaMd(TipoRiga.PARAGRAFO, inline(riga)))
+            else -> risultato.add(RigaMd(TipoRiga.PARAGRAFO, inline(riga, coloreCodice)))
         }
         indice++
     }
@@ -211,7 +215,9 @@ fun MarkdownText(
     modifier: Modifier = Modifier,
     stile: TextStyle = MaterialTheme.typography.bodyMedium,
 ) {
-    val righe = remember(markdown) { parseRighe(markdown) }
+    // Colore del codice inline dal tema Material 3 (prima era fisso).
+    val coloreCodice = MaterialTheme.colorScheme.surfaceVariant
+    val righe = remember(markdown, coloreCodice) { parseRighe(markdown, coloreCodice) }
     Column(modifier = modifier) {
         righe.forEach { riga ->
             when (riga.tipo) {

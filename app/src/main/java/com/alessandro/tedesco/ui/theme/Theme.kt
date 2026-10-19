@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -13,358 +15,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Palette Uber — nero, bianco, grigi neutri
-private val Nero = Color(0xFF000000)
-private val NeroChiaro = Color(0xFF1A1A1A)
-private val GrigioScuro = Color(0xFF2A2A2A)
-private val GrigioMedio = Color(0xFF4A4A4A)
-private val GrigioChiaro = Color(0xFF6B6B6B)
-private val GrigioMoltoChiaro = Color(0xFFE0E0E0)
-private val Bianco = Color(0xFFFFFFFF)
-private val BiancoSporco = Color(0xFFF5F5F5)
-
-// Accent color (viola)
-private val VerdeUber = Color(0xFF6750A4)
-private val VerdeUberScuro = Color(0xFF4F378B)
-
-private val SchemaChiaro = lightColorScheme(
-    primary = Nero,
-    onPrimary = Bianco,
-    primaryContainer = NeroChiaro,
-    onPrimaryContainer = Bianco,
-    secondary = GrigioScuro,
-    onSecondary = Bianco,
-    secondaryContainer = GrigioMoltoChiaro,
-    onSecondaryContainer = Nero,
-    tertiary = VerdeUber,
-    onTertiary = Bianco,
-    tertiaryContainer = Color(0xFFE8DEF8),
-    onTertiaryContainer = Color(0xFF21005D),
-    error = Color(0xFFE53935),
-    onError = Bianco,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    background = Bianco,
-    onBackground = Nero,
-    surface = Bianco,
-    onSurface = Nero,
-    surfaceVariant = BiancoSporco,
-    onSurfaceVariant = GrigioMedio,
-    outline = GrigioChiaro,
-    outlineVariant = GrigioMoltoChiaro
-)
-
-private val SchemaScuro = darkColorScheme(
-    primary = Bianco,
-    onPrimary = Nero,
-    primaryContainer = GrigioScuro,
-    onPrimaryContainer = Bianco,
-    secondary = GrigioMoltoChiaro,
-    onSecondary = Nero,
-    secondaryContainer = GrigioMedio,
-    onSecondaryContainer = Bianco,
-    tertiary = VerdeUber,
-    onTertiary = Nero,
-    tertiaryContainer = VerdeUberScuro,
-    onTertiaryContainer = Bianco,
-    error = Color(0xFFEF5350),
-    onError = Nero,
-    errorContainer = Color(0xFFB71C1C),
-    onErrorContainer = Bianco,
-    background = Nero,
-    onBackground = Bianco,
-    surface = Nero,
-    onSurface = Bianco,
-    surfaceVariant = NeroChiaro,
-    onSurfaceVariant = GrigioMoltoChiaro,
-    outline = GrigioMedio,
-    outlineVariant = GrigioScuro
-)
-
-// Palette alternative stile Uber
-private val BluUber = Color(0xFF276EF1)
-private val ArancioUber = Color(0xFFFF6B35)
-private val ViolaUber = Color(0xFF7B2FBE)
-private val RossoUber = Color(0xFFE53935)
-
-private val SchemaChiaroBlu = lightColorScheme(
-    primary = BluUber,
-    onPrimary = Bianco,
-    primaryContainer = Color(0xFFD6E3FF),
-    onPrimaryContainer = Color(0xFF001B3D),
-    secondary = GrigioScuro,
-    onSecondary = Bianco,
-    secondaryContainer = GrigioMoltoChiaro,
-    onSecondaryContainer = Nero,
-    tertiary = VerdeUber,
-    onTertiary = Bianco,
-    tertiaryContainer = Color(0xFFE8DEF8),
-    onTertiaryContainer = Color(0xFF21005D),
-    error = Color(0xFFE53935),
-    onError = Bianco,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    background = Bianco,
-    onBackground = Nero,
-    surface = Bianco,
-    onSurface = Nero,
-    surfaceVariant = BiancoSporco,
-    onSurfaceVariant = GrigioMedio,
-    outline = GrigioChiaro,
-    outlineVariant = GrigioMoltoChiaro
-)
-
-private val SchemaScuroBlu = darkColorScheme(
-    primary = Color(0xFF5B8DEF),
-    onPrimary = Color(0xFF001B3D),
-    primaryContainer = Color(0xFF1A3A6B),
-    onPrimaryContainer = Color(0xFFD6E3FF),
-    secondary = Color(0xFF9DC0FF),
-    onSecondary = Color(0xFF001B3D),
-    secondaryContainer = Color(0xFF14315C),
-    onSecondaryContainer = Color(0xFFD6E3FF),
-    tertiary = VerdeUber,
-    onTertiary = Nero,
-    tertiaryContainer = VerdeUberScuro,
-    onTertiaryContainer = Bianco,
-    error = Color(0xFFEF5350),
-    onError = Nero,
-    errorContainer = Color(0xFFB71C1C),
-    onErrorContainer = Bianco,
-    background = Color(0xFF0A1420),
-    onBackground = Color(0xFFE6EEFF),
-    surface = Color(0xFF0A1420),
-    onSurface = Color(0xFFE6EEFF),
-    surfaceVariant = Color(0xFF16263A),
-    onSurfaceVariant = Color(0xFFB8C8E0),
-    outline = Color(0xFF5B8DEF),
-    outlineVariant = Color(0xFF1F3A5C)
-)
-
-private val SchemaChiaroArancio = lightColorScheme(
-    primary = ArancioUber,
-    onPrimary = Bianco,
-    primaryContainer = Color(0xFFFFE0D6),
-    onPrimaryContainer = Color(0xFF3D1600),
-    secondary = GrigioScuro,
-    onSecondary = Bianco,
-    secondaryContainer = GrigioMoltoChiaro,
-    onSecondaryContainer = Nero,
-    tertiary = VerdeUber,
-    onTertiary = Bianco,
-    tertiaryContainer = Color(0xFFE8DEF8),
-    onTertiaryContainer = Color(0xFF21005D),
-    error = Color(0xFFE53935),
-    onError = Bianco,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    background = Bianco,
-    onBackground = Nero,
-    surface = Bianco,
-    onSurface = Nero,
-    surfaceVariant = BiancoSporco,
-    onSurfaceVariant = GrigioMedio,
-    outline = GrigioChiaro,
-    outlineVariant = GrigioMoltoChiaro
-)
-
-private val SchemaScuroArancio = darkColorScheme(
-    primary = Color(0xFFFF8A50),
-    onPrimary = Color(0xFF3D1600),
-    primaryContainer = Color(0xFF6B2D00),
-    onPrimaryContainer = Color(0xFFFFE0D6),
-    secondary = Color(0xFFFFB68C),
-    onSecondary = Color(0xFF3D1600),
-    secondaryContainer = Color(0xFF54230A),
-    onSecondaryContainer = Color(0xFFFFE0D6),
-    tertiary = VerdeUber,
-    onTertiary = Nero,
-    tertiaryContainer = VerdeUberScuro,
-    onTertiaryContainer = Bianco,
-    error = Color(0xFFEF5350),
-    onError = Nero,
-    errorContainer = Color(0xFFB71C1C),
-    onErrorContainer = Bianco,
-    background = Color(0xFF1A0E06),
-    onBackground = Color(0xFFFFEDE4),
-    surface = Color(0xFF1A0E06),
-    onSurface = Color(0xFFFFEDE4),
-    surfaceVariant = Color(0xFF33200F),
-    onSurfaceVariant = Color(0xFFE8C8B0),
-    outline = Color(0xFFFF8A50),
-    outlineVariant = Color(0xFF4A2E18)
-)
-
-private val SchemaChiaroViola = lightColorScheme(
-    primary = ViolaUber,
-    onPrimary = Bianco,
-    primaryContainer = Color(0xFFE8D5FF),
-    onPrimaryContainer = Color(0xFF1A003D),
-    secondary = GrigioScuro,
-    onSecondary = Bianco,
-    secondaryContainer = GrigioMoltoChiaro,
-    onSecondaryContainer = Nero,
-    tertiary = VerdeUber,
-    onTertiary = Bianco,
-    tertiaryContainer = Color(0xFFE8DEF8),
-    onTertiaryContainer = Color(0xFF21005D),
-    error = Color(0xFFE53935),
-    onError = Bianco,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    background = Bianco,
-    onBackground = Nero,
-    surface = Bianco,
-    onSurface = Nero,
-    surfaceVariant = BiancoSporco,
-    onSurfaceVariant = GrigioMedio,
-    outline = GrigioChiaro,
-    outlineVariant = GrigioMoltoChiaro
-)
-
-private val SchemaScuroViola = darkColorScheme(
-    primary = Color(0xFFC08CFF),
-    onPrimary = Color(0xFF2A0050),
-    primaryContainer = Color(0xFF3D1A6B),
-    onPrimaryContainer = Color(0xFFE8D5FF),
-    secondary = Color(0xFFD8B8FF),
-    onSecondary = Color(0xFF2A0050),
-    secondaryContainer = Color(0xFF2E1450),
-    onSecondaryContainer = Color(0xFFE8D5FF),
-    tertiary = VerdeUber,
-    onTertiary = Nero,
-    tertiaryContainer = VerdeUberScuro,
-    onTertiaryContainer = Bianco,
-    error = Color(0xFFEF5350),
-    onError = Nero,
-    errorContainer = Color(0xFFB71C1C),
-    onErrorContainer = Bianco,
-    background = Color(0xFF120A1A),
-    onBackground = Color(0xFFF0E6FF),
-    surface = Color(0xFF120A1A),
-    onSurface = Color(0xFFF0E6FF),
-    surfaceVariant = Color(0xFF26143A),
-    onSurfaceVariant = Color(0xFFD0B8E8),
-    outline = Color(0xFFC08CFF),
-    outlineVariant = Color(0xFF3A2055)
-)
-
-private val SchemaChiaroRosso = lightColorScheme(
-    primary = RossoUber,
-    onPrimary = Bianco,
-    primaryContainer = Color(0xFFFFD6D6),
-    onPrimaryContainer = Color(0xFF3D0000),
-    secondary = GrigioScuro,
-    onSecondary = Bianco,
-    secondaryContainer = GrigioMoltoChiaro,
-    onSecondaryContainer = Nero,
-    tertiary = VerdeUber,
-    onTertiary = Bianco,
-    tertiaryContainer = Color(0xFFE8DEF8),
-    onTertiaryContainer = Color(0xFF21005D),
-    error = Color(0xFFE53935),
-    onError = Bianco,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    background = Bianco,
-    onBackground = Nero,
-    surface = Bianco,
-    onSurface = Nero,
-    surfaceVariant = BiancoSporco,
-    onSurfaceVariant = GrigioMedio,
-    outline = GrigioChiaro,
-    outlineVariant = GrigioMoltoChiaro
-)
-
-private val SchemaScuroRosso = darkColorScheme(
-    primary = Color(0xFFFF6B6B),
-    onPrimary = Color(0xFF3D0000),
-    primaryContainer = Color(0xFF6B1A1A),
-    onPrimaryContainer = Color(0xFFFFD6D6),
-    secondary = Color(0xFFFF9E9E),
-    onSecondary = Color(0xFF3D0000),
-    secondaryContainer = Color(0xFF521414),
-    onSecondaryContainer = Color(0xFFFFD6D6),
-    tertiary = VerdeUber,
-    onTertiary = Nero,
-    tertiaryContainer = VerdeUberScuro,
-    onTertiaryContainer = Bianco,
-    error = Color(0xFFFF8A80),
-    onError = Nero,
-    errorContainer = Color(0xFFB71C1C),
-    onErrorContainer = Bianco,
-    background = Color(0xFF1A0808),
-    onBackground = Color(0xFFFFE8E8),
-    surface = Color(0xFF1A0808),
-    onSurface = Color(0xFFFFE8E8),
-    surfaceVariant = Color(0xFF331212),
-    onSurfaceVariant = Color(0xFFE8B8B8),
-    outline = Color(0xFFFF6B6B),
-    outlineVariant = Color(0xFF4A1A1A)
-)
-
-// Tipografia Uber — pulita e moderna
-private val TipografiaUber = Typography(
-    displayLarge = TextStyle(fontSize = 57.sp, fontWeight = FontWeight.Bold, lineHeight = 64.sp, letterSpacing = -0.25.sp),
-    displayMedium = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold, lineHeight = 52.sp),
-    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 44.sp),
-    headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, lineHeight = 36.sp),
-    headlineSmall = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 32.sp),
-    titleLarge = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp, letterSpacing = 0.15.sp),
-    titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    bodyLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp, letterSpacing = 0.5.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp, letterSpacing = 0.25.sp),
-    bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 16.sp, letterSpacing = 0.4.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp, letterSpacing = 0.5.sp)
-)
-
-
-enum class PaletteApp(val id: String, val nome: String) {
-    UBER("uber", "Uber (Nero)"),
-    BLU("blu", "Blu"),
-    ARANCIO("arancio", "Arancio"),
-    VIOLA("viola", "Viola"),
-    ROSSO("rosso", "Rosso");
-
-    companion object {
-        fun daId(id: String): PaletteApp = entries.firstOrNull { it.id == id } ?: UBER
-    }
-}
+// --- Tema Material 3 standard ---
+// Nessuna palette custom: si usano gli schemi ufficiali Material 3.
+// Android 12+ -> dynamic color (Material You): l'app prende i colori dal sistema.
+// Altrimenti -> schema baseline Material 3 (darkColorScheme/lightColorScheme).
 
 @Composable
 fun TedescoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
-    palette: PaletteApp = PaletteApp.UBER,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        darkTheme -> when (palette) {
-            PaletteApp.UBER -> SchemaScuro
-            PaletteApp.BLU -> SchemaScuroBlu
-            PaletteApp.ARANCIO -> SchemaScuroArancio
-            PaletteApp.VIOLA -> SchemaScuroViola
-            PaletteApp.ROSSO -> SchemaScuroRosso
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        else -> when (palette) {
-            PaletteApp.UBER -> SchemaChiaro
-            PaletteApp.BLU -> SchemaChiaroBlu
-            PaletteApp.ARANCIO -> SchemaChiaroArancio
-            PaletteApp.VIOLA -> SchemaChiaroViola
-            PaletteApp.ROSSO -> SchemaChiaroRosso
-        }
+        darkTheme -> darkColorScheme()
+        else -> lightColorScheme()
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = TipografiaUber,
         content = content
     )
 }
@@ -482,7 +158,7 @@ fun responsiveCornerRadius(): Int {
 }
 
 @Composable
-fun responsiveTypography(): Typography = TipografiaUber
+fun responsiveTypography(): Typography = MaterialTheme.typography
 
 @Composable
 fun responsiveColumnArrangement(): androidx.compose.foundation.layout.Arrangement.Vertical {

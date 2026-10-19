@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.TedescoApp
-import com.alessandro.tedesco.ui.theme.PaletteApp
 import com.alessandro.tedesco.ui.theme.TedescoTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,13 +20,9 @@ class MainActivity : ComponentActivity() {
         val app = application as TedescoApp
 
         setContent {
-            val paletteId by app.profileManagerInstance.paletteFlow
-                .collectAsStateWithLifecycle("uber")
-
-            TedescoTheme(
-                darkTheme = true,
-                palette = PaletteApp.daId(paletteId)
-            ) {
+            // Material 3: dynamic color su Android 12+, altrimenti schema baseline.
+            // App pensata dark: per seguire il sistema basta togliere darkTheme = true.
+            TedescoTheme(darkTheme = true) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

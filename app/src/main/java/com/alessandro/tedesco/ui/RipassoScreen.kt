@@ -65,6 +65,11 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
+    // Carica la sessione dalla fonte unica (stessa lista del contatore).
+    // Senza questo la schermata mostrava una sessione vuota o vecchia: "niente da
+    // ripassare" a schermo aperto, "2 da ripassare" a schermo chiuso.
+    LaunchedEffect(Unit) { vm.caricaSessione() }
+
     ScreenScaffold("Ripasso", onBack = onIndietro, scrollable = false) {
 
             Column(

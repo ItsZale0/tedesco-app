@@ -55,14 +55,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.ui.theme.Raggi
 
-/** Colore "vetro" del tema: superficie semitrasparente che segue dark/light. */
+/** Superficie dei contenitori: token Material 3 (niente colori custom). */
 @Composable
-fun glassContainerColor(): Color {
-    val base = MaterialTheme.colorScheme.surface
-    return if (isSystemInDarkTheme()) base.copy(alpha = 0.36f) else base.copy(alpha = 0.52f)
-}
+fun glassContainerColor(): Color = MaterialTheme.colorScheme.surfaceContainer
 
-private val GlassShape: Shape = RoundedCornerShape(Raggi.card)
+/** Forma dei contenitori: forma card Material 3. */
+private val GlassShape: Shape
+    @Composable get() = MaterialTheme.shapes.medium
 
 /**
  * Contenitore "liquid glass" riutilizzabile in tutta l'app.
@@ -79,9 +78,7 @@ fun GlassSurface(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape),
+        modifier = modifier.fillMaxWidth(),
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
@@ -102,8 +99,7 @@ fun GlassButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(AltezzaBottonePrincipale())
-            .clip(GlassShape),
+            .height(AltezzaBottonePrincipale()),
         enabled = enabled,
         colors = colors,
         contentPadding = PaddingValues(horizontal = 20.dp)
@@ -132,16 +128,8 @@ fun GlassOutlinedTextField(
         singleLine = singleLine,
         maxLines = maxLines,
         enabled = enabled,
-        shape = GlassShape,
-        keyboardOptions = keyboardOptions,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-        )
+        shape = MaterialTheme.shapes.medium,
+        keyboardOptions = keyboardOptions
     )
 }
 
@@ -158,12 +146,10 @@ fun GlassExpandableSection(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(GlassShape)
             .clickable { expanded = !expanded },
-        shape = GlassShape,
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = glassContainerColor()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
             Row(
@@ -225,23 +211,12 @@ fun <T : Any> GlassDropdown(
                 Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
             },
-            shape = RoundedCornerShape(Raggi.card),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-            )
+            shape = MaterialTheme.shapes.medium
         )
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            tonalElevation = 8.dp,
-            shape = RoundedCornerShape(Raggi.card),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+            shape = MaterialTheme.shapes.medium
         ) {
             options.forEach { (value, name) ->
                 DropdownMenuItem(

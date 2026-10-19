@@ -137,6 +137,22 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /**
+     * Parole da ripassare: STESSA lista che alimenta il contatore `paroleFragili`.
+     * Deriva dalle stesse sorgenti (parole, review, log) con lo stesso calcolo, quindi
+     * "2 da ripassare" in home == 2 carte nella sessione di ripasso.
+     */
+    val paroleDaRipassare: StateFlow<List<WordEntity>> = combine(
+        repo.observeWords(),
+        repo.reviewsFlow,
+        repo.ripassiLogFlow
+    ) { parole, reviews, log ->
+        val verifiche = VerificaLessico.verificheDaLog(log)
+        VerificaLessico.paroleDaRipassare(
+            parole, log, verifiche, reviews, System.currentTimeMillis()
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
         repo.reviewsFlow,
@@ -396,17 +412,17 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     // ---- Sessione di ripasso ----
 
+    /**
+     * Carica la sessione di ripasso dalla fonte unica: la stessa lista del contatore,
+     * gia' calcolata dal flow `paroleDaRipassare`. Prima usava solo `dueReviews()`:
+     * per questo una sezione che mostrava "niente da ripassare" poteva lasciare
+     * il contatore su "2 da ripassare".
+     */
     fun caricaSessione() {
-        viewModelScope.launch {
-            _caricamento.value = true
-            val reviews: List<ReviewEntity> = repo.dueReviews()
-            val tutte: List<WordEntity> = parole.first()
-            val cards = reviews.mapNotNull { r -> tutte.firstOrNull { w -> w.id == r.wordId } }
-                .filter { ParolaTedesca.utilizzabile(it) }
-            _sessione.value = SessionState(cards = cards)
-            _caricamento.value = false
-            if (cards.isEmpty()) _messaggio.value = "Niente da ripassare. Torna domani."
-        }
+        val cards = paroleDaRipassare.value
+        _sessione.value = SessionState(cards = cards)
+        _messaggio.value = if (cards.isEmpty()) "Niente da ripassare. Torna domani."
+        else "Ripasso di ${cards.size} parole"
     }
 
     fun rivela() {
