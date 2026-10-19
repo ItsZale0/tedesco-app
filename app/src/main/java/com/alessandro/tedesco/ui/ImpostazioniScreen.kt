@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -424,21 +427,78 @@ fun ImpostazioniScreen(
                 // --- AGGIORNAMENTI ---
                 SettingsExpandableSection(
                     title = "Aggiornamenti",
-                    description = "L'app controlla all'apertura. Puoi forzare il controllo."
+                    description = "L'app controlla da sola all'apertura e ti avvisa. Puoi anche forzare il controllo."
                 ) {
                     SettingsButton(onClick = { updater.checkForUpdate() }) { Text("Controlla aggiornamenti ora") }
-                    Spacer(Modifier.height(8.dp))
-                    val statoUpd = when (val s = updateState) {
-                        is UpdateState.Checking -> "Controllo in corso…" to false
-                        is UpdateState.Available -> "Disponibile v${s.version.versionName}" to false
-                        is UpdateState.Error -> "Errore: ${s.message}" to true
-                        else -> "Nessun aggiornamento disponibile" to false
+                    Spacer(Modifier.height(10.dp))
+                    when (val s = updateState) {
+                        is UpdateState.Checking -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Controllo in corso…", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        is UpdateState.Available -> {
+                            Text(
+                                "Disponibile v${s.version.versionName} (${s.version.versionCode})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            SettingsButton(onClick = { updater.downloadUpdate(s.version) }) {
+                                Text("Scarica e installa")
+                            }
+                        }
+                        is UpdateState.Downloading -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                LinearProgressIndicator(
+                                    progress = { s.progress / 100f },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    "Download v${s.progress}%",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                        is UpdateState.ReadyToInstall -> {
+                            Text(
+                                "Aggiornamento pronto all'installazione",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            SettingsButton(onClick = { updater.installUpdate(s.file) }) { Text("Installa ora") }
+                        }
+                        is UpdateState.NeedPermission -> {
+                            Text(
+                                "Serve il permesso per installare app sconosciute.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            SettingsButton(onClick = { updater.apriImpostazioniInstallazione() }) {
+                                Text("Apri impostazioni")
+                            }
+                        }
+                        is UpdateState.Error -> {
+                            Text(
+                                s.message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            SettingsButton(onClick = { updater.checkForUpdate() }) { Text("Riprova") }
+                        }
+                        else -> Text(
+                            "Nessun aggiornamento disponibile",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    Text(
-                        statoUpd.first, style = MaterialTheme.typography.bodySmall,
-                        color = if (statoUpd.second) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
                 Spacer(Modifier.height(16.dp))
 

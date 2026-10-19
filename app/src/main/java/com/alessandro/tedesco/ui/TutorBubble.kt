@@ -1,0 +1,336 @@
+package com.alessandro.tedesco.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.local.ConversazioneEntry
+import kotlinx.coroutines.launch
+
+/**
+ * Tutor AI come bolla laterale (stile Meta AI su WhatsApp):
+ * - chiusa: FAB circolare in basso a destra
+ * - aperta: pannello chat ancorato in basso a destra, sopra il contenuto
+ *
+ * Vive sopra il NavHost (in AppNav), quindi e' disponibile su ogni schermata.
+ * La conversazione e' persistita nel profilo come la schermata completa.
+ */
+@Composable
+fun TutorBubble(vm: TedescoViewModel) {
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+    val livello = profilo?.stato?.progresso?.livelloCorrente?.label?.substringBefore(" ") ?: "A0"
+    val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
+
+    var aperto by remember { mutableStateOf(false) }
+    var messaggi by remember { mutableStateOf<List<MessaggioTutor>>(emptyList()) }
+    var storicoCaricato by remember { mutableStateOf(false) }
+    var input by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue("")) }
+    var caricamento by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    // Carica la conversazione salvata (o il messaggio di benvenuto)
+    LaunchedEffect(profilo?.id) {
+        val p = profilo
+        if (p != null && !storicoCaricato) {
+            val storico = p.stato.conversazioni
+                .filter { it.tipo == "tutor" }
+                .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
+            messaggi = if (storico.isNotEmpty()) storico else listOf(
+                MessaggioTutor(
+                    testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi grammatica, esempi o dubbi. Rispondo in italiano.",
+                    daUtente = false
+                )
+            )
+            storicoCaricato = true
+        }
+    }
+
+    // Salva la conversazione quando cambia
+    LaunchedEffect(messaggi, profilo) {
+        val p = profilo
+        if (p != null && storicoCaricato) {
+            val conversazioni = messaggi.mapIndexed { index, msg ->
+                ConversazioneEntry(
+                    id = "tutor_${System.currentTimeMillis()}_$index",
+                    tipo = "tutor",
+                    ruolo = if (msg.daUtente) "utente" else "tutor",
+                    testo = msg.testo,
+                    timestamp = System.currentTimeMillis() - (messaggi.size - index) * 1000,
+                    correzione = if (msg.errore) msg.testo else null
+                )
+            }
+            vm.saveConversazioni(p.id, "tutor", conversazioni)
+        }
+    }
+
+    fun invia(testo: String) {
+        keyboard?.hide()
+        val t = testo.trim()
+        if (t.isBlank() || caricamento) return
+        messaggi = messaggi + MessaggioTutor(t, daUtente = true)
+        input = androidx.compose.ui.text.input.TextFieldValue("")
+        caricamento = true
+        scope.launch {
+            val cronologia = messaggi
+                .filterNot { it.errore }
+                .map { if (it.daUtente) "utente" to it.testo else "tutor" to it.testo }
+            val risultato = vm.chiediAlTutor(cronologia, livello, lezioneCorrente)
+            risultato.fold(
+                onSuccess = { risposta -> messaggi = messaggi + MessaggioTutor(risposta, daUtente = false) },
+                onFailure = { e -> messaggi = messaggi + MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true) }
+            )
+            caricamento = false
+        }
+    }
+
+    LaunchedEffect(messaggi.size) {
+        if (messaggi.isNotEmpty()) listState.animateScrollToItem(messaggi.lastIndex)
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        if (!aperto) {
+            // Chiusa: bolla circolare
+            Box(Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
+                SmallFloatingActionButton(
+                    onClick = { aperto = true },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SmartToy,
+                        contentDescription = "Apri il tutor",
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+        } else {
+            // Aperta: pannello chat sopra il contenuto
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .widthIn(min = 300.dp, max = 400.dp)
+                    .fillMaxHeight(0.62f)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    tonalElevation = 3.dp,
+                    shadowElevation = 10.dp,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .imePadding()
+                    ) {
+                        // Header
+                        Surface(
+                            tonalElevation = 2.dp,
+                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Filled.SmartToy,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.size(10.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "Tutor AI",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        "Livello $livello",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                IconButton(onClick = { aperto = false }, modifier = Modifier.size(40.dp)) {
+                                    Icon(
+                                        Icons.Filled.Close,
+                                        contentDescription = "Chiudi",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Messaggi
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp),
+                            contentPadding = PaddingValues(vertical = 6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(messaggi, key = { it.hashCode() }) { msg ->
+                                BollaMessaggio(msg)
+                            }
+                            if (caricamento) {
+                                item {
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Start
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant,
+                                            modifier = Modifier.padding(2.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier
+                                                    .padding(10.dp)
+                                                    .size(18.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Input
+                        Surface(tonalElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = input,
+                                    onValueChange = { input = it },
+                                    modifier = Modifier.weight(1f),
+                                    placeholder = { Text("Chiedi al tutor…") },
+                                    maxLines = 3,
+                                    shape = RoundedCornerShape(18.dp),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                                    keyboardActions = KeyboardActions(onSend = { invia(input.text) })
+                                )
+                                IconButton(
+                                    onClick = { invia(input.text) },
+                                    enabled = !caricamento && input.text.isNotBlank(),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.Send,
+                                        contentDescription = "Invia",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BollaMessaggio(msg: MessaggioTutor) {
+    val allineaADestra = msg.daUtente
+    val colore = when {
+        msg.errore -> MaterialTheme.colorScheme.errorContainer
+        allineaADestra -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    val testoColore = when {
+        msg.errore -> MaterialTheme.colorScheme.onErrorContainer
+        allineaADestra -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Box(Modifier.fillMaxWidth(), contentAlignment = if (allineaADestra) Alignment.CenterEnd else Alignment.CenterStart) {
+        Surface(
+            shape = RoundedCornerShape(
+                topStart = 14.dp,
+                topEnd = 14.dp,
+                bottomStart = if (allineaADestra) 14.dp else 4.dp,
+                bottomEnd = if (allineaADestra) 4.dp else 14.dp
+            ),
+            color = colore,
+            modifier = Modifier.widthIn(max = 260.dp)
+        ) {
+            if (msg.daUtente) {
+                Text(
+                    msg.testo,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = testoColore,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            } else {
+                MarkdownText(
+                    markdown = msg.testo,
+                    color = testoColore,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            }
+        }
+    }
+}

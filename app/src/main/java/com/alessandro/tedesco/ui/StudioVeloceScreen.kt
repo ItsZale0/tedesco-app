@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.local.WordEntity
+import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -73,6 +74,7 @@ import com.alessandro.tedesco.ui.theme.Spaziature
 @Composable
 fun StudioVeloceScreen(
     vm: TedescoViewModel,
+    updater: UpdaterViewModel,
     onVaiAImpostazioni: () -> Unit = {},
     onVaiAProgresso: () -> Unit = {},
     onVaiATutor: () -> Unit = {},
@@ -222,6 +224,10 @@ fun StudioVeloceScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(Spaziature.md)
         ) {
+            // ---- Banner aggiornamento (sempre in alto) ----
+            item {
+                UpdateBanner(updater)
+            }
             // ---- Header: numero lezione, titolo, avanzamento ----
             item {
                 Card(
