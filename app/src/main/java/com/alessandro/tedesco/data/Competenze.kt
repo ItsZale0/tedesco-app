@@ -19,7 +19,6 @@ object CalcoloCompetenze {
     const val OBIETTIVO_PAROLE_B1 = 2000
 
     /** Minimo di test per dimensione perché il livello possa avanzare. */
-    /** Minimo di test per dimensione perché il livello possa avanzare. */
     private fun minTest(livello: LivelloCEFR): Int = when (livello) {
         LivelloCEFR.A0, LivelloCEFR.A1 -> 3
         LivelloCEFR.A2 -> 4
