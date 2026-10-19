@@ -128,7 +128,7 @@ fun PushToTalkButton(
     if (state == VoiceState.ERROR && errorMessage != null) {
         Spacer(Modifier.height(8.dp))
         Text(
-            text = errorMessage!!,
+            text = errorMessage ?: "",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.padding(horizontal = 16.dp)

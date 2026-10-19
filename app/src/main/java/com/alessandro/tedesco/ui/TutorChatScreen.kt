@@ -46,8 +46,17 @@ import android.app.Application
 data class MessaggioTutor(
     val testo: String,
     val daUtente: Boolean,
-    val errore: Boolean = false
+    val errore: Boolean = false,
+    /**
+     * Id unico del messaggio. Senza, due messaggi con lo stesso testo hanno lo
+     * stesso hashCode(): il LazyColumn della bolla li usa come chiave e va in crash
+     * con "Key was already used" dopo pochi giri di chat.
+     */
+    val id: Long = 0L
 )
+
+/** Conversazione tenuta in memoria: oltre questi messaggi i piu' vecchi cadono. */
+private const val LIMITE_CHAT = 100
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +74,7 @@ fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
 
     // Carica conversazione persistente dal profilo quando disponibile
     var messaggi by remember { mutableStateOf<List<MessaggioTutor>>(emptyList()) }
+    var contatoreId by remember { mutableLongStateOf(0L) }
     var storicoCaricato by remember { mutableStateOf(false) }
     LaunchedEffect(profilo?.id) {
         val p = profilo
@@ -72,12 +82,14 @@ fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
             val storico = p.stato.conversazioni
                 .filter { it.tipo == "tutor" }
                 .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
-            messaggi = if (storico.isNotEmpty()) storico else listOf(
+            // Id unici per posizione: la stessa frase inviata due volte non deve collidere.
+            messaggi = (if (storico.isNotEmpty()) storico else listOf(
                 MessaggioTutor(
                     testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi quello che vuoi: grammatica, esempi, esercizi, dubbi. Rispondo in italiano.",
                     daUtente = false
                 )
-            )
+            )).mapIndexed { i, m -> m.copy(id = i.toLong()) }
+            contatoreId = messaggi.size.toLong()
             storicoCaricato = true
         }
     }
@@ -106,11 +118,17 @@ fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
         }
     }
 
+    /** Aggiunge un messaggio con id unico e tiene in memoria solo gli ultimi LIMITE_CHAT. */
+    fun aggiungi(m: MessaggioTutor): List<MessaggioTutor> {
+        contatoreId += 1
+        return (messaggi + m.copy(id = contatoreId)).takeLast(LIMITE_CHAT)
+    }
+
     fun invia(testo: String) {
         keyboard?.hide()
         val t = testo.trim()
         if (t.isBlank() || caricamento) return
-        messaggi = messaggi + MessaggioTutor(t, daUtente = true)
+        messaggi = aggiungi(MessaggioTutor(t, daUtente = true))
         input = TextFieldValue("")
         caricamento = true
 
@@ -122,14 +140,14 @@ fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
             val risultato = vm.chiediAlTutor(cronologia, livello, lezioneCorrente)
             risultato.fold(
                 onSuccess = { risposta ->
-                    messaggi = messaggi + MessaggioTutor(risposta, daUtente = false)
+                    messaggi = aggiungi(MessaggioTutor(risposta, daUtente = false))
                     // Avvia animazione di digitazione
                     rispostaAnimata = ""
                     rispostaDaAnimare = risposta
                     animazioneAttiva = true
                 },
                 onFailure = { e ->
-                    messaggi = messaggi + MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true)
+                    messaggi = aggiungi(MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true))
                 }
             )
             caricamento = false
@@ -222,7 +240,7 @@ fun TutorChatScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(messaggi) { msg ->
+                items(messaggi, key = { it.id }) { msg ->
                     MessaggioBubble(
                         msg = msg,
                         isUltima = msg == messaggi.last(),

@@ -129,7 +129,7 @@ fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            correzione!!,
+                            correzione ?: "",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

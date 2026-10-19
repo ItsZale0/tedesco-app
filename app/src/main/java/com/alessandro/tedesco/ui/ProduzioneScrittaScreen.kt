@@ -119,7 +119,11 @@ fun ProduzioneScrittaScreen(
     LaunchedEffect(Unit) { vm.caricaEserciziGenerati() }
 
     ScreenScaffold("Produzione Scritta", onBack = onIndietro, scrollable = false) {
-        if (esercizioSelezionato == null) {
+        // Val locale: in questo modo lo smart cast funziona e non serve "!!"
+        // (con un delegato 'var' il ramo else poteva leggere un valore gia' nullo).
+        val esercizioCorrente = esercizioSelezionato
+
+        if (esercizioCorrente == null) {
             // Lista esercizi
             LazyColumn(
                 modifier = Modifier
@@ -162,7 +166,7 @@ fun ProduzioneScrittaScreen(
                     }
                     if (erroreGen != null) {
                         Text(
-                            text = erroreGen!!,
+                            text = erroreGen ?: "",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp)
@@ -217,13 +221,13 @@ fun ProduzioneScrittaScreen(
                 ) {
                     Column(modifier = Modifier.padding(Spaziature.md)) {
                         Text(
-                            text = esercizioSelezionato!!.titolo,
+                            text = esercizioCorrente.titolo,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(Modifier.height(Spaziature.sm))
                         Text(
-                            text = esercizioSelezionato!!.istruzioni,
+                            text = esercizioCorrente.istruzioni,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -245,7 +249,7 @@ fun ProduzioneScrittaScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = esercizioSelezionato!!.esempio,
+                            text = esercizioCorrente.esempio,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -263,7 +267,7 @@ fun ProduzioneScrittaScreen(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold
                         )
-                        esercizioSelezionato!!.suggerimenti.forEach { suggerimento ->
+                        esercizioCorrente.suggerimenti.forEach { suggerimento ->
                             Row(
                                 modifier = Modifier.padding(vertical = 2.dp)
                             ) {

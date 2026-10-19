@@ -104,7 +104,7 @@ fun TraduttoreScreen(vm: TedescoViewModel) {
 
                 if (errore != null) {
                     Text(
-                        errore!!,
+                        errore ?: "",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )

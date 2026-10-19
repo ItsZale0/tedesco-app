@@ -1202,7 +1202,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                     corretto = true,
                     correzione = correzione
                 )
-                _risposte.value = listOf(entry) + _risposte.value
+                // Cap: la cronologia delle correzioni cresce altrimenti all'infinito.
+                _risposte.value = (listOf(entry) + _risposte.value).takeLast(LIMITE_RISPOSTE)
                 val nuovoStato = profilo.stato.copy(
                     risposte = listOf(entry) + profilo.stato.risposte
                 )
@@ -1316,6 +1317,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     companion object {
         const val GIORNI_PER_LEZIONE = 2
+        /** Cronologia delle correzioni del tutor tenuta in memoria (piu' il backup). */
+        private const val LIMITE_RISPOSTE = 60
         private const val MS_PER_GIORNO = 24L * 60 * 60 * 1000
         fun formattaData(ts: Long): String {
             if (ts == 0L) return "mai"

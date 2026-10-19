@@ -414,7 +414,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                     }
                     if (erroreGen != null) {
                         Text(
-                            text = erroreGen!!,
+                            text = erroreGen ?: "",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 8.dp)

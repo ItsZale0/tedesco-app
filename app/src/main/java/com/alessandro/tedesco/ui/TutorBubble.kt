@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,6 +59,9 @@ import kotlinx.coroutines.launch
  * Vive sopra il NavHost (in AppNav), quindi e' disponibile su ogni schermata.
  * La conversazione e' persistita nel profilo come la schermata completa.
  */
+/** Conversazione tenuta in memoria: oltre questi messaggi i piu' vecchi cadono. */
+private const val LIMITE_CHAT = 100
+
 @Composable
 fun TutorBubble(vm: TedescoViewModel) {
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
@@ -66,6 +70,7 @@ fun TutorBubble(vm: TedescoViewModel) {
 
     var aperto by remember { mutableStateOf(false) }
     var messaggi by remember { mutableStateOf<List<MessaggioTutor>>(emptyList()) }
+    var contatoreId by remember { mutableLongStateOf(0L) }
     var storicoCaricato by remember { mutableStateOf(false) }
     var input by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue("")) }
     var caricamento by remember { mutableStateOf(false) }
@@ -80,12 +85,14 @@ fun TutorBubble(vm: TedescoViewModel) {
             val storico = p.stato.conversazioni
                 .filter { it.tipo == "tutor" }
                 .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
-            messaggi = if (storico.isNotEmpty()) storico else listOf(
+            // Id unici per posizione: piu' messaggi identici devono restare distinguibili.
+            messaggi = (if (storico.isNotEmpty()) storico else listOf(
                 MessaggioTutor(
                     testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi grammatica, esempi o dubbi. Rispondo in italiano.",
                     daUtente = false
                 )
-            )
+            )).mapIndexed { i, m -> m.copy(id = i.toLong()) }
+            contatoreId = messaggi.size.toLong()
             storicoCaricato = true
         }
     }
@@ -108,11 +115,17 @@ fun TutorBubble(vm: TedescoViewModel) {
         }
     }
 
+    /** Aggiunge un messaggio con id unico e tiene in memoria solo gli ultimi LIMITE_CHAT. */
+    fun aggiungi(m: MessaggioTutor): List<MessaggioTutor> {
+        contatoreId += 1
+        return (messaggi + m.copy(id = contatoreId)).takeLast(LIMITE_CHAT)
+    }
+
     fun invia(testo: String) {
         keyboard?.hide()
         val t = testo.trim()
         if (t.isBlank() || caricamento) return
-        messaggi = messaggi + MessaggioTutor(t, daUtente = true)
+        messaggi = aggiungi(MessaggioTutor(t, daUtente = true))
         input = androidx.compose.ui.text.input.TextFieldValue("")
         caricamento = true
         scope.launch {
@@ -121,8 +134,8 @@ fun TutorBubble(vm: TedescoViewModel) {
                 .map { if (it.daUtente) "utente" to it.testo else "tutor" to it.testo }
             val risultato = vm.chiediAlTutor(cronologia, livello, lezioneCorrente)
             risultato.fold(
-                onSuccess = { risposta -> messaggi = messaggi + MessaggioTutor(risposta, daUtente = false) },
-                onFailure = { e -> messaggi = messaggi + MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true) }
+                onSuccess = { risposta -> messaggi = aggiungi(MessaggioTutor(risposta, daUtente = false)) },
+                onFailure = { e -> messaggi = aggiungi(MessaggioTutor(e.message ?: "Errore sconosciuto", daUtente = false, errore = true)) }
             )
             caricamento = false
         }
@@ -229,7 +242,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                             contentPadding = PaddingValues(vertical = 6.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            items(messaggi, key = { it.hashCode() }) { msg ->
+                            items(messaggi, key = { it.id }) { msg ->
                                 BollaMessaggio(msg)
                             }
                             if (caricamento) {
