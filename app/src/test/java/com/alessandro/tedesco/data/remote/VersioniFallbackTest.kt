@@ -56,6 +56,20 @@ class VersioniFallbackTest {
     }
 
     @Test
+    fun `con cache CDN vecchia prende la versione piu recente`() {
+        val vecchia = vm.decodificaContenutoApi(rispostaApi(181))
+        val nuova = vm.decodificaContenutoApi(rispostaApi(182))
+
+        val recente = vm.versionePiuRecente(listOf(vecchia, nuova))
+        assertEquals(182, recente?.versionCode)
+        val recenteAlContrario = vm.versionePiuRecente(listOf(nuova, vecchia))
+        assertEquals(182, recenteAlContrario?.versionCode)
+        val sola = vm.versionePiuRecente(listOf(vecchia))
+        assertEquals(181, sola?.versionCode)
+        org.junit.Assert.assertNull(vm.versionePiuRecente(emptyList()))
+    }
+
+    @Test
     fun `campo content assente lancia eccezione`() {
         assertThrows(java.io.IOException::class.java) {
             vm.decodificaContenutoApi("""{"name":"version.json"}""")

@@ -112,9 +112,16 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
      * GitHub contents (base64). Entrambe fallite → IOException.
      */
     private fun leggiVersioneServer(): VersionInfo {
-        runCatching { scaricaVersione(URL_RAW) }.getOrNull()?.let { return it }
-        runCatching { scaricaVersioneDaApi() }.getOrNull()?.let { return it }
-        throw IOException("Entrambe le fonti di versione non rispondono")
+        // Legge da entrambe le fonti e prende la versione PIU' RECENTE: la cache CDN di
+        // raw.githubusercontent.com può restituire per ore il file vecchio dopo un push,
+        // e in quel caso l'auto-update non partirebbe mai.
+        val sorgenti = listOf(
+            runCatching { scaricaVersione(URL_RAW) },
+            runCatching { scaricaVersioneDaApi() }
+        ).mapNotNull { it.getOrNull() }
+
+        return versionePiuRecente(sorgenti)
+            ?: throw IOException("Entrambe le fonti di versione non rispondono")
     }
 
     private fun scaricaVersione(url: String): VersionInfo {
@@ -225,6 +232,10 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
             VerificaApk.isApkValido(apk)
         }.getOrDefault(false)
     }
+
+    /** Prende la versione più alta tra le fonti disponibili (cache CDN può essere vecchia). */
+    internal fun versionePiuRecente(sorgenti: List<VersionInfo>): VersionInfo? =
+        sorgenti.maxByOrNull { it.versionCode }
 
     /**
      * Decodifica la risposta di /repos/{owner}/{repo}/contents/version.json:
