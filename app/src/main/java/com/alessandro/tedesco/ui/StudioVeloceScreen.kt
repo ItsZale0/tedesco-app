@@ -24,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AssistChip
@@ -75,6 +77,7 @@ import com.alessandro.tedesco.ui.theme.Spaziature
 fun StudioVeloceScreen(
     vm: TedescoViewModel,
     updater: UpdaterViewModel,
+    onVaiAEsercizi: () -> Unit = {},
     onVaiAImpostazioni: () -> Unit = {},
     onVaiAProgresso: () -> Unit = {},
     onVaiATutor: () -> Unit = {},
@@ -189,6 +192,10 @@ fun StudioVeloceScreen(
                             Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
                         }
                         DropdownMenu(expanded = mostraMenu, onDismissRequest = { mostraMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Esercizi") },
+                                onClick = { mostraMenu = false; onVaiAEsercizi() }
+                            )
                             DropdownMenuItem(
                                 text = { Text("Progresso") },
                                 onClick = { mostraMenu = false; onVaiAProgresso() }

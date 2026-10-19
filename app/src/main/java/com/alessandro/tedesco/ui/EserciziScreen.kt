@@ -1,0 +1,250 @@
+package com.alessandro.tedesco.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Hearing
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.CalcoloProgresso
+import com.alessandro.tedesco.data.ConsigliEsercizi
+import com.alessandro.tedesco.data.CertificazioniUfficiali
+import com.alessandro.tedesco.ui.theme.Raggi
+import com.alessandro.tedesco.ui.theme.dimensioneContenuto
+import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+
+/**
+ * Hub degli esercizi: tutti i tipi che esistevano n'app, organizzati.
+ *
+ * In cima un CONSIGLIO DINAMICO: in base ai progressi reali (parole fragili,
+ * competenza piu' debole) suggerisce il tipo di esercizio piu' utile ora.
+ * Sotto un selettore: una card per ogni tipo, con icona, descrizione e dato.
+ */
+@Composable
+fun EserciziScreen(
+    vm: TedescoViewModel,
+    onIndietro: () -> Unit = {},
+    onVaiA: (String) -> Unit = {}
+) {
+    val p by vm.progressoReale.collectAsStateWithLifecycle(null)
+    val pr = p
+    val consiglio = ConsigliEsercizi.consiglio(pr)
+
+    ScreenScaffold("Esercizi", onBack = onIndietro) {
+        Column(
+            modifier = Modifier.widthIn(max = dimensioneContenuto()),
+            verticalArrangement = Arrangement.spacedBy(spaziaturaSchermo())
+        ) {
+            // ---- Consiglio dinamico ----
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(Raggi.card),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.EmojiEvents,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text(
+                            "Consiglio per te",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        consiglio.titolo,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        consiglio.motivo,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = { onVaiA(consiglio.route) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Raggi.bottone)
+                    ) {
+                        Text("Inizia")
+                    }
+                }
+            }
+
+            // ---- Selettore ----
+            Text(
+                "Oppure scegli tu",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            TipiEsercizio.chunked(2).forEach { riga ->
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    riga.forEach { tipo ->
+                        CardTipoEsercizio(
+                            tipo = tipo,
+                            stat = statPerTipo(tipo.id, pr),
+                            onClick = { onVaiA(tipo.route) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (riga.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+
+            // Nota soglia ufficiale
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Soglia ufficiale Goethe/telc/ÖSD: 60% per competenza. Il livello sale solo quando " +
+                    "TUTTE le 4 superano la soglia.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+private data class TipoEsercizio(
+    val id: String,
+    val route: String,
+    val nome: String,
+    val descrizione: String,
+    val icona: ImageVector
+)
+
+private val TipiEsercizio = listOf(
+    TipoEsercizio("grammatica", "grammatica", "Grammatica", "Regole e forme, una alla volta",
+        Icons.Filled.School),
+    TipoEsercizio("comprensione", "comprensione", "Lettura", "Un testo calibrato al tuo livello",
+        Icons.Filled.Quiz),
+    TipoEsercizio("produzione", "produzione", "Produzione scritta", "Scrivi e fai correggere dal tutor",
+        Icons.Filled.Edit),
+    TipoEsercizio("verifica", "verifica", "Verifica lessico", "Dimostra di sapere le parole studiate",
+        Icons.Filled.Translate),
+    TipoEsercizio("ascolto", "ascolto", "Ascolto", "Audio con domande per l'orecchio",
+        Icons.Filled.Hearing),
+    TipoEsercizio("ripasso", "ripasso", "Ripasso", "Ripassa le parole sbagliate o fragili",
+        Icons.Filled.Refresh)
+)
+
+private fun statPerTipo(id: String, pr: CalcoloProgresso.ProgressoReale?): String {
+    if (pr == null) return "Per iniziare"
+    val soglia = CertificazioniUfficiali.SOGLIA_SUPERAMENTO
+    return when (id) {
+        "grammatica" -> "${pr.competenze.grammatica.toInt()}% ${if (pr.competenze.grammatica >= soglia) "✓" else ""}"
+        "comprensione" -> "${pr.competenze.comprensione.toInt()}% ${if (pr.competenze.comprensione >= soglia) "✓" else ""}"
+        "produzione" -> if (pr.produzioniScritte > 0) "${pr.mediaProduzione.toInt()}% media" else "Nessun testo"
+        "verifica" -> "${pr.paroleImparate}/${pr.paroleDisponibili} verificate"
+        "ascolto" -> "Livello ${pr.livello.label.substringBefore(" ")}"
+        "ripasso" -> if (pr.paroleFragili > 0) "${pr.paroleFragili} da ripassare" else "Tutto a posto"
+        else -> ""
+    }
+}
+
+@Composable
+private fun CardTipoEsercizio(
+    tipo: TipoEsercizio,
+    stat: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(vertical = 2.dp),
+        shape = RoundedCornerShape(Raggi.card),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(38.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        tipo.icona,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                tipo.nome,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                tipo.descrizione,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stat,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}

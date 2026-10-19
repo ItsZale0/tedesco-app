@@ -51,11 +51,37 @@ fun AppNav(
                 StudioVeloceScreen(
                     vm = vm,
                     updater = updater,
+                    onVaiAEsercizi = { nav.navigate("esercizi") },
                     onVaiAImpostazioni = { nav.navigate("impostazioni") },
                     onVaiAProgresso = { nav.navigate("progresso") },
                     onVaiATutor = { nav.navigate("tutor") },
                     onVaiABackup = { nav.navigate("backup") }
                 )
+            }
+            composable("esercizi") {
+                EserciziScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() },
+                    onVaiA = { route -> nav.navigate(route) }
+                )
+            }
+            composable("grammatica") {
+                GrammaticaScreen(vm = vm, onFatto = { nav.popBackStack() })
+            }
+            composable("comprensione") {
+                ComprensioneScreen(vm = vm, onFatto = { nav.popBackStack() })
+            }
+            composable("produzione") {
+                ProduzioneScreen(vm = vm, onFatto = { nav.popBackStack() })
+            }
+            composable("verifica") {
+                VerificaScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
+            composable("ascolto") {
+                AscoltoScreen(vm = vm, onFatto = { nav.popBackStack() })
+            }
+            composable("ripasso") {
+                RipassoScreen(vm = vm, onIndietro = { nav.popBackStack() })
             }
             composable("progresso") {
                 ProgressoScreen(vm = vm, onIndietro = { nav.popBackStack() })
