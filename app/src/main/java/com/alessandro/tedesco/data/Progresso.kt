@@ -113,7 +113,7 @@ object CalcoloProgresso {
         val paroleImparate = paroleAttive.count { verifiche[it.id] == true }
 
         // --- Streak REALE dal log (giorni consecutivi con almeno un ripasso) ---
-        val giorni = log.map { LocalDate.ofEpochDay(it.timestamp / 86_400_000L) }.toSet()
+        val giorni = VerificaLessico.giorniDaLog(log)
         val oggi = LocalDate.ofEpochDay(now / 86_400_000L)
         var streak = 0
         var d = oggi

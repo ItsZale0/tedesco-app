@@ -73,6 +73,29 @@ class TedescoApp : Application(), Configuration.Provider {
     }
 
     /**
+     * Il sistema chiede memoria: liberiamo tutto cio' che si puo' ricostruire.
+     * Senza questo l'app arrivava a riempire l'heap (256 MB) e moriva con
+     * OutOfMemoryError anche per allocazioni da 32 byte.
+     */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            liberaMemoria()
+        }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        liberaMemoria()
+    }
+
+    /** Chiude il motore di sintesi e svuota le cache derivate (si ricreano da sole). */
+    private fun liberaMemoria() {
+        runCatching { com.alessandro.tedesco.ui.TtsCondiviso.chiudi() }
+        runCatching { com.alessandro.tedesco.data.VerificaLessico.svuotaCache() }
+    }
+
+    /**
      * Salva lo stack trace dell'ultimo crash in filesDir/ultimo_crash.txt, cosi'
      * Impostazioni lo mostra: un crash senza log e' un bug irripetibile.
      * Il handler originale viene chiamato dopo, cosi' l'app si chiude come sempre.
