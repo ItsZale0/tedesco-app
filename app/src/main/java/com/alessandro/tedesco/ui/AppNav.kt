@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -11,6 +12,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -82,7 +84,18 @@ fun AppNav(
             composable("comprensione") {
                 ComprensioneScreen(vm = vm, onFatto = { nav.popBackStack() })
             }
+            // Produzione = sezione di SCRITTURA: si scrive un testo e lo corregge il tutor
+            // (criteri Goethe). Il quiz a scelta multipla è "espressioni", più sotto.
             composable("produzione") {
+                val profiloAttivo by vm.profiloAttivo.collectAsStateWithLifecycle()
+                ProduzioneScrittaScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() },
+                    profilo = profiloAttivo,
+                    onVaiACorrezioni = { nav.navigate("tutor") }
+                )
+            }
+            composable("espressioni") {
                 ProduzioneScreen(vm = vm, onFatto = { nav.popBackStack() })
             }
             composable("verifica") {

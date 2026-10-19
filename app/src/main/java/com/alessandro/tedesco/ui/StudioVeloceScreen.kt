@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +60,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +78,7 @@ import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
+import kotlinx.coroutines.launch
 
 /**
  * V2 - schermata unica: lezione + parole + esercizi, in un flusso lineare.
@@ -94,6 +99,7 @@ fun StudioVeloceScreen(
 ) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
+    val scope = rememberCoroutineScope()
 
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
     val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
@@ -361,24 +367,73 @@ fun StudioVeloceScreen(
                 item {
                     SezioneTitolo(
                         titolo = "Parole chiave",
-                        sottotitolo = "${paroleLezione.size} parole di questa lezione - tocca una parola per ascoltarla"
+                        sottotitolo = "Scorri: ${paroleLezione.size} parole - tocca per ascoltare"
                     )
                 }
-                items(paroleLezione.chunked(2), key = { it.first().id }) { riga ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spaziature.sm)
-                    ) {
-                        riga.forEach { parola ->
-                            CardParola(
-                                parola = parola,
-                                modifier = Modifier.weight(1f),
-                                onAscolta = {
-                                    ttsHelper.speak(ParolaTedesca.conArticolo(parola.article, parola.german))
-                                }
-                            )
+                // Slider orizzontale: la home resta corta anche con 30 parole.
+                item {
+                    val statoLista = rememberLazyListState()
+                    val paginaCorrente = statoLista.firstVisibleItemIndex
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LazyRow(
+                            state = statoLista,
+                            flingBehavior = rememberSnapFlingBehavior(lazyListState = statoLista),
+                            horizontalArrangement = Arrangement.spacedBy(Spaziature.sm),
+                            contentPadding = PaddingValues(end = Spaziature.xxl)
+                        ) {
+                            items(paroleLezione, key = { it.id }) { parola ->
+                                CardParola(
+                                    parola = parola,
+                                    modifier = Modifier.fillParentMaxWidth(0.86f),
+                                    onAscolta = {
+                                        ttsHelper.speak(ParolaTedesca.conArticolo(parola.article, parola.german))
+                                    }
+                                )
+                            }
                         }
-                        if (riga.size == 1) Spacer(Modifier.weight(1f))
+                        Spacer(Modifier.height(Spaziature.xs))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                "${(paginaCorrente + 1).coerceAtMost(paroleLezione.size)} / ${paroleLezione.size}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (paroleLezione.size > 1) {
+                                Spacer(Modifier.width(Spaziature.sm))
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            statoLista.animateScrollToItem(
+                                                (paginaCorrente + 1) % paroleLezione.size
+                                            )
+                                        }
+                                    }
+                                ) { Text("Prossima") }
+                            }
+                        }
+                        if (paroleLezione.size in 2..14) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                repeat(paroleLezione.size) { i ->
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(2.dp)
+                                            .size(if (i == paginaCorrente) 8.dp else 6.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (i == paginaCorrente) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.outlineVariant
+                                            )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

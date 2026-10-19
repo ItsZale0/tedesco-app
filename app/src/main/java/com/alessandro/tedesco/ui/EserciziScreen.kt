@@ -44,6 +44,7 @@ import com.alessandro.tedesco.data.CertificazioniUfficiali
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import androidx.compose.material.icons.filled.Chat
 
 /**
  * Hub degli esercizi: tutti i tipi che esistevano n'app, organizzati.
@@ -169,8 +170,10 @@ private val TipiEsercizio = listOf(
         Icons.Filled.School),
     TipoEsercizio("comprensione", "comprensione", "Lettura", "Un testo calibrato al tuo livello",
         Icons.Filled.Quiz),
-    TipoEsercizio("produzione", "produzione", "Produzione scritta", "Scrivi e fai correggere dal tutor",
+    TipoEsercizio("produzione", "produzione", "Produzione scritta", "Scrivi un testo: lo corregge il tutor",
         Icons.Filled.Edit),
+    TipoEsercizio("espressioni", "espressioni", "Espressioni rapide", "Quiz: scegli la frase tedesca giusta",
+        Icons.Filled.Chat),
     TipoEsercizio("verifica", "verifica", "Verifica lessico", "Dimostra di sapere le parole studiate",
         Icons.Filled.Translate),
     TipoEsercizio("ascolto", "ascolto", "Ascolto", "Audio con domande per l'orecchio",
@@ -185,7 +188,9 @@ private fun statPerTipo(id: String, pr: CalcoloProgresso.ProgressoReale?): Strin
     return when (id) {
         "grammatica" -> "${pr.competenze.grammatica.toInt()}% ${if (pr.competenze.grammatica >= soglia) "✓" else ""}"
         "comprensione" -> "${pr.competenze.comprensione.toInt()}% ${if (pr.competenze.comprensione >= soglia) "✓" else ""}"
-        "produzione" -> if (pr.produzioniScritte > 0) "${pr.mediaProduzione.toInt()}% media" else "Nessun testo"
+        "produzione" -> if (pr.produzioniScritte > 0) "${pr.produzioniScritte} testi - ${pr.mediaProduzione.toInt()}%"
+            else "Nessun testo ancora"
+        "espressioni" -> "Quiz rapido"
         "verifica" -> "${pr.paroleImparate}/${pr.paroleDisponibili} verificate"
         "ascolto" -> "Livello ${pr.livello.label.substringBefore(" ")}"
         "ripasso" -> if (pr.paroleFragili > 0) "${pr.paroleFragili} da ripassare" else "Tutto a posto"
