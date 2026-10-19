@@ -90,7 +90,7 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
         vm.caricaEserciziGenerati()
         val freschi = try {
             vm.generaEsercizi(TipoEsercizio.COMPRENSIONE, quanti = 10)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }

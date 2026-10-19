@@ -76,7 +76,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
         vm.caricaEserciziGenerati()
         val freschi = try {
             vm.generaEsercizi(TipoEsercizio.GRAMMATICA, quanti = 10)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
@@ -187,7 +187,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                                 traduzione = withContext(Dispatchers.IO) {
                                                     traduci(esercizio.domanda)
                                                 }
-                                            } catch (e: Exception) {
+                                            } catch (e: Throwable) {
                                                 traduzione = "Errore: ${e.message}"
                                             } finally {
                                                 caricamentoTraduzione = false
@@ -263,7 +263,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                                 traduzione = withContext(Dispatchers.IO) {
                                                     traduci(opzione)
                                                 }
-                                            } catch (e: Exception) {
+                                            } catch (e: Throwable) {
                                                 traduzione = "Errore: ${e.message}"
                                             } finally {
                                                 caricamentoTraduzione = false
@@ -315,7 +315,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                                     traduzioneEsempio = withContext(Dispatchers.IO) {
                                                         traduci(esercizio.esempio)
                                                     }
-                                                } catch (e: Exception) {
+                                                } catch (e: Throwable) {
                                                     traduzioneEsempio = "Errore: ${e.message}"
                                                 } finally {
                                                     caricamentoTraduzione = false

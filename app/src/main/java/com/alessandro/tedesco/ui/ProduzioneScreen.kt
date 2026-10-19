@@ -80,7 +80,7 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
         vm.caricaEserciziGenerati()
         val freschi: List<EsercizioGenerato> = try {
             vm.generaEsercizi(TipoEsercizio.PRODUZIONE, quanti = 10)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }

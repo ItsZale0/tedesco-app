@@ -89,8 +89,10 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
         vm.caricaEserciziGenerati()
         val generati: List<EsercizioGenerato> = try {
             vm.generaEsercizi(TipoEsercizio.ASCOLTO, quanti = 10)
-        } catch (e: Exception) {
-            erroreGen = e.localizedMessage ?: "Errore di rete"
+        } catch (e: Throwable) {
+            // Throwable, non Exception: un errore del modello o della rete non deve
+            // poter chiudere l'app.
+            erroreGen = (e.localizedMessage ?: e.javaClass.simpleName)
             emptyList()
         }
         val lista: List<EsercizioAscolto> = if (generati.isNotEmpty()) {
@@ -115,7 +117,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
     }
 
     ScreenScaffold(
-        title = "Ascolto (H\u00f6rverstehen)",
+        title = "Ascolto (Hörverstehen)",
         scrollable = true
     ) {
         Column(
@@ -211,7 +213,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                                 contentDescription = "Ascolta"
                             )
                             Spacer(Modifier.padding(4.dp))
-                            Text("Ascorta")
+                            Text("Ascolta")
                         }
                         if (mostraTraduzione) {
                             Spacer(Modifier.height(8.dp))

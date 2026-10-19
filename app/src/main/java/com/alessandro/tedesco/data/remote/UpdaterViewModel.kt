@@ -17,7 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Base64
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -52,7 +55,18 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val state: StateFlow<UpdateState> = _state.asStateFlow()
 
+    /** Esito dell'ultimo controllo, mostrato in Impostazioni per capire se funziona. */
+    private val _ultimoControllo = MutableStateFlow("")
+    val ultimoControllo: StateFlow<String> = _ultimoControllo.asStateFlow()
+
     private var downloadJob: Job? = null
+
+    companion object {
+        const val URL_RAW =
+            "https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json"
+        const val URL_API_CONTENTS =
+            "https://api.github.com/repos/ItsZale0/tedesco-app/contents/version.json"
+    }
 
     val versioneCorrente: String = runCatching {
         val pm = getApplication<Application>().packageManager
@@ -67,35 +81,57 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
     fun checkForUpdate() {
         if (_state.value is UpdateState.Checking) return
         _state.value = UpdateState.Checking
+        _ultimoControllo.value = ""
         android.util.Log.d("Updater", "Controllo aggiornamenti… (versione locale: $versioneCorrenteCode)")
 
         viewModelScope.launch {
             try {
-                val version = withContext(Dispatchers.IO) {
-                    val request = Request.Builder()
-                        .url("https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json?t=" + System.currentTimeMillis())
-                        .build()
-                    client.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) {
-                            throw IOException("HTTP ${response.code}")
-                        }
-                        val body = response.body?.string()
-                            ?: throw IOException("Risposta vuota dal server")
-                        Json.decodeFromString<VersionInfo>(body)
-                    }
-                }
+                val version = withContext(Dispatchers.IO) { leggiVersioneServer() }
 
                 android.util.Log.d("Updater", "Versione server: ${version.versionCode} (${version.versionName}), locale: $versioneCorrenteCode")
+                _ultimoControllo.value =
+                    "Server: v${version.versionName} (${version.versionCode}) — locale: $versioneCorrente"
 
-                if (version.versionCode > versioneCorrenteCode) {
-                    _state.value = UpdateState.Available(version)
+                _state.value = if (version.versionCode > versioneCorrenteCode) {
+                    UpdateState.Available(version)
                 } else {
-                    _state.value = UpdateState.UpToDate
+                    UpdateState.UpToDate
                 }
             } catch (e: Exception) {
                 android.util.Log.e("Updater", "Errore controllo aggiornamenti", e)
-                _state.value = UpdateState.Error(messaggioErrore(e), retryable = true)
+                val msg = messaggioErrore(e)
+                _ultimoControllo.value = "Ultimo controllo fallito: $msg"
+                _state.value = UpdateState.Error(msg, retryable = true)
             }
+        }
+    }
+
+    /**
+     * Legge version.json da due fonti: prima raw.githubusercontent.com (veloce, senza
+     * autenticazione); se non risponde (VPN, DNS, blocco Cloudflare) prova l'API
+     * GitHub contents (base64). Entrambe fallite → IOException.
+     */
+    private fun leggiVersioneServer(): VersionInfo {
+        runCatching { scaricaVersione(URL_RAW) }.getOrNull()?.let { return it }
+        runCatching { scaricaVersioneDaApi() }.getOrNull()?.let { return it }
+        throw IOException("Entrambe le fonti di versione non rispondono")
+    }
+
+    private fun scaricaVersione(url: String): VersionInfo {
+        val request = Request.Builder().url("$url?t=${System.currentTimeMillis()}").build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+            val body = response.body?.string() ?: throw IOException("Risposta vuota dal server")
+            return Json.decodeFromString<VersionInfo>(body)
+        }
+    }
+
+    /** Fallback: /contents/version.json di GitHub restituisce il file in base64. */
+    private fun scaricaVersioneDaApi(): VersionInfo {
+        val request = Request.Builder().url(URL_API_CONTENTS).build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+            return decodificaContenutoApi(response.body?.string() ?: "{}")
         }
     }
 
@@ -135,34 +171,12 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
 
                     val apk = File(dir, "Tedesco-v${version.versionName}.apk")
 
-                    val request = Request.Builder()
-                        .url(version.apkUrl)
-                        .build()
-
-                    client.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) {
-                            throw IOException("HTTP ${response.code}")
-                        }
-                        val body = response.body ?: throw IOException("Risposta vuota dal server")
-
-                        val total = body.contentLength()
-                        var downloaded = 0L
-
-                        apk.outputStream().use { out ->
-                            body.byteStream().use { input ->
-                                val buffer = ByteArray(8192)
-                                var read: Int
-                                while (input.read(buffer).also { read = it } != -1) {
-                                    out.write(buffer, 0, read)
-                                    downloaded += read
-                                    if (total > 0) {
-                                        val progress = (downloaded * 100 / total).toInt()
-                                        _state.value = UpdateState.Downloading(progress)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Prova l'URL dichiarato, poi una variante con nome file minuscolo:
+                    // l'asset su GitHub e' case-sensitive e il task può divergere.
+                    val urlAlternative = version.apkUrl.replace("Tedesco-v", "tedesco-v")
+                    val fonti = listOf(version.apkUrl, urlAlternative).distinct()
+                    val riuscita = fonti.any { url -> scaricaApk(url, apk) }
+                    if (!riuscita) throw IOException("Download fallito da tutte le fonti")
 
                     // Verifica integrità APK
                     if (!VerificaApk.isApkValido(apk)) {
@@ -180,6 +194,48 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
                 _state.value = UpdateState.Error(messaggioErrore(e), retryable = true)
             }
         }
+    }
+
+    /**
+     * Scarica l'APK in `apk` dall'URL dato. Ritorna true se riuscito (e l'APK e'
+     * valido), false in caso di errore di rete — cosi' si puo' provare un'altra fonte.
+     */
+    private suspend fun scaricaApk(url: String, apk: File): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = Request.Builder().url(url).build()
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@runCatching false
+                val body = response.body ?: return@runCatching false
+                val total = body.contentLength()
+                var downloaded = 0L
+                apk.outputStream().use { out ->
+                    body.byteStream().use { input ->
+                        val buffer = ByteArray(8192)
+                        var read: Int
+                        while (input.read(buffer).also { read = it } != -1) {
+                            out.write(buffer, 0, read)
+                            downloaded += read
+                            if (total > 0) {
+                                _state.value = UpdateState.Downloading((downloaded * 100 / total).toInt())
+                            }
+                        }
+                    }
+                }
+            }
+            VerificaApk.isApkValido(apk)
+        }.getOrDefault(false)
+    }
+
+    /**
+     * Decodifica la risposta di /repos/{owner}/{repo}/contents/version.json:
+     * {"content": "<base64>"}. Testata perché l'auto-update non deve dipendere
+     * da una sola fonte.
+     */
+    internal fun decodificaContenutoApi(json: String): VersionInfo {
+        val base64 = Json.parseToJsonElement(json).jsonObject["content"]
+            ?.jsonPrimitive?.content ?: throw IOException("Campo content assente")
+        val decoded = String(Base64.getDecoder().decode(base64.replace("\\s".toRegex(), "")))
+        return Json.decodeFromString<VersionInfo>(decoded)
     }
 
     fun hasInstallPermission(): Boolean {

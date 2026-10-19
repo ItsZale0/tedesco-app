@@ -2,11 +2,15 @@ package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,7 +18,6 @@ import androidx.navigation.compose.rememberNavController
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.BackupViewModel
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
-import kotlinx.coroutines.delay
 
 /**
  * V2 - una sola schermata principale (Studio Veloce).
@@ -34,10 +37,18 @@ fun AppNav(
     val vm = viewModel<TedescoViewModel>(factory = factory)
     val updater = viewModel<UpdaterViewModel>(factory = factory)
 
-    // Controllo automatico aggiornamenti all'apertura (una volta per avvio)
+    // Auto-update: controllo all'apertura E a ogni ripristino in primo piano.
+    // Il ViewModel fa da solo fallback (raw.githubusercontent -> API GitHub).
     LaunchedEffect(Unit) {
-        delay(2500)
         updater.checkForUpdate()
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val osservatore = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_RESUME) updater.checkForUpdate()
+        }
+        lifecycleOwner.lifecycle.addObserver(osservatore)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
     }
 
     val nav = rememberNavController()

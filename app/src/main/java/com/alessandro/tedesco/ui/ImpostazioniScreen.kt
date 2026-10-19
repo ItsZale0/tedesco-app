@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -28,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -39,6 +41,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
@@ -58,6 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -70,6 +74,7 @@ import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
+import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.PaletteApp
 import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -257,6 +262,7 @@ fun ImpostazioniScreen(
     val googleSheets by vm.enableGoogleSheets.collectAsStateWithLifecycle(false)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
+    val ultimoControllo by updater.ultimoControllo.collectAsStateWithLifecycle("")
     val paletteId by vm.palette.collectAsStateWithLifecycle("uber")
 
     var cambiaProfilo by remember { mutableStateOf(false) }
@@ -429,7 +435,26 @@ fun ImpostazioniScreen(
                     title = "Aggiornamenti",
                     description = "L'app controlla da sola all'apertura e ti avvisa. Puoi anche forzare il controllo."
                 ) {
-                    SettingsButton(onClick = { updater.checkForUpdate() }) { Text("Controlla aggiornamenti ora") }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Versione installata: ${updater.versioneCorrente ?: "?"} (${updater.versioneCorrenteCode})",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { updater.checkForUpdate() }) {
+                            Icon(
+                                Icons.Filled.Refresh,
+                                contentDescription = "Controlla aggiornamenti ora",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    ultimoControllo.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(4.dp))
+                        Text(it, style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Spacer(Modifier.height(10.dp))
                     when (val s = updateState) {
                         is UpdateState.Checking -> {
@@ -493,14 +518,44 @@ fun ImpostazioniScreen(
                             Spacer(Modifier.height(8.dp))
                             SettingsButton(onClick = { updater.checkForUpdate() }) { Text("Riprova") }
                         }
+                        is UpdateState.UpToDate -> Text(
+                            "Sei aggiornato all'ultima versione.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                         else -> Text(
-                            "Nessun aggiornamento disponibile",
+                            "Tocca l'icona in alto a destra per controllare.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+
+                // --- CRASH REPORTER ---
+                // Se l'app si e' interrotta, qui c'e' lo stack trace: e' l'unico modo
+                // per capire il motivo senza un PC collegato.
+                val ctx = LocalContext.current
+                TedescoApp.ultimoCrash(ctx)?.let { trace ->
+                    SettingsExpandableSection(
+                        title = "Ultimo arresto anomalo",
+                        description = "L'app si e' interrotta. Guarda lo stack trace."
+                    ) {
+                        Text(
+                            trace.take(1200),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 220.dp)
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        SettingsButton(onClick = { TedescoApp.cancellaUltimoCrash(ctx) }) {
+                            Text("Ho capito, cancella")
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
 
                 // --- BACKUP CLOUD ---
                 SettingsExpandableSection(

@@ -278,6 +278,7 @@ fun StudioVeloceScreen(
                                     buildString {
                                         append("${paroleLezione.size} parole")
                                         if (esercizi.isNotEmpty()) append(" - ${esercizi.size} esercizi")
+                                        append(" - v${com.alessandro.tedesco.BuildConfig.VERSION_NAME}")
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

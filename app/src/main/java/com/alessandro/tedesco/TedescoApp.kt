@@ -22,6 +22,10 @@ import okhttp3.OkHttpClient
 
 class TedescoApp : Application(), Configuration.Provider {
 
+    /** Handler originale: il crash resta visibile all'utente ("l'app si e' interrotta"). */
+    private val handlerOriginale: Thread.UncaughtExceptionHandler? =
+        Thread.getDefaultUncaughtExceptionHandler()
+
     /** Scope dell'app: per lavoro che deve sopravvivere all'Activity ma non e' un worker. */
     private val appScope = kotlinx.coroutines.CoroutineScope(
         kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
@@ -56,6 +60,7 @@ class TedescoApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        installaCrashReporter()
         SyncWorker.schedule(this)
         ReminderWorker.schedule(this)
         // Riprogramma il backup automatico se l'utente lo aveva attivato
@@ -67,7 +72,43 @@ class TedescoApp : Application(), Configuration.Provider {
         }
     }
 
+    /**
+     * Salva lo stack trace dell'ultimo crash in filesDir/ultimo_crash.txt, cosi'
+     * Impostazioni lo mostra: un crash senza log e' un bug irripetibile.
+     * Il handler originale viene chiamato dopo, cosi' l'app si chiude come sempre.
+     */
+    private fun installaCrashReporter() {
+        Thread.setDefaultUncaughtExceptionHandler { thread, errore ->
+            runCatching {
+                val trace = buildString {
+                    appendLine("Data: ${java.util.Date()}")
+                    appendLine("Thread: ${thread.name}")
+                    append(errore.stackTraceToString())
+                    var causa: Throwable? = errore.cause
+                    while (causa != null) {
+                        appendLine("Causa: $causa")
+                        append(causa.stackTraceToString())
+                        causa = causa.cause
+                    }
+                }
+                java.io.File(filesDir, "ultimo_crash.txt").writeText(trace)
+                android.util.Log.e("CrashReporter", "Crash salvato in filesDir/ultimo_crash.txt", errore)
+            }
+            handlerOriginale?.uncaughtException(thread, errore)
+        }
+    }
+
     companion object {
         fun get(context: Context): TedescoApp = context.applicationContext as TedescoApp
+
+        /** Ultimo crash salvato (null se l'app non e' mai crashata). */
+        fun ultimoCrash(context: Context): String? = runCatching {
+            val f = java.io.File(context.filesDir, "ultimo_crash.txt")
+            if (f.exists()) f.readText() else null
+        }.getOrNull()
+
+        fun cancellaUltimoCrash(context: Context) {
+            runCatching { java.io.File(context.filesDir, "ultimo_crash.txt").delete() }
+        }
     }
 }
