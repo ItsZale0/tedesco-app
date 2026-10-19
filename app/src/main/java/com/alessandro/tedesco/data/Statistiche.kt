@@ -95,29 +95,37 @@ object CalcoloStatistiche {
         // Filtra le parole archiviate: non devono comparire in nessun conteggio
         val paroleAttive = parole.filter { !it.archived }
 
-        val paroleTotali = paroleAttive.size
-        val paroleSynced = paroleAttive.count { it.source == WordSource.SYNCED }
-        val paroleCustom = paroleAttive.count { it.source == WordSource.CUSTOM }
-
-        // Mappa wordId -> ReviewEntity per le parole attive
-        val reviewAttive = paroleAttive.mapNotNull { w ->
-            reviews[w.id]?.let { w.id to it }
-        }.toMap()
-
-        // Parole da ripassare: review con dueAt <= now
-        val daRipassare = reviewAttive.values.count { it.dueAt <= now }
-
-        // Classificazione per stadio di apprendimento
-        // Una parola senza review conta come "nuove"
-        val nuove = paroleAttive.count { w ->
+        // UN SOLO passaggio sulle parole: prima c'erano ~6 scansioni complete
+        // (synced, custom, nuove, in apprendimento, mature, lezioni) piu' un filter.
+        var paroleSynced = 0
+        var paroleCustom = 0
+        var nuove = 0
+        var inApprendimento = 0
+        var mature = 0
+        var daRipassare = 0
+        val reviewAttive = HashMap<String, ReviewEntity>(paroleAttive.size * 2)
+        val conteggiLezione = HashMap<Int, IntArray>(24)   // lezione -> [totale, mature]
+        for (w in paroleAttive) {
+            when (w.source) {
+                WordSource.SYNCED -> paroleSynced++
+                WordSource.CUSTOM -> paroleCustom++
+            }
             val r = reviews[w.id]
-            r == null || r.repetitions == 0
+            if (r == null || r.repetitions == 0) nuove++
+            if (r != null) {
+                reviewAttive[w.id] = r
+                if (r.repetitions in 1..3) inApprendimento++
+                if (r.repetitions >= 4) mature++
+                if (r.dueAt <= now) daRipassare++
+            }
+            val conteggio = conteggiLezione.getOrPut(w.lesson) { IntArray(2) }
+            conteggio[0]++
+            if (r != null && r.repetitions >= 4) conteggio[1]++
         }
-        val inApprendimento = reviewAttive.values.count { it.repetitions in 1..3 }
-        val mature = reviewAttive.values.count { it.repetitions >= 4 }
+        val paroleTotali = paroleAttive.size
 
         // Lezioni distinte tra le parole attive
-        val lezioniDistinte = paroleAttive.map { it.lesson }.distinct().sorted()
+        val lezioniDistinte = conteggiLezione.keys.sorted()
         val lezioniTotali = lezioniDistinte.size
 
         // Ripassi ed errori REALI dal log eventi (una riga per risposta data).
@@ -125,10 +133,13 @@ object CalcoloStatistiche {
         val ripassiTotali: Int
         val erroriTotali: Int
         val accuratezza: Float
+        // UN SOLO indice del log per tutto il calcolo (memoizzato).
+        val indiceGiorni = IndiceLog.di(ripassiLog)
         if (ripassiLog.isNotEmpty()) {
-            ripassiTotali = ripassiLog.size
-            erroriTotali = ripassiLog.count { !it.corretta }
-            accuratezza = ripassiLog.count { it.corretta }.toFloat() / ripassiLog.size.toFloat()
+            // Tutti i conteggi vengono dall'indice: prima erano 2 scansioni complete.
+            ripassiTotali = indiceGiorni.totale
+            erroriTotali = indiceGiorni.errori
+            accuratezza = indiceGiorni.accuratezza
         } else {
             ripassiTotali = reviewAttive.values.sumOf { it.repetitions }
             erroriTotali = reviewAttive.values.sumOf { it.lapses }
@@ -148,15 +159,8 @@ object CalcoloStatistiche {
 
         // Conteggio per lezione
         val perLezione = lezioniDistinte.map { lezione ->
-            val paroleLezione = paroleAttive.filter { it.lesson == lezione }
-            ConteggioLezione(
-                lezione = lezione,
-                totale = paroleLezione.size,
-                mature = paroleLezione.count { w ->
-                    val r = reviews[w.id]
-                    r != null && r.repetitions >= 4
-                }
-            )
+            val conteggio = conteggiLezione.getOrPut(lezione) { IntArray(2) }
+            ConteggioLezione(lezione = lezione, totale = conteggio[0], mature = conteggio[1])
         }
 
         // Attività degli ultimi 7 giorni (dal più vecchio a oggi) dal log REALE.
@@ -165,7 +169,9 @@ object CalcoloStatistiche {
             val giorno = oggi.minusDays(offset.toLong())
             val etichetta = giorno.format(FORMATTER_GIORNO)
             val ripassi = if (ripassiLog.isNotEmpty()) {
-                ripassiLog.count { stessoGiorno(it.timestamp, giorno) }
+                // Un lookup nell'indice invece di una scansione completa del log
+                // (erano 7 scansioni e ~35.000 LocalDate per ricalcolo).
+                indiceGiorni.ripassiDelGiorno(giorno)
             } else {
                 reviewAttive.values.count { r ->
                     r.lastReviewedAt != null && stessoGiorno(r.lastReviewedAt, giorno)
@@ -235,22 +241,26 @@ object CalcoloStatistiche {
         val oggi = LocalDate.ofEpochDay(now / (1000 * 60 * 60 * 24))
         val formatter = DateTimeFormatter.ofPattern("d/M", Locale.ITALIAN)
 
-        // Prima risposta CORRETTA per parola (dal log reale): quando la parola e stata "imparata".
+        // Prima risposta CORRETTA per parola: dall'indice (prima erano due
+        // scansioni complete + una mappa grande a ogni ricalcolo).
         val primaCorretta: Map<String, Long> = if (ripassiLog.isNotEmpty()) {
-            ripassiLog.filter { it.corretta }
-                .groupBy { it.wordId }
-                .mapValues { (_, evs) -> evs.minOf { it.timestamp } }
+            IndiceLog.di(ripassiLog).primaCorretta
         } else {
             reviews.values.filter { it.lastReviewedAt != null }
                 .associate { it.wordId to (it.lastReviewedAt ?: 0L) }
         }
+
+        // I timestamp delle parole imparate, ordinati UNA volta: cosi' ogni giorno
+        // e' una ricerca binaria invece di una scansione (erano 30 x N = ~36.000
+        // iterazioni per ogni ricalcolo del progresso).
+        val imparateOrdinate = primaCorretta.values.sorted()
 
         return (29 downTo 0).map { offset ->
             val giorno = oggi.minusDays(offset.toLong())
             val etichetta = giorno.format(formatter)
             val giornoFine = giorno.plusDays(1).toEpochDay() * 1000 * 60 * 60 * 24
 
-            val imparate = primaCorretta.values.count { it < giornoFine }
+            val imparate = quantiMinori(imparateOrdinate, giornoFine)
 
             ProgressPoint(
                 etichetta = etichetta,
@@ -258,6 +268,17 @@ object CalcoloStatistiche {
                 paroleTotali = paroleAttive.size
             )
         }
+    }
+
+    /** Quanti valori della lista ORDINATA sono minori di [soglia] (ricerca binaria). */
+    private fun quantiMinori(ordinati: List<Long>, soglia: Long): Int {
+        var lo = 0
+        var hi = ordinati.size
+        while (lo < hi) {
+            val mid = (lo + hi) / 2
+            if (ordinati[mid] < soglia) lo = mid + 1 else hi = mid
+        }
+        return lo
     }
 
     /**

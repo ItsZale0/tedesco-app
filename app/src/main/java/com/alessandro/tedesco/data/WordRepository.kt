@@ -119,7 +119,7 @@ class WordRepository(
      * cancellava conversazioni del tutor, correzioni, esercizi generati,
      * lezioni generate e le streak ("la chat non ha memoria", "la streak e' 0").
      */
-    private suspend fun salvaSuProfilo() {
+    private suspend fun salvaSuProfilo(immediato: Boolean = false) {
         val corrente = profileManager.statoAttivo()
         profileManager.aggiornaStatoAttivo(
             corrente.copy(
@@ -132,7 +132,8 @@ class WordRepository(
                 sessioni = _sessioni.value,
                 ripassiLog = _ripassiLog.value,
                 lastSync = System.currentTimeMillis()
-            )
+            ),
+            immediato = immediato
         )
     }
 
@@ -160,7 +161,8 @@ class WordRepository(
         val mappa = profilo.stato.lezioniGenerate.toMutableMap()
         mappa[numero.toString()] = contenuto
         profileManager.aggiornaStatoAttivo(
-            profilo.stato.copy(lezioneContenuto = contenuto, lezioniGenerate = mappa)
+            profilo.stato.copy(lezioneContenuto = contenuto, lezioniGenerate = mappa),
+            immediato = true
         )
         _lezioneContenuto.value = contenuto
     }
@@ -317,7 +319,7 @@ class WordRepository(
             )
             _feedLog.value = (_feedLog.value + logEntry).takeLast(30)
 
-            salvaSuProfiloConEtag(newEtag)
+            salvaSuProfiloConEtag(newEtag)   // sync: raro e importante, scrive subito
 
             SyncResult.Updated(added, changed, feed.words.size)
         } catch (e: Exception) {
@@ -347,7 +349,8 @@ class WordRepository(
                 sessioni = _sessioni.value,
                 etag = nuovoEtag ?: corrente.etag,
                 lastSync = System.currentTimeMillis()
-            )
+            ),
+            immediato = true   // sync del feed: raro, ma deve essere subito su disco
         )
     }
 
@@ -523,7 +526,8 @@ class WordRepository(
                 feedLog = emptyList(),
                 guida = null,
                 etag = ""
-            )
+            ),
+            immediato = true
         )
     }
 

@@ -135,9 +135,10 @@ object CalcoloProgresso {
         }
 
         // --- Accuratezza REALE dal log ---
-        val ripassiTotali = log.size
-        val accuratezza = if (ripassiTotali == 0) 0f
-            else log.count { it.corretta }.toFloat() / ripassiTotali.toFloat()
+        // Conteggi dall'indice (memoizzato): prima era un'altra scansione completa.
+        val indiceLog = IndiceLog.di(log)
+        val ripassiTotali = indiceLog.totale
+        val accuratezza = indiceLog.accuratezza
 
         // --- Minuti di studio stimati (realistici, dal numero di ripassi) ---
         val minutiStudiati = (ripassiTotali * SECONDI_PER_RIPASSO) / 60

@@ -136,7 +136,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             obiettivo = profilo.stato.progresso.obiettivoLivello,
             now = System.currentTimeMillis()
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * Parole da ripassare: STESSA lista che alimenta il contatore `paroleFragili`.
@@ -152,7 +157,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         VerificaLessico.paroleDaRipassare(
             parole, log, verifiche, reviews, System.currentTimeMillis()
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
@@ -168,7 +178,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             now = System.currentTimeMillis(),
             ripassiLog = ripassiLog
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Percorso adattivo calcolato dai progressi dell'utente. */
     val percorsoAdattivo: StateFlow<CalcoloPercorsoAdattivo.PercorsoAdattivo?> = combine(
@@ -186,7 +201,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             obiettivoLivello = profilo.stato.progresso.obiettivoLivello,
             ultimoTest = profilo.stato.progresso.ultimoTest
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** IDs dei passi del percorso giornaliero completati oggi. */
     private val _passiCompletatiOggi = MutableStateFlow<Set<String>>(emptySet())
@@ -210,7 +230,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             ultimoTest = profilo.stato.progresso.ultimoTest,
             passiCompletatiOggi = completati
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Sessioni adattive generate dinamicamente dai progressi dell'utente. */
     val sessioniAdattive: StateFlow<AdaptiveSessionEngine.RisultatoGenerazione?> = combine(
@@ -232,7 +257,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             livelloCorrente = profilo.stato.progresso.livelloCorrente,
             obiettivoLivello = profilo.stato.progresso.obiettivoLivello
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Domande di test adattive generate dinamicamente dai progressi dell'utente. */
     val testiAdattivi: StateFlow<List<com.alessandro.tedesco.data.local.DomandaTest>?> = combine(
@@ -251,7 +281,12 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             parole = paroleAttive,
             reviews = reviews
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
+        // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
+        // quando nessuna schermata mostrava il valore: era il grosso delle
+        // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
+        // mentre una schermata lo osserva (5s di grazia per la navigazione).
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** IDs dei passi del percorso giornaliero completati oggi. */
     fun completaPassoGiornaliero(passoId: String) {

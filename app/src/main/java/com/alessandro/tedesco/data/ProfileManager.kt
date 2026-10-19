@@ -12,6 +12,9 @@ import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +68,9 @@ fun LivelloIniziale.toLivelloCEFR(): LivelloCEFR = when (this) {
  * vicenda lasciando la lista profili vuota — la schermata appariva ma non
  * si poteva selezionare nulla.
  */
+/** Attesa della coalescenza dei salvataggi (ms). */
+private const val SALVATAGGIO_ATTESA_MS = 400L
+
 class ProfileManager(
     private val context: Context,
     private val json: Json,
@@ -123,7 +129,42 @@ class ProfileManager(
         context.profiliDataStore.edit { it[ProfiliKeys.PROFILI_JSON] = jsonStr }
     }
 
-    private suspend fun saveToDataStore() = scriviSuDataStore(_repository.value)
+    /**
+     * Salvataggio COALESCENTE.
+     *
+     * Prima ogni modifica (ogni risposta data, ogni parola aggiunta) codificava in
+     * JSON l'intero repository (~1,7 MB) e riscriveva il file DataStore: decine di
+     * megabyte di allocazioni e I/O al minuto. Ora le modifiche ravvicinate si
+     * fondono in UNA sola scrittura (400 ms dopo l'ultima).
+     */
+    private val daScrivere = MutableStateFlow(0L)
+
+    init {
+        scope.launch {
+            daScrivere.collectLatest {
+                delay(SALVATAGGIO_ATTESA_MS)
+                scriviSuDataStore(_repository.value)
+            }
+        }
+    }
+
+    /** Aggiornamento frequente (ogni risposta): scrive in modo coalescente. */
+    private fun saveToDataStore() {
+        daScrivere.value = daScrivere.value + 1
+    }
+
+    /**
+     * Operazione strutturale (cambio profilo, creazione, uscita, ripristino):
+     * rara e importante, si scrive SUBITO. Il coalescing serve solo a non
+     * riscrivere 1,7 MB a ogni singola risposta.
+     */
+    private suspend fun scriviSubito() = scriviSuDataStore(_repository.value)
+
+    /**
+     * Scrive SUBITO, senza attendere la coalescenza: da chiamare quando l'app va
+     * in background, cosi' non si perde l'ultima modifica.
+     */
+    suspend fun flush() = scriviSuDataStore(_repository.value)
 
     /** Tutti i profili disponibili, nell'ordine dei preset. */
     fun profiliDisponibili(): List<ProfiloUtente> {
@@ -150,7 +191,7 @@ class ProfileManager(
             profili = repo.profili + (profiloId to aggiornato),
             profiloAttivoId = profiloId
         )
-        saveToDataStore()
+        scriviSubito()
     }
 
     /** Crea un nuovo profilo personalizzato. */
@@ -181,13 +222,13 @@ class ProfileManager(
             ultimoAccesso = System.currentTimeMillis()
         )
         _repository.value = repo.copy(profili = repo.profili + (id to nuovo))
-        saveToDataStore()
+        scriviSubito()
     }
 
     /** Torna alla schermata di selezione profilo. */
     suspend fun esciDalProfilo() {
         _repository.value = _repository.value.copy(profiloAttivoId = null)
-        saveToDataStore()
+        scriviSubito()
     }
 
     /**
@@ -199,17 +240,24 @@ class ProfileManager(
      */
     suspend fun sostituisciRepository(nuovo: ProfiliRepository) = withContext(io) {
         _repository.value = nuovo
-        saveToDataStore()
+        scriviSubito()
     }
 
     /** Aggiorna lo stato del profilo attivo (parole, reviews, guida, progresso). */
-    suspend fun aggiornaStatoAttivo(stato: ProfiloStato) {
+    /**
+     * Aggiorna lo stato del profilo attivo.
+     *
+     * @param immediato true per le operazioni rare ma importanti (sync del feed,
+     *   lezione generata, reset): scrivono subito. Gli aggiornamenti frequenti
+     *   (ogni risposta data) vengono coalesciati in una sola scrittura.
+     */
+    suspend fun aggiornaStatoAttivo(stato: ProfiloStato, immediato: Boolean = false) {
         val repo = _repository.value
         val id = repo.profiloAttivoId ?: return
         val profilo = repo.profili[id] ?: return
         val aggiornato = profilo.copy(stato = stato, ultimoAccesso = System.currentTimeMillis())
         _repository.value = repo.copy(profili = repo.profili + (id to aggiornato))
-        saveToDataStore()
+        if (immediato) scriviSubito() else saveToDataStore()
     }
 
     fun statoAttivo(): ProfiloStato = profiloAttivo()?.stato ?: ProfiloStato()

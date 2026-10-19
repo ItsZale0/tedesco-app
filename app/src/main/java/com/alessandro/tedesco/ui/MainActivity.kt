@@ -1,7 +1,9 @@
 package com.alessandro.tedesco.ui
 
 import android.os.Bundle
+import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +23,10 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         TtsCondiviso.chiudi()
+        // Salva subito le ultime modifiche (il salvataggio normale e' coalescente).
+        lifecycleScope.launch {
+            TedescoApp.get(this@MainActivity).profileManagerInstance.flush()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

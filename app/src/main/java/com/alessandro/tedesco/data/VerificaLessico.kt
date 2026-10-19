@@ -84,65 +84,20 @@ object VerificaLessico {
      * Una parola e' verificata se l'ultima VERIFICA (quiz) e' corretta.
      * Il self-report del flashcard ("Lo so"/"Non lo so") NON conta: non e' evidenza.
      */
-    // --- Cache: la stessa lista (per identita') da' la stessa risposta ---------
-    private var logInCache: List<RipassoLogEntity>? = null
-    private var verificheInCache: Map<String, Boolean> = emptyMap()
-    private var giorniInCache: Set<java.time.LocalDate> = emptySet()
-
     /**
      * Mappa parola -> esito dell'ULTIMA verifica.
-     *
-     * E' MEMOIZZATA: il progresso viene ricalcolato a ogni evento (ogni risposta
-     * data, ogni parola nuova) e questa funzione era chiamata 2-3 volte per
-     * ricalcolo, ricostruendo ogni volta una HashMap da migliaia di voci. Era la
-     * causa dell'OutOfMemoryError che chiudeva l'app con l'heap pieno a 256 MB.
-     *
-     * Con la cache (chiave = identita' della lista, che il repository sostituisce
-     * a ogni modifica) il lavoro si fa UNA volta per cambiamento del log.
+     * Delegata a [IndiceLog]: un solo passaggio sul log, memoizzato.
      */
-    @Synchronized
-    fun verificheDaLog(log: List<RipassoLogEntity>): Map<String, Boolean> {
-        if (logInCache === log) return verificheInCache
+    fun verificheDaLog(log: List<RipassoLogEntity>): Map<String, Boolean> =
+        IndiceLog.di(log).verifiche
 
-        // Un solo passaggio: niente liste intermedie (filter/groupBy allocavano
-        // una lista, una mappa, una lista per parola e una seconda mappa).
-        // SOLO gli eventi di verifica contano: il self-report del flashcard non e'
-        // evidenza. In caso di timestamp identici vale l'ULTIMO evento.
-        val esiti = HashMap<String, Boolean>()
-        val ultimo = HashMap<String, Long>()
-        val giorni = HashSet<java.time.LocalDate>()
-        for (evento in log) {
-            giorni.add(java.time.LocalDate.ofEpochDay(evento.timestamp / 86_400_000L))
-            if (!evento.verifica) continue
-            val precedente = ultimo[evento.wordId]
-            if (precedente == null || evento.timestamp >= precedente) {
-                ultimo[evento.wordId] = evento.timestamp
-                esiti[evento.wordId] = evento.corretta
-            }
-        }
-        logInCache = log
-        verificheInCache = esiti
-        giorniInCache = giorni
-        return esiti
-    }
+    /** Giorni distinti con almeno un ripasso (per la streak). */
+    fun giorniDaLog(log: List<RipassoLogEntity>): Set<java.time.LocalDate> =
+        IndiceLog.di(log).giorni
 
-    /**
-     * Giorni distinti con almeno un ripasso (per la streak).
-     * Derivati dalla stessa cache del log: prima ogni ricalcolo costruiva una
-     * lista di N date e un Set solo per contare la streak.
-     */
-    @Synchronized
-    fun giorniDaLog(log: List<RipassoLogEntity>): Set<java.time.LocalDate> {
-        verificheDaLog(log)
-        return giorniInCache
-    }
-
-    /** Libera le cache (pressione di memoria): verranno ricostruite al bisogno. */
-    @Synchronized
+    /** Libera le cache (pressione di memoria): si ricostruiscono al bisogno. */
     fun svuotaCache() {
-        logInCache = null
-        verificheInCache = emptyMap()
-        giorniInCache = emptySet()
+        IndiceLog.svuota()
     }
 
     /**
