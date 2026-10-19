@@ -5,6 +5,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.limita
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloProgresso
@@ -1096,7 +1097,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val nuoviErrori = (profilo.stato.progresso.erroriGrammatica + domandeErrate).distinct()
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testGrammatica = profilo.stato.progresso.testGrammatica + nuovoTest,
+                    testGrammatica = (profilo.stato.progresso.testGrammatica + nuovoTest).limita(),
                     erroriGrammatica = nuoviErrori
                 )
             )
@@ -1118,7 +1119,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testComprensione = profilo.stato.progresso.testComprensione + nuovoTest
+                    testComprensione = (profilo.stato.progresso.testComprensione + nuovoTest).limita()
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
@@ -1139,7 +1140,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testProduzione = profilo.stato.progresso.testProduzione + nuovoTest
+                    testProduzione = (profilo.stato.progresso.testProduzione + nuovoTest).limita()
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
@@ -1228,7 +1229,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 profileManager.aggiornaStatoAttivo(
                     statoCorrente.copy(
                         progresso = statoCorrente.progresso.copy(
-                            valutazioniProduzione = statoCorrente.progresso.valutazioniProduzione + v
+                            valutazioniProduzione = (statoCorrente.progresso.valutazioniProduzione + v).limita()
                         )
                     )
                 )
@@ -1298,7 +1299,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testB1 = profilo.stato.progresso.testB1 + nuovoTest
+                    testB1 = (profilo.stato.progresso.testB1 + nuovoTest).limita()
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
@@ -1324,7 +1325,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testAdattivi = profilo.stato.progresso.testAdattivi + nuovoTest,
+                    testAdattivi = (profilo.stato.progresso.testAdattivi + nuovoTest).limita(),
                     livelloCorrente = nuovoLivello
                 )
             )
@@ -1345,7 +1346,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(
-                    testAscolto = profilo.stato.progresso.testAscolto + nuovoTest
+                    testAscolto = (profilo.stato.progresso.testAscolto + nuovoTest).limita()
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
@@ -1354,6 +1355,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     companion object {
         const val GIORNI_PER_LEZIONE = 2
+
+        // I tetti alle liste storiche vivono in data/Storico.kt (testabili).
         /** Cronologia delle correzioni del tutor tenuta in memoria (piu' il backup). */
         private const val LIMITE_RISPOSTE = 60
         private const val MS_PER_GIORNO = 24L * 60 * 60 * 1000

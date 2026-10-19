@@ -52,14 +52,13 @@ class VoiceHelper(private val context: Context) {
     private var onResultCallback: ((String) -> Unit)? = null
     private var onStateChange: ((VoiceState) -> Unit)? = null
 
-    init {
-        // Inizializza TTS subito per averlo pronto quando serve
-        initTts()
-    }
+    // NOTA: il motore TTS non viene piu' creato nel costruttore. Prima bastava
+    // aprire la schermata vocale per istanziare un TextToSpeech (collegamento al
+    // servizio + caricamento della lingua). Ora nasce alla prima riproduzione.
 
     private fun initTts() {
         if (tts != null) return
-        tts = TextToSpeech(context) { status ->
+        tts = TextToSpeech(context.applicationContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 tts?.language = Locale.GERMAN
                 ttsReady = true

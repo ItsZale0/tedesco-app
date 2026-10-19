@@ -21,7 +21,7 @@ import java.util.Base64
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import okhttp3.OkHttpClient
+import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
@@ -44,13 +44,7 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
 
     private val app = application as TedescoApp
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .callTimeout(120, TimeUnit.SECONDS)
-        .followRedirects(true)
-        .followSslRedirects(true)
-        .build()
+    private val client = HttpCondiviso.client
 
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val state: StateFlow<UpdateState> = _state.asStateFlow()

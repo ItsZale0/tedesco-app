@@ -18,10 +18,8 @@ object AppModule {
         isLenient = true
         coerceInputValues = true
     }
-    fun provideOkHttp(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
-        .build()
+    /** Anche il feed usa il client condiviso: un solo pool per tutta l'app. */
+    fun provideOkHttp(): OkHttpClient = HttpCondiviso.client
     fun provideFeedService(okHttp: OkHttpClient): FeedService {
         return object : FeedService {
             override suspend fun getRaw(url: String): okhttp3.Response {

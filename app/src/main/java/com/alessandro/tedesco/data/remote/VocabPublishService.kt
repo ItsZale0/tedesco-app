@@ -3,7 +3,7 @@ package com.alessandro.tedesco.data.remote
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
+import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
@@ -18,10 +18,7 @@ import java.util.concurrent.TimeUnit
  */
 class VocabPublishService {
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
-        .build()
+    private val client = HttpCondiviso.client
 
     /**
      * Invia una parola al canale. Non lancia eccezioni: se la rete

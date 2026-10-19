@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
+import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
@@ -91,11 +91,7 @@ data class VoceGlossario(
  */
 class GeneratoreEsercizi {
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .callTimeout(90, TimeUnit.SECONDS)
-        .build()
+    private val client = HttpCondiviso.client
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 

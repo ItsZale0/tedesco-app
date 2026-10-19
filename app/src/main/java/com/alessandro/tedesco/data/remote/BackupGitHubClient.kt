@@ -11,7 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
+import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
@@ -29,11 +29,7 @@ class BackupGitHubClient(
     private val token: String,
     private val repo: String
 ) {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
+    private val client = HttpCondiviso.client
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val mediaJson = "application/json".toMediaType()

@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.data.remote
 
+import okhttp3.OkHttpClient
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -7,7 +9,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
+import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
@@ -53,10 +55,7 @@ data class LezioneGenerata(
 )
 
 class GeneratoreLezioni(
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(90, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient = HttpCondiviso.client
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 

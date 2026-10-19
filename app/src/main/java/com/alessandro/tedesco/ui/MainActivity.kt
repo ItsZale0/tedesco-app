@@ -14,6 +14,15 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.TedescoTheme
 
 class MainActivity : ComponentActivity() {
+    /**
+     * Il motore TTS condiviso si libera quando l'app non e' piu' in primo piano:
+     * nessuna risorsa audio resta impegnata mentre l'app e' in background.
+     */
+    override fun onStop() {
+        super.onStop()
+        TtsCondiviso.chiudi()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
