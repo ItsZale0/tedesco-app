@@ -97,6 +97,17 @@ class WordRepository(
         _progressoFeed.value = stato.progressoFeed
         _sessioni.value = stato.sessioni
         _ripassiLog.value = stato.ripassiLog
+        // Contenuto lezione e feed lezioni: appartengono al profilo. Senza il reset
+        // il nuovo profilo vedrebbe la lezione e l'elenco delle lezioni del profilo
+        // precedente (Emma vedeva i contenuti di Alessandro).
+        _lezioneContenuto.value = ""
+        _lezioni.value = emptyList()
+    }
+
+    /** Azzera i contenuti dipendenti dal profilo (lezione corrente e feed lezioni). */
+    fun resetContenutiProfilo() {
+        _lezioneContenuto.value = ""
+        _lezioni.value = emptyList()
     }
 
     /**

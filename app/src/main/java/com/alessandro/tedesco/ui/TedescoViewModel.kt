@@ -336,6 +336,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 if (id != ultimoProfilo) {
                     ultimoProfilo = id
                     if (id != null) {
+                        // Il ViewModel e' un singleton: senza il reset restano in memoria
+                        // lezione, esercizi, domande e stato del profilo precedente.
+                        resetStatoProfilo()
                         caricaEserciziGenerati()
                         // Riallinea il livello CEFR ai criteri reali: corregge eventuali
                         // livelli gonfiati salvati in precedenza (es. falso "A2").
@@ -356,9 +359,33 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     fun selezionaProfilo(id: String) {
         viewModelScope.launch {
             profileManager.selezionaProfilo(id)
+            // Subito dopo il cambio: la memoria del profilo precedente non deve
+            // restare visibile (Emma non deve vedere le lezioni di Alessandro).
+            resetStatoProfilo()
             _messaggio.value = "Profilo attivato"
             sincronizza(mostraMessaggio = false)
         }
+    }
+
+    /**
+     * Azzera tutto lo stato in memoria che appartiene al profilo attivo.
+     *
+     * Il ViewModel vive per tutta la durata dell'app (singleton in AppNav): i dati
+     * del profilo precedente resterebbero in memoria e verrebbero mostrati al nuovo
+     * profilo finche' qualche schermata non li ricarica. Per questo ogni cambio
+     * profilo passa da qui: il nuovo profilo parte vuoto e genera i propri
+     * contenuti (lezione ed esercizi) con il suo livello.
+     */
+    fun resetStatoProfilo() {
+        _domandeVerifica.value = emptyList()
+        _risposte.value = emptyList()
+        _sessione.value = SessionState()
+        _lezioneStato.value = StatoLezione.Idle
+        setGenFlow(TipoEsercizio.COMPRENSIONE, emptyList())
+        setGenFlow(TipoEsercizio.PRODUZIONE, emptyList())
+        setGenFlow(TipoEsercizio.ASCOLTO, emptyList())
+        setGenFlow(TipoEsercizio.GRAMMATICA, emptyList())
+        repo.resetContenutiProfilo()
     }
 
     /** Crea un nuovo profilo personalizzato. */
@@ -372,7 +399,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     fun esciDalProfilo() {
         viewModelScope.launch {
             profileManager.esciDalProfilo()
-            _sessione.value = SessionState()
+            resetStatoProfilo()
             syncAvviato = false
         }
     }
@@ -636,6 +663,16 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val comp = CalcoloCompetenze.calcola(parole, reviews, p, System.currentTimeMillis(), log)
             val stimato = comp.livelloComplessivo
             if (stimato == p.livelloCorrente) return@launch
+
+            // Un profilo SENZA dati non deve tornare al livello base: il livello
+            // iniziale e' una scelta dell'utente (es. Emma parte da B1). Senza questa
+            // guardia ogni cambio profilo resettava a A0 il livello selezionato.
+            if (parole.isEmpty()) return@launch
+
+            // Mai RETROCEDERE: il ricalcolo puo' solo promuovere, non degradare.
+            // Un livello piu' alto di quello dimostrato resta valido finche' non
+            // viene cambiato esplicitamente dall'utente.
+            if (stimato.ordine <= p.livelloCorrente.ordine) return@launch
 
             val nuovoStato = profilo.stato.copy(progresso = p.copy(livelloCorrente = stimato))
             profileManager.aggiornaStatoAttivo(nuovoStato)
