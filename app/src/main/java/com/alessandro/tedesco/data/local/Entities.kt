@@ -78,7 +78,26 @@ enum class LivelloCEFR(val ordine: Int, val label: String, val descrizione: Stri
     B1(3, "B1 — Intermedio", "Congiuntivo, passivo, frasi complesse · Wortliste 2400 parole (attive ~1200)"),
     B2(4, "B2 — Avanzato", "Lavorativo, testi complessi, sfumature · ~4000 parole"),
     C1(5, "C1 — Autonomo", "Fluente, accademico/professionale · ~8000 parole"),
-    C2(6, "C2 — Madrelingua", "Nativo, tutte le sfumature")
+    C2(6, "C2 — Madrelingua", "Nativo, tutte le sfumature");
+
+    /** Codice breve: "A0 — Principiante assoluto" -> "A0". */
+    fun codiceBreve(): String = label.substringBefore(" — ").substringBefore(" ").trim().uppercase()
+
+    companion object {
+        /**
+         * Risolve un codice ("A0") o un label ("A0 — Principiante assoluto") al livello.
+         *
+         * Il label e' lungo e pieno di caratteri speciali: confrontarlo con i codici
+         * brevi delle parole ha fatto filtrare lista vuota in due punti dell'app.
+         */
+        fun daTesto(testo: String?): LivelloCEFR {
+            val t = testo?.trim().orEmpty()
+            if (t.isEmpty()) return A0
+            entries.firstOrNull { it.label == t }?.let { return it }
+            val breve = t.substringBefore(" — ").substringBefore(" ").trim().uppercase()
+            return entries.firstOrNull { it.codiceBreve() == breve } ?: A0
+        }
+    }
 }
 
 /** Risultato di un test di livello */

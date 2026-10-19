@@ -4,6 +4,7 @@ import android.content.Context
 import com.alessandro.tedesco.data.local.FeedLogEntity
 import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.LessonEntity
+import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ReviewEntity
 import com.alessandro.tedesco.data.local.RipassoLogEntity
@@ -232,7 +233,7 @@ class WordRepository(
     fun observeLessons(): Flow<List<LessonEntity>> = _lezioni
 
     fun observeWordsByLevel(level: String): Flow<List<WordEntity>> = wordsFlow
-        .map { it.filter { !it.archived && it.level == level }.sortedBy { it.german } }
+        .map { it.filter { !it.archived && it.level == LivelloCEFR.daTesto(level).codiceBreve() }.sortedBy { it.german } }
 
     fun observeLevels(): Flow<List<String>> = wordsFlow
         .map { it.filter { !it.archived }.map { it.level }.distinct().sorted() }

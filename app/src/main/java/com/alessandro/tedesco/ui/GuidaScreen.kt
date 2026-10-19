@@ -335,12 +335,23 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(Modifier.size(10.dp))
-                    Text(
-                        text = "Lezione $lezioneCorrente",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Column {
+                        Text(
+                            text = "Lezione $lezioneCorrente",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        // Quanto manca alla lezione successiva: la regola e'
+                        // "una lezione ogni due giorni", cosi' la progressione e' chiara.
+                        Text(
+                            text = if (giorniProssima > 0)
+                                "Tra $giorniProssima giorno${if (giorniProssima == 1) "" else "i"}: ripassa e fai gli esercizi"
+                                else "Puoi iniziare la lezione ${lezioneCorrente + 1}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
                 TextButton(
                     onClick = { mostraSelettore = !mostraSelettore },

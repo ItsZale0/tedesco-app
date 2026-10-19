@@ -784,9 +784,10 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 .distinct()
                 .sorted()
             val nuova = p.lezioneCorrente + 1
-            val prossima = (nuova..reali.last()).firstOrNull { it in reali } ?: nuova
-            if (prossima == nuova && prossima > reali.last()) return@launch
-            if (prossima == nuova && prossima > reali.last()) return@launch
+            // Senza parole e senze lezioni si avanza lo stesso: la lezione la genera l'AI.
+            val prossima = if (reali.isEmpty()) nuova
+                else (nuova..reali.last()).firstOrNull { it in reali } ?: nuova
+            if (prossima == nuova && reali.isNotEmpty() && prossima > reali.last()) return@launch
             val nuovoStato = profilo.stato.copy(
                 progresso = p.copy(
                     lezioneCorrente = prossima,
@@ -795,8 +796,13 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 )
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
-            repo.aggiornaLezioneContenuto(nuova)
-            _messaggio.value = "Lezione $nuova iniziata! La prossima tra $GIORNI_PER_LEZIONE giorni."
+            repo.aggiornaLezioneContenuto(prossima)
+            // Genera SUBITO il contenuto della lezione appena raggiunta: cosi'
+            // quando l'utente la apre e' gia' pronta (altrimenti aspetterebbe l'AI).
+            if (repo.observeLezioneContenuto().first().isBlank()) {
+                generaLezioneDinamica(prossima)
+            }
+            _messaggio.value = "Lezione $prossima iniziata! La prossima tra $GIORNI_PER_LEZIONE giorni."
         }
     }
 
@@ -1035,7 +1041,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         modello: String? = null
     ): List<EsercizioGenerato> {
         val chiave = tutorApiKey.value
-        val livello = profiloAttivo.value?.stato?.progresso?.livelloCorrente?.label ?: "A0"
+        val livelloUtente = profiloAttivo.value?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
+        val livello = livelloUtente.label
         val medico = profiloAttivo.value?.config?.mostraContestoMedico == true
         // evita duplicati: passa le domande già generate
         val esistenti = statoGenerati(tipo, profileManager.profiloAttivo()?.stato ?: ProfiloStato())
@@ -1045,11 +1052,16 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             quanti = quanti, contestoMedico = medico, evita = evita, modello = modello
         )
         // converte in entità e persisti
-        val nuovi = risultato.map { e ->
+        // SOGLIA DI LIVELLO: un esercizio piu' alto del profilo non viene mai
+        // proposto (il modello a volte supera il livello richiesto). Si filtra qui,
+        // in un solo punto, cosi' TUTTE le sezioni restano calibrate al livello.
+        val ammessi = risultato.filter { LivelloCEFR.daTesto(it.livello).ordine <= livelloUtente.ordine }
+        val nuovi = ammessi.map { e ->
             EsercizioGenEntity(
                 id = e.id, tipo = tipo.jsonTipo, domanda = e.domanda,
                 opzioni = e.opzioni, rispostaCorretta = e.rispostaCorretta,
-                spiegazione = e.spiegazione, livello = e.livello,
+                spiegazione = e.spiegazione,
+                livello = LivelloCEFR.daTesto(e.livello).codiceBreve(),
                 fraseTedesca = e.fraseTedesca, traduzioneItaliana = e.traduzioneItaliana,
                 testoLettura = e.testoLettura, glossario = e.glossario
             )
