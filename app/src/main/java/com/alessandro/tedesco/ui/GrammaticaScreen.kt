@@ -32,11 +32,11 @@ import com.alessandro.tedesco.data.remote.TipoEsercizio
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.CardDefaults
 import com.alessandro.tedesco.data.CategoriaGrammatica
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -35,7 +34,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.BackupCloud
 import com.alessandro.tedesco.data.remote.BackupStato
 import com.alessandro.tedesco.data.remote.BackupViewModel
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -69,7 +67,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
             // --- Cosa viene salvato ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Raggi.card),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
@@ -98,7 +96,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
             // --- Configurazione ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Raggi.card),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -157,7 +155,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
             when (val s = stato) {
                 is BackupStato.InCorso -> Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Raggi.card),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
@@ -189,7 +187,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
             // --- Backup automatico ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Raggi.card),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -310,7 +308,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
 private fun MessaggioStato(messaggio: String, errore: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = if (errore) MaterialTheme.colorScheme.errorContainer
             else MaterialTheme.colorScheme.primaryContainer)

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.*
@@ -33,7 +34,6 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VolumeOff
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 import com.alessandro.tedesco.data.local.ConversazioneEntry

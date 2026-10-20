@@ -59,7 +59,6 @@ import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.ui.theme.Spaziature
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
@@ -128,7 +127,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
                     onValueChange = { ricerca = it },
                     label = { Text("Cerca in tedesco o italiano") },
                     singleLine = true,
-                    shape = RoundedCornerShape(Raggi.card),
+                    shape = MaterialTheme.shapes.medium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
@@ -232,7 +231,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
 private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -254,7 +253,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
                 Text(
                     text = w.italian,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 w.example.takeIf { it.isNotBlank() }?.let {
                     Spacer(Modifier.height(6.dp))
@@ -264,7 +263,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(
@@ -289,7 +288,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
                 modifier = Modifier
                     .background(
                         MaterialTheme.colorScheme.primaryContainer,
-                        RoundedCornerShape(4.dp)
+                        MaterialTheme.shapes.small
                     )
                     .padding(horizontal = 6.dp, vertical = 3.dp)
             )

@@ -172,7 +172,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                     .fillMaxHeight(0.62f)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
                     tonalElevation = 3.dp,
                     shadowElevation = 10.dp,
                     color = MaterialTheme.colorScheme.surface,
@@ -186,7 +186,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                         // Header
                         Surface(
                             tonalElevation = 2.dp,
-                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -252,7 +252,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                                         horizontalArrangement = Arrangement.Start
                                     ) {
                                         Surface(
-                                            shape = RoundedCornerShape(14.dp),
+                                            shape = MaterialTheme.shapes.large,
                                             color = MaterialTheme.colorScheme.surfaceVariant,
                                             modifier = Modifier.padding(2.dp)
                                         ) {
@@ -282,7 +282,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Chiedi al tutor…") },
                                     maxLines = 3,
-                                    shape = RoundedCornerShape(18.dp),
+                                    shape = MaterialTheme.shapes.extraLarge,
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                                     keyboardActions = KeyboardActions(onSend = { invia(input.text) })
                                 )

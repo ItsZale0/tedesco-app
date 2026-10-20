@@ -43,7 +43,6 @@ import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.TipoDomanda
 import com.alessandro.tedesco.data.local.toDomandaTest
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto

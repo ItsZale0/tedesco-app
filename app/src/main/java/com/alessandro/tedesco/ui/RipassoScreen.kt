@@ -52,7 +52,6 @@ import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import com.alessandro.tedesco.ui.theme.Spaziature
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
@@ -203,7 +202,6 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
                                 text = "[ $it ]",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    .copy(alpha = 0.7f)
                             )
                         }
                     }

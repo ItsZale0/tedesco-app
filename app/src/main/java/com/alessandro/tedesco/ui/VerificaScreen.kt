@@ -48,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.VerificaLessico
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 
 /**
@@ -101,7 +100,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                     Spacer(Modifier.height(16.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
@@ -169,7 +168,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         // Parola tedesca
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(Raggi.card),
+                            shape = MaterialTheme.shapes.medium,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer)
                         ) {
@@ -207,14 +206,14 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             OutlinedButton(
                                 onClick = { if (scelta == null) vm.rispondiVerifica(opzione) },
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = MaterialTheme.shapes.large,
                                 border = androidx.compose.foundation.BorderStroke(2.dp, bordo),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = when {
                                         rivelato && eCorretta ->
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                                            MaterialTheme.colorScheme.primaryContainer
                                         rivelato && eScelta ->
-                                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                                            MaterialTheme.colorScheme.errorContainer
                                         else -> Color.Transparent
                                     }
                                 )
@@ -243,7 +242,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             Spacer(Modifier.height(14.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(Raggi.card),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant)
                             ) {

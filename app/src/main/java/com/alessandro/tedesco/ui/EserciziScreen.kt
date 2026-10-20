@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Edit
@@ -41,7 +40,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloProgresso
 import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.CertificazioniUfficiali
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.compose.material.icons.filled.Chat
@@ -71,11 +69,11 @@ fun EserciziScreen(
             // ---- Consiglio dinamico ----
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Raggi.card),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -104,13 +102,13 @@ fun EserciziScreen(
                     Text(
                         consiglio.motivo,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = { onVaiA(consiglio.route) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.bottone)
+                        shape = MaterialTheme.shapes.large
                     ) {
                         Text("Inizia")
                     }
@@ -209,9 +207,9 @@ private fun CardTipoEsercizio(
         modifier = modifier
             .clickable { onClick() }
             .padding(vertical = 2.dp),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        
     ) {
         Column(
             Modifier

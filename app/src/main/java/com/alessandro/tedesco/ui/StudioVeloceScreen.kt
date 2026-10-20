@@ -76,7 +76,6 @@ import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -253,12 +252,11 @@ fun StudioVeloceScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(Raggi.card),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
+                                    ) {
                     Column(modifier = Modifier.padding(Spaziature.md)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
@@ -302,7 +300,7 @@ fun StudioVeloceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
+                                    .clip(MaterialTheme.shapes.extraSmall)
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
@@ -340,12 +338,11 @@ fun StudioVeloceScreen(
                     var teoriaAperta by rememberSaveable { mutableStateOf(true) }
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                                            ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             // Intestazione cliccabile: apre/chiude la lezione
                             Row(
@@ -384,7 +381,7 @@ fun StudioVeloceScreen(
                                     )
                                 ) {
                                     HorizontalDivider(
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                                        color = MaterialTheme.colorScheme.outlineVariant
                                     )
                                     Spacer(Modifier.height(Spaziature.sm))
                                     MarkdownText(
@@ -489,12 +486,11 @@ fun StudioVeloceScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onVaiAEsercizi() },
-                    shape = RoundedCornerShape(Raggi.card),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
+                                    ) {
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -569,12 +565,11 @@ fun StudioVeloceScreen(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                                            ) {
                         Column(modifier = Modifier.padding(Spaziature.md)) {
                             Text(
                                 esercizio.domanda,
@@ -597,12 +592,12 @@ fun StudioVeloceScreen(
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp)
                                         .clickable(enabled = !verificato) { scelta = i },
-                                    shape = RoundedCornerShape(14.dp),
+                                    shape = MaterialTheme.shapes.large,
                                     colors = CardDefaults.cardColors(containerColor = colore),
                                     border = if (selezionato && !verificato) {
                                         BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                                     } else {
-                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                     }
                                 ) {
                                     Row(
@@ -655,7 +650,7 @@ fun StudioVeloceScreen(
                                 Spacer(Modifier.height(Spaziature.sm))
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(14.dp),
+                                    shape = MaterialTheme.shapes.large,
                                     colors = CardDefaults.cardColors(
                                         containerColor = if (esitoGiusto) {
                                             MaterialTheme.colorScheme.primaryContainer
@@ -701,7 +696,7 @@ fun StudioVeloceScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(AltezzaBottonePrincipale()),
-                                    shape = RoundedCornerShape(Raggi.bottone)
+                                    shape = MaterialTheme.shapes.large
                                 ) {
                                     Text("Verifica risposta")
                                 }
@@ -715,7 +710,7 @@ fun StudioVeloceScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(AltezzaBottonePrincipale()),
-                                    shape = RoundedCornerShape(Raggi.bottone)
+                                    shape = MaterialTheme.shapes.large
                                 ) {
                                     Text(if (indice < esercizi.size - 1) "Prossima domanda" else "Vedi risultato")
                                 }
@@ -736,12 +731,11 @@ fun StudioVeloceScreen(
                     }
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                                            ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -782,7 +776,7 @@ fun StudioVeloceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(AltezzaBottonePrincipale()),
-                                shape = RoundedCornerShape(Raggi.bottone)
+                                shape = MaterialTheme.shapes.large
                             ) {
                                 Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(Spaziature.sm))
@@ -801,7 +795,7 @@ fun StudioVeloceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(AltezzaBottonePrincipale()),
-                                shape = RoundedCornerShape(Raggi.bottone)
+                                shape = MaterialTheme.shapes.large
                             ) {
                                 Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(Spaziature.sm))
@@ -817,12 +811,11 @@ fun StudioVeloceScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(Raggi.card),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
+                                            ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -845,7 +838,7 @@ fun StudioVeloceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(AltezzaBottonePrincipale()),
-                                shape = RoundedCornerShape(Raggi.bottone)
+                                shape = MaterialTheme.shapes.large
                             ) {
                                 Text("Genera la lezione")
                             }
@@ -929,10 +922,9 @@ private fun CardParola(
 ) {
     Card(
         modifier = modifier.clickable { onAscolta() },
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(Spaziature.sm)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -959,7 +951,7 @@ private fun CardParola(
                 Text(
                     parola.example,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )

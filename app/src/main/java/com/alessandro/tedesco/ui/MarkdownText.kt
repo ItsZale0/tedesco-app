@@ -250,12 +250,12 @@ fun MarkdownText(
                     modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
                 )
                 TipoRiga.PUNTATO -> Row(modifier = Modifier.padding(start = 4.dp, top = 3.dp)) {
-                    Text("\u2022", color = color.copy(alpha = 0.7f), style = stile)
+                    Text("\u2022", color = color, style = stile)
                     Spacer(Modifier.width(8.dp))
                     Text(riga.testo, style = stile, color = color)
                 }
                 TipoRiga.NUMERATO -> Row(modifier = Modifier.padding(start = 4.dp, top = 3.dp)) {
-                    Text("${riga.numero}.", color = color.copy(alpha = 0.7f), style = stile)
+                    Text("${riga.numero}.", color = color, style = stile)
                     Spacer(Modifier.width(8.dp))
                     Text(riga.testo, style = stile, color = color)
                 }
@@ -268,13 +268,13 @@ fun MarkdownText(
                         Modifier
                             .width(3.dp)
                             .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+                            .background(MaterialTheme.colorScheme.primary)
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
                         riga.testo,
                         style = stile,
-                        color = color.copy(alpha = 0.9f),
+                        color = color,
                         fontStyle = FontStyle.Italic
                     )
                 }
@@ -283,7 +283,7 @@ fun MarkdownText(
                 }
                 TipoRiga.SEPARATORE -> HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
-                    color = color.copy(alpha = 0.2f)
+                    color = color
                 )
                 TipoRiga.VUOTO -> Spacer(Modifier.height(8.dp))
                 TipoRiga.PARAGRAFO -> Text(
@@ -304,7 +304,7 @@ fun MarkdownText(
 @Composable
 private fun TabellaMarkdown(tabella: TabellaMd, color: Color, stile: TextStyle) {
     val bordi = MaterialTheme.colorScheme.outlineVariant
-    val forma = RoundedCornerShape(8.dp)
+    val forma = MaterialTheme.shapes.medium
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -318,7 +318,7 @@ private fun TabellaMarkdown(tabella: TabellaMd, color: Color, stile: TextStyle) 
             color = color,
             stile = stile,
             grassetto = true,
-            sfondo = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            sfondo = MaterialTheme.colorScheme.surfaceVariant
         )
         HorizontalDivider(color = bordi)
         tabella.righe.forEachIndexed { i, riga ->
@@ -331,7 +331,7 @@ private fun TabellaMarkdown(tabella: TabellaMd, color: Color, stile: TextStyle) 
                 sfondo = Color.Transparent
             )
             if (i < tabella.righe.lastIndex) {
-                HorizontalDivider(color = bordi.copy(alpha = 0.5f))
+                HorizontalDivider(color = bordi)
             }
         }
     }

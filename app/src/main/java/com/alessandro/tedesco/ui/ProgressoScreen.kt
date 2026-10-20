@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloProgresso
 import com.alessandro.tedesco.data.CertificazioniUfficiali
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
@@ -95,7 +94,7 @@ fun ProgressoScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
 private fun CardLivello(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
@@ -169,7 +168,7 @@ private fun CardLivello(pr: CalcoloProgresso.ProgressoReale) {
 private fun CardNumeriChiave(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -219,7 +218,7 @@ private fun Kpi(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -249,7 +248,7 @@ private fun Kpi(
 private fun CardProssimoPasso(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -278,7 +277,7 @@ private fun CardProssimoPasso(pr: CalcoloProgresso.ProgressoReale) {
 private fun CardCompetenze(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -332,7 +331,7 @@ private fun BarraCompetenza(nome: String, valore: Float) {
 private fun CardProduzione(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -467,7 +466,7 @@ private fun GraficoEvoluzione(pr: CalcoloProgresso.ProgressoReale) {
 private fun CardTraguardi(pr: CalcoloProgresso.ProgressoReale) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {

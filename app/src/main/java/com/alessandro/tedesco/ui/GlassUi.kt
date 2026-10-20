@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
@@ -53,7 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.alessandro.tedesco.ui.theme.Raggi
 
 /** Superficie dei contenitori: token Material 3 (niente colori custom). */
 @Composable
@@ -74,14 +72,13 @@ fun GlassSurface(
     modifier: Modifier = Modifier,
     shape: Shape = GlassShape,
     containerColor: Color = glassContainerColor(),
-    border: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+    border: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = border
     ) { Column(content = { content() }) }
 }
@@ -148,8 +145,7 @@ fun GlassExpandableSection(
             .fillMaxWidth()
             .clickable { expanded = !expanded },
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = glassContainerColor()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = glassContainerColor())
     ) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
             Row(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +23,6 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.launch
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
@@ -192,7 +192,7 @@ fun MessaggioBubble(msg: MessaggioVoiceChat, ttsHelper: TtsHelper) {
         Card(
             modifier = Modifier.widthIn(max = 300.dp),
             colors = CardDefaults.cardColors(containerColor = containerColor),
-            shape = RoundedCornerShape(12.dp)
+            shape = MaterialTheme.shapes.large
         ) {
             Column(Modifier.padding(12.dp)) {
                 Text(

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -45,7 +44,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloPercorsoAdattivo
 import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -169,7 +167,7 @@ fun HomeScreen(
                 if (pr != null) {
                     GlassSurface(
                         modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Column(modifier = Modifier.padding(Spaziature.md)) {
                             Row(
@@ -234,7 +232,7 @@ fun HomeScreen(
                 // Card principale: parole da ripassare
                 GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Column(
                         modifier = Modifier
@@ -268,7 +266,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(AltezzaBottonePrincipale()),
-                            shape = RoundedCornerShape(Raggi.bottone)
+                            shape = MaterialTheme.shapes.large
                         ) {
                             Text(
                                 text = if (daRipassare == 0) "Ripassa comunque" else "Inizia il ripasso",
@@ -285,7 +283,7 @@ fun HomeScreen(
                 percorsoGiorno?.let { pg ->
                     GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
                 ) {
                         Column(
                             modifier = Modifier
@@ -391,7 +389,7 @@ fun HomeScreen(
                 // Sezione 'Come procede'
                 GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Column(
                         modifier = Modifier
@@ -472,7 +470,7 @@ private fun RiquadroCompact(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(Raggi.card),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

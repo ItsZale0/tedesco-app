@@ -23,6 +23,7 @@ import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.toDomandaTest
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch

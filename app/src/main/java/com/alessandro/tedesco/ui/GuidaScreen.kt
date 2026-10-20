@@ -77,7 +77,6 @@ import com.alessandro.tedesco.data.local.GuidaEntity
 import com.alessandro.tedesco.data.local.LessonEntity
 import androidx.compose.ui.platform.LocalContext
 import com.alessandro.tedesco.ui.theme.Spaziature
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.TitoloSchermata
 import androidx.compose.material3.OutlinedButton
@@ -285,7 +284,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
             .fillMaxWidth()
             .height(AltezzaBottonePrincipale())
             .padding(horizontal = Spaziature.md),
-        shape = RoundedCornerShape(Raggi.bottone)
+        shape = MaterialTheme.shapes.large
     ) {
         Text("Inizia la lezione ${lezioneCorrente + 1}")
     }
@@ -294,7 +293,7 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
     if (giorniProssima > 0) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(Raggi.card),
+            shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
         ) {
             Column(Modifier.padding(14.dp)) {
@@ -323,12 +322,11 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
                     stiffness = Spring.StiffnessLow
                 )
             ),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+            ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -619,12 +617,11 @@ private fun SezioneCard(sez: SezioneEntity) {
                     stiffness = Spring.StiffnessLow
                 )
             ),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+            ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -633,7 +630,7 @@ private fun SezioneCard(sez: SezioneEntity) {
                 ) {
                     Card(
                         modifier = Modifier.size(width = 4.dp, height = 24.dp),
-                        shape = RoundedCornerShape(2.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )

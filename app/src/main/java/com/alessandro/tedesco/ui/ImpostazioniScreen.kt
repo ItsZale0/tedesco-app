@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
@@ -75,7 +74,6 @@ import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.TedescoApp
-import com.alessandro.tedesco.ui.theme.Raggi
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
@@ -102,8 +100,7 @@ fun GlassCard(
         modifier = modifier.fillMaxWidth().clip(shape),
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = settingsGlassColor()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) { Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), content = { content() }) }
+            ) { Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), content = { content() }) }
 }
 
 /** Sezione impostazioni a tendina: header cliccabile con chevron + contenuto espandibile. */
@@ -120,8 +117,7 @@ private fun SettingsExpandableSection(
         modifier = modifier.fillMaxWidth().clip(GlassShape),
         shape = GlassShape,
         colors = CardDefaults.cardColors(containerColor = settingsGlassColor()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
+            ) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
             Row(
                 modifier = Modifier
@@ -198,7 +194,7 @@ private fun <T : Any> DropdownSelector(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = GlassShape,
             ) {
             options.forEach { (value, name) ->
@@ -232,7 +228,7 @@ private fun SettingsButton(
         modifier = modifier.fillMaxWidth().height(AltezzaBottonePrincipale()).clip(GlassShape),
         enabled = enabled,
         colors = colors,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) { content() }
 }
@@ -694,8 +690,8 @@ private fun TutorialGrigio(testo: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = GlassShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             TextButton(onClick = { aperto = !aperto }) {
