@@ -21,6 +21,7 @@ import com.alessandro.tedesco.data.SessionState
 import com.alessandro.tedesco.data.Statistiche
 import com.alessandro.tedesco.data.SyncResult
 import com.alessandro.tedesco.data.TestB1
+import com.alessandro.tedesco.data.selezionaProssimaLezione
 import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.LivelloIniziale
@@ -761,33 +762,14 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
             val p = profilo.stato.progresso
-            val inizio = p.dataInizioLezione
-            val trascorsi = if (inizio <= 0L) GIORNI_PER_LEZIONE.toLong()
-                else (System.currentTimeMillis() - inizio) / MS_PER_GIORNO
-            if (trascorsi < GIORNI_PER_LEZIONE) {
-                val giorniMancanti = (GIORNI_PER_LEZIONE - trascorsi).toInt()
-                val unita = if (giorniMancanti == 1) "giorno" else "giorni"
-                _messaggio.value = "Prossima lezione tra $giorniMancanti $unita. Nel frattempo ripassa!"
-                return@launch
-            }
-            // Salta alle lezioni REALI: quelle con parole nel vocabolario
-            // oppure con contenuto (feed). Escluso: lezioni con 0 parole e
-            // 0 contenuto (es. lezione 5, se il feed non ha parole e la
-            // generazione non è ancora avvenuta).
-            // Salta alle lezioni REALI: quelle con parole nel vocabolario
-            // oppure con contenuto (feed). Escluso: lezioni con 0 parole e
-            // 0 contenuto (es. lezione 5, se il feed non ha parole e la
-            // generazione non è ancora avvenuta).
+            // Parole disponibili e lezioni del feed per capire che lezioni sono "vere".
             val parole = repo.observeWords().first().filter { !it.archived }
             val lezioniFeed = repo.observeLessons().first()
-            val reali = (parole.map { it.lesson }.distinct() + lezioniFeed.map { it.numero })
-                .distinct()
-                .sorted()
             val nuova = p.lezioneCorrente + 1
-            // Senza parole e senze lezioni si avanza lo stesso: la lezione la genera l'AI.
-            val prossima = if (reali.isEmpty()) nuova
-                else (nuova..reali.last()).firstOrNull { it in reali } ?: nuova
-            if (prossima == nuova && reali.isNotEmpty() && prossima > reali.last()) return@launch
+            // Selettore: prossima lezione con parole nel vocabolario o contenuto.
+            val prossima = selezionaProssimaLezione(nuova, parole, lezioniFeed)
+            if (prossima == nuova) return@launch
+
             val nuovoStato = profilo.stato.copy(
                 progresso = p.copy(
                     lezioneCorrente = prossima,
@@ -798,17 +780,13 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             profileManager.aggiornaStatoAttivo(nuovoStato)
             repo.aggiornaLezioneContenuto(prossima)
             // Genera SUBITO il contenuto della lezione appena raggiunta: cosi'
-            // quando l'utente la apre e' gia' pronta (altrimenti aspetterebbe l'AI).
+            // quando l'utente la apre e' già pronta.
             if (repo.observeLezioneContenuto().first().isBlank()) {
                 generaLezioneDinamica(prossima)
             }
-            _messaggio.value = "Lezione $prossima iniziata! La prossima tra $GIORNI_PER_LEZIONE giorni."
+            _messaggio.value = "Lezione $prossima iniziata. La prossima la clicca quando e' pronta!"
         }
-    }
-
-    // ---- Lezione dinamica (generata dall'AI) ----
-
-    private val _lezioneStato = MutableStateFlow<StatoLezione>(StatoLezione.Idle)
+    }    private val _lezioneStato = MutableStateFlow<StatoLezione>(StatoLezione.Idle)
     val lezioneStato: StateFlow<StatoLezione> = _lezioneStato.asStateFlow()
 
     private val generatoreLezioni = GeneratoreLezioni()

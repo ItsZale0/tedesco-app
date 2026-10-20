@@ -277,33 +277,41 @@ private fun LezioneDelGiornoCard(vm: TedescoViewModel) {
         }
     }
 
-    // Banner: una lezione ogni 2 giorni
+    // IL PULSANTE È SEMPRE ATTIVO: l'avanzamento è a scelta del learner.
+    // "Una lezione ogni 2 giorni" era un suggerimento pedagogico, non una gabbia.
+    Button(
+        onClick = { vm.avanzaLezione() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(AltezzaBottonePrincipale())
+            .padding(horizontal = Spaziature.md),
+        shape = RoundedCornerShape(Raggi.bottone)
+    ) {
+        Text("Inizia la lezione ${lezioneCorrente + 1}")
+    }
+    Spacer(Modifier.height(6.dp))
+    // Suggerimento: "una lezione ogni 2 giorni" serve a consolidare, non a bloccare.
     if (giorniProssima > 0) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(Raggi.card),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.padding(14.dp)) {
                 Text(
-                    "Prossima lezione tra $giorniProssima giorno${if (giorniProssima == 1) "" else "i"}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    "La lezione è disponibile ORA: sei pronto?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Ripassa le parole e fai gli esercizi nel frattempo!",
-                    style = MaterialTheme.typography.bodySmall
+                    "Continua quando vuoi. Quella prossima è a tua scelta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }
-        Spacer(Modifier.height(8.dp))
-    } else {
-        Button(
-            onClick = { vm.avanzaLezione() },
-            modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
-        ) { Text("Inizia la lezione ${lezioneCorrente + 1}") }
-        Spacer(Modifier.height(8.dp))
     }
 
     Card(
