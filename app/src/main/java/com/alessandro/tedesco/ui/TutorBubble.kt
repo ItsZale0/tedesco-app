@@ -253,7 +253,7 @@ fun TutorBubble(vm: TedescoViewModel) {
                                     ) {
                                         Surface(
                                             shape = MaterialTheme.shapes.large,
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(2.dp)
                                         ) {
                                             CircularProgressIndicator(
@@ -312,7 +312,7 @@ private fun BollaMessaggio(msg: MessaggioTutor) {
     val colore = when {
         msg.errore -> MaterialTheme.colorScheme.errorContainer
         allineaADestra -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
     val testoColore = when {
         msg.errore -> MaterialTheme.colorScheme.onErrorContainer

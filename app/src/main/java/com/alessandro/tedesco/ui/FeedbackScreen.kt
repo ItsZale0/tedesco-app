@@ -102,7 +102,7 @@ fun FeedbackScreen(
                                 containerColor = if (selezionato)
                                     MaterialTheme.colorScheme.primaryContainer
                                 else
-                                    MaterialTheme.colorScheme.surfaceVariant
+                                    MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
                             Row(
@@ -165,7 +165,7 @@ fun FeedbackScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -244,7 +244,7 @@ private fun FeedbackCard(risposta: FeedbackEntry) {
             containerColor = if (risposta.corretto)
                 MaterialTheme.colorScheme.secondaryContainer
             else
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {

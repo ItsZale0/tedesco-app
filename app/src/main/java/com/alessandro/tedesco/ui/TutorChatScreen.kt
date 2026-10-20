@@ -389,7 +389,7 @@ private fun MessaggioBubble(
                 containerColor = when {
                     isUser -> MaterialTheme.colorScheme.primary
                     msg.errore -> MaterialTheme.colorScheme.errorContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    else -> MaterialTheme.colorScheme.surfaceContainer
                 }
             ),
             modifier = Modifier.widthIn(max = 300.dp)

@@ -340,7 +340,7 @@ fun StudioVeloceScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
                         ),
                                             ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -567,7 +567,7 @@ fun StudioVeloceScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
                         ),
                                             ) {
                         Column(modifier = Modifier.padding(Spaziature.md)) {
@@ -611,7 +611,7 @@ fun StudioVeloceScreen(
                                             color = if (selezionato) {
                                                 MaterialTheme.colorScheme.primary
                                             } else {
-                                                MaterialTheme.colorScheme.surfaceVariant
+                                                MaterialTheme.colorScheme.surfaceContainer
                                             },
                                             modifier = Modifier.size(28.dp)
                                         ) {

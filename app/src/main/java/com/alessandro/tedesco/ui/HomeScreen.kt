@@ -389,7 +389,7 @@ fun HomeScreen(
                 // Sezione 'Come procede'
                 GlassSurface(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 ) {
                     Column(
                         modifier = Modifier
@@ -472,7 +472,7 @@ private fun RiquadroCompact(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column(

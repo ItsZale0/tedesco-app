@@ -195,7 +195,7 @@ fun RoleplayScreen(vm: TedescoViewModel) {
                             onClick = { vm.avviaRoleplay(s) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -350,7 +350,7 @@ private fun MessaggioBubble(
                 containerColor = when {
                     isUser -> MaterialTheme.colorScheme.primary
                     msg.errore -> MaterialTheme.colorScheme.errorContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    else -> MaterialTheme.colorScheme.surfaceContainer
                 }
             ),
             modifier = Modifier.widthIn(max = 300.dp)

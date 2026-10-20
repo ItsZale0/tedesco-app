@@ -690,7 +690,7 @@ private fun TutorialGrigio(testo: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = GlassShape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {

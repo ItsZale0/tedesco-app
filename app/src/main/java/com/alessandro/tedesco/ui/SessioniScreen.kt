@@ -44,12 +44,12 @@ private fun colorePerTipo(tipo: String) = when (tipo.uppercase()) {
     "SESSIONE", "SESSIONE_GUIDATA" -> MaterialTheme.colorScheme.primaryContainer
     "TEST", "TEST_LIVELLO" -> MaterialTheme.colorScheme.secondaryContainer
     "ROLEPLAY" -> MaterialTheme.colorScheme.tertiaryContainer
-    "RIPASSO" -> MaterialTheme.colorScheme.surfaceVariant
+    "RIPASSO" -> MaterialTheme.colorScheme.surfaceContainer
     "GRAMMATICA" -> MaterialTheme.colorScheme.primaryContainer
     "COMPRENSIONE" -> MaterialTheme.colorScheme.secondaryContainer
     "PRODUZIONE" -> MaterialTheme.colorScheme.tertiaryContainer
-    "VOCABOLARIO" -> MaterialTheme.colorScheme.surfaceVariant
-    else -> MaterialTheme.colorScheme.surfaceVariant
+    "VOCABOLARIO" -> MaterialTheme.colorScheme.surfaceContainer
+    else -> MaterialTheme.colorScheme.surfaceContainer
 }
 
 /**

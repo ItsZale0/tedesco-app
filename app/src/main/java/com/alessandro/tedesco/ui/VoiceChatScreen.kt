@@ -182,7 +182,7 @@ fun MessaggioBubble(msg: MessaggioVoiceChat, ttsHelper: TtsHelper) {
     val containerColor = if (msg.daUtente) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.surfaceContainer
     }
 
     Row(

@@ -619,7 +619,7 @@ private fun SezioneCard(sez: SezioneEntity) {
             ),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
             ) {
         Column(modifier = Modifier.padding(20.dp)) {

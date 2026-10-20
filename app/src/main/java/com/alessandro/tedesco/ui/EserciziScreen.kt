@@ -208,7 +208,7 @@ private fun CardTipoEsercizio(
             .clickable { onClick() }
             .padding(vertical = 2.dp),
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         
     ) {
         Column(

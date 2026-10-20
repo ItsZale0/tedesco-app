@@ -102,7 +102,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
                         Column(Modifier.fillMaxWidth().padding(16.dp)) {
                             Text("Cosa significa", style = MaterialTheme.typography.titleSmall,
@@ -244,7 +244,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = MaterialTheme.shapes.medium,
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             ) {
                                 Column(Modifier.fillMaxWidth().padding(14.dp)) {
                                     Text(

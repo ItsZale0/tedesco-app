@@ -216,7 +216,7 @@ fun MarkdownText(
     stile: TextStyle = MaterialTheme.typography.bodyMedium,
 ) {
     // Colore del codice inline dal tema Material 3 (prima era fisso).
-    val coloreCodice = MaterialTheme.colorScheme.surfaceVariant
+    val coloreCodice = MaterialTheme.colorScheme.surfaceContainer
     val righe = remember(markdown, coloreCodice) { parseRighe(markdown, coloreCodice) }
     Column(modifier = modifier) {
         righe.forEach { riga ->
@@ -318,7 +318,7 @@ private fun TabellaMarkdown(tabella: TabellaMd, color: Color, stile: TextStyle) 
             color = color,
             stile = stile,
             grassetto = true,
-            sfondo = MaterialTheme.colorScheme.surfaceVariant
+            sfondo = MaterialTheme.colorScheme.surfaceContainer
         )
         HorizontalDivider(color = bordi)
         tabella.righe.forEachIndexed { i, riga ->

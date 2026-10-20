@@ -69,7 +69,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Text("Cosa viene salvato", style = MaterialTheme.typography.titleMedium,

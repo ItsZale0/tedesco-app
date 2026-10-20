@@ -72,7 +72,7 @@ fun TestB1Screen(vm: TedescoViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
                             Column(modifier = Modifier.padding(Spaziature.md)) {

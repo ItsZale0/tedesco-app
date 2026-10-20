@@ -140,7 +140,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                             containerColor = if (selezionato)
                                 MaterialTheme.colorScheme.primary
                             else
-                                MaterialTheme.colorScheme.surfaceVariant
+                                MaterialTheme.colorScheme.surfaceContainer
                         )
                     ) {
                         Text(

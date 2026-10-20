@@ -251,7 +251,7 @@ fun SpeakingScreen(
                     .fillMaxWidth()
                     .padding(vertical = spaziaturaSchermo()),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {

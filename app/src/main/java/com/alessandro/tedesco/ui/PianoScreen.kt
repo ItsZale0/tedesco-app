@@ -138,7 +138,7 @@ fun PianoScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
                             Row(modifier = Modifier.padding(16.dp)) {
@@ -182,7 +182,7 @@ fun PianoScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
                             Row(modifier = Modifier.padding(16.dp)) {
@@ -237,7 +237,7 @@ private fun TappaCard(nome: String, descrizione: String, lezioni: String, stato:
     val colore = when (stato) {
         "completata" -> MaterialTheme.colorScheme.secondaryContainer
         "in corso" -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
     Card(
         modifier = Modifier.fillMaxWidth(),

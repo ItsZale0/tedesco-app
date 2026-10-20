@@ -233,7 +233,7 @@ private fun WordRow(w: WordEntity, onAscolta: () -> Unit, onAscoltaFrase: () -> 
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Row(
