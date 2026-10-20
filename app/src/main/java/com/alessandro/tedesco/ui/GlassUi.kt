@@ -63,9 +63,9 @@ private val GlassShape: Shape
 
 /**
  * Contenitore "liquid glass" riutilizzabile in tutta l'app.
- * Trasparente, bordo sottile theme-tint, leggera ombra. Il [containerColor]
- * è semitrasparente per default (follow the theme) e può essere sovrascritto
- * per mantenere la colorazione tema (es. primaryContainer.copy(alpha=0.6f)).
+ * Superficie con token Material 3: [containerColor] di default è
+ * surfaceContainer (tonalità chiara del tema). Può essere sovrascritto
+ * per mantenere la colorazione tema (es. primaryContainer).
  */
 @Composable
 fun GlassSurface(

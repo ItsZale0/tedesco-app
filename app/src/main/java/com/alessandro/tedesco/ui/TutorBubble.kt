@@ -321,12 +321,7 @@ private fun BollaMessaggio(msg: MessaggioTutor) {
     }
     Box(Modifier.fillMaxWidth(), contentAlignment = if (allineaADestra) Alignment.CenterEnd else Alignment.CenterStart) {
         Surface(
-            shape = RoundedCornerShape(
-                topStart = 14.dp,
-                topEnd = 14.dp,
-                bottomStart = if (allineaADestra) 14.dp else 4.dp,
-                bottomEnd = if (allineaADestra) 4.dp else 14.dp
-            ),
+            shape = MaterialTheme.shapes.large,
             color = colore,
             modifier = Modifier.widthIn(max = 260.dp)
         ) {
