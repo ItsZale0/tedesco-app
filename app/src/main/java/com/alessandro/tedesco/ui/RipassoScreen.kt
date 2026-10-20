@@ -2,7 +2,6 @@ package com.alessandro.tedesco.ui
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,7 +108,7 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(12.dp))
                             Button(
                                 onClick = onVaiANuove,
                                 modifier = Modifier
@@ -207,10 +206,10 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // retro: appare subito, niente animazione che fa aspettare
-                AnimatedVisibility(visible = sessionState.rispostaMostrata) {
+                if (sessionState.rispostaMostrata) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally

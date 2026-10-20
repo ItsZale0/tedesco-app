@@ -2,7 +2,6 @@
 
 package com.alessandro.tedesco.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -171,7 +170,7 @@ fun GlassExpandableSection(
                     modifier = Modifier.size(28.dp)
                 )
             }
-            AnimatedVisibility(visible = expanded) {
+            if (expanded) {
                 Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(10.dp))
                     content()

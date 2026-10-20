@@ -148,7 +148,7 @@ fun TutorBubble(vm: TedescoViewModel) {
     Box(Modifier.fillMaxSize()) {
         if (!aperto) {
             // Chiusa: bolla circolare
-            Box(Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
+            Box(Modifier.align(Alignment.BottomEnd).padding(12.dp)) {
                 SmallFloatingActionButton(
                     onClick = { aperto = true },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,

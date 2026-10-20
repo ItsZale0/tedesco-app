@@ -94,7 +94,7 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer
                         )
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
                                 "Livello stimato: $livelloName",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -115,7 +115,7 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             "Si sta preparando il test adattivo basato sul tuo livello attuale e sui tuoi errori…",
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -299,7 +299,7 @@ fun TestAdattiviScreen(vm: TedescoViewModel) {
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
             }
 
     }

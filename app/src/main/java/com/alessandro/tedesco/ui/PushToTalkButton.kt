@@ -1,8 +1,5 @@
 package com.alessandro.tedesco.ui
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -45,25 +42,14 @@ fun PushToTalkButton(
     val partialText by remember { derivedStateOf { voiceHelper.partialText } }
     val errorMessage by remember { derivedStateOf { voiceHelper.errorMessage } }
 
-    // Animazione del bottone durante l'ascolto
-    val scale by animateFloatAsState(
-        targetValue = if (state == VoiceState.LISTENING) 1.2f else 1f,
-        animationSpec = tween(300),
-        label = "micScale"
-    )
-
-    // Colore del bottone in base allo stato
-    val backgroundColor by animateColorAsState(
-        targetValue = when (state) {
-            VoiceState.LISTENING -> MaterialTheme.colorScheme.error
-            VoiceState.PROCESSING -> MaterialTheme.colorScheme.tertiary
-            VoiceState.SPEAKING -> MaterialTheme.colorScheme.primary
-            VoiceState.ERROR -> MaterialTheme.colorScheme.errorContainer
-            else -> MaterialTheme.colorScheme.primaryContainer
-        },
-        animationSpec = tween(300),
-        label = "micColor"
-    )
+    // Colore del bottone in base allo stato (senza animazione)
+    val backgroundColor = when (state) {
+        VoiceState.LISTENING -> MaterialTheme.colorScheme.error
+        VoiceState.PROCESSING -> MaterialTheme.colorScheme.tertiary
+        VoiceState.SPEAKING -> MaterialTheme.colorScheme.primary
+        VoiceState.ERROR -> MaterialTheme.colorScheme.errorContainer
+        else -> MaterialTheme.colorScheme.primaryContainer
+    }
 
     val contentColor = when (state) {
         VoiceState.LISTENING -> MaterialTheme.colorScheme.onError

@@ -16,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
-import androidx.compose.animation.core.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.buildAnnotatedString

@@ -69,7 +69,7 @@ fun FeedbackScreen(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
                         Text(
                             text = "Esercizi lezione $lezioneCorrente",
                             style = MaterialTheme.typography.titleMedium,
@@ -108,7 +108,7 @@ fun FeedbackScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
+                                    .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
@@ -147,7 +147,7 @@ fun FeedbackScreen(
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
                             )
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = "Esercizio selezionato: ${e.domanda}",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -158,7 +158,7 @@ fun FeedbackScreen(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
             }
 
             // Campo di input libero
@@ -168,7 +168,7 @@ fun FeedbackScreen(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Text(
                         text = "Oppure scrivi liberamente in tedesco",
                         style = MaterialTheme.typography.titleSmall,
@@ -214,7 +214,7 @@ fun FeedbackScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Storico correzioni
             if (risposte.isNotEmpty()) {

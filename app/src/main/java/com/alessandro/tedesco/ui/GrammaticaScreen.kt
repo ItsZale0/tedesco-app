@@ -131,7 +131,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(24.dp)
+                            modifier = Modifier.padding(12.dp)
                         ) {
                             Text("Nessun esercizio generato", style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(8.dp))
@@ -140,7 +140,7 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(12.dp))
                             Button(onClick = { tentativo++ }) { Text("Riprova") }
                             Spacer(Modifier.height(8.dp))
                             OutlinedButton(onClick = onFatto) { Text("Torna indietro") }

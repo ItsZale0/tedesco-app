@@ -197,7 +197,7 @@ fun RoleplayScreen(vm: TedescoViewModel) {
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     s.titolo,
                                     style = MaterialTheme.typography.titleMedium,

@@ -1,6 +1,5 @@
 package com.alessandro.tedesco.ui
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,22 +45,13 @@ fun ContestoMedicoScreen(
 
             Spacer(Modifier.height(Spaziature.md))
 
-            // Contenuto tab
-            AnimatedContent(
-                targetState = tab,
-                label = "contenuto",
-                transitionSpec = {
-                    fadeIn() + slideInHorizontally() togetherWith
-                    fadeOut() + slideOutHorizontally()
-                }
-            ) { targetTab ->
-                when (targetTab) {
+            // Contenuto tab (senza animazione)
+            when (tab) {
                     0 -> TabLessico()
                     1 -> TabScenari()
                     2 -> TabFrasi()
                 }
             }
-
     }
 }
 
@@ -131,7 +121,7 @@ private fun TabLessico() {
                                 contentDescription = null
                             )
                         }
-                        AnimatedVisibility(visible = expandida) {
+                        if (expandida) {
                             Column(modifier = Modifier.padding(top = Spaziature.sm)) {
                                 Text(
                                     text = parola.example,
@@ -176,7 +166,7 @@ private fun TabScenari() {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    AnimatedVisibility(visible = expandido) {
+                    if (expandido) {
                         Column(modifier = Modifier.padding(top = Spaziature.sm)) {
                             scenario.frasiChiave.forEachIndexed { index, frase ->
                                 Row(modifier = Modifier.padding(vertical = 4.dp)) {

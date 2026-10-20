@@ -84,7 +84,7 @@ fun ProgressoScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
             // ---- 6. Traguardi ----
             CardTraguardi(pr)
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
@@ -99,7 +99,7 @@ private fun CardLivello(pr: CalcoloProgresso.ProgressoReale) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -122,7 +122,7 @@ private fun CardLivello(pr: CalcoloProgresso.ProgressoReale) {
             )
 
             val prossimo = pr.prossimoLivello
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
             if (prossimo != null) {
                 Row(
                     Modifier.fillMaxWidth(),
@@ -170,7 +170,7 @@ private fun CardNumeriChiave(pr: CalcoloProgresso.ProgressoReale) {
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(
                 "I tuoi numeri",
                 style = MaterialTheme.typography.titleMedium,
@@ -250,7 +250,7 @@ private fun CardProssimoPasso(pr: CalcoloProgresso.ProgressoReale) {
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(
                 "Cosa fare adesso",
                 style = MaterialTheme.typography.titleMedium,
@@ -279,7 +279,7 @@ private fun CardCompetenze(pr: CalcoloProgresso.ProgressoReale) {
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(
                 "Le 4 competenze",
                 style = MaterialTheme.typography.titleMedium,
@@ -333,7 +333,7 @@ private fun CardProduzione(pr: CalcoloProgresso.ProgressoReale) {
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(
                 "Produzione scritta",
                 style = MaterialTheme.typography.titleMedium,
@@ -468,7 +468,7 @@ private fun CardTraguardi(pr: CalcoloProgresso.ProgressoReale) {
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Traguardi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(

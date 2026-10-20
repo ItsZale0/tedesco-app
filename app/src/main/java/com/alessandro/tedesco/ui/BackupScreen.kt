@@ -71,7 +71,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(Modifier.fillMaxWidth().padding(12.dp)) {
                     Text("Cosa viene salvato", style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(4.dp))
@@ -99,7 +99,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(Modifier.fillMaxWidth().padding(12.dp)) {
                     Text("Configurazione", style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(10.dp))
@@ -190,7 +190,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(Modifier.fillMaxWidth().padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,7 +239,7 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
         }
     }
 
@@ -325,19 +325,14 @@ private fun MessaggioStato(messaggio: String, errore: Boolean) {
 
 @Composable
 private fun TutorialGrigioBackup(testo: String) {
-    var aperto by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth()) {
-        TextButton(onClick = { aperto = !aperto }) {
-            Text(if (aperto) "Come creo il token? ▲" else "Come creo il token? ▼",
-                style = MaterialTheme.typography.bodySmall)
-        }
-        if (aperto) {
-            Text(
-                testo,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-        }
+    GlassExpandableSection(
+        title = "Come creo il token?",
+        description = null
+    ) {
+        Text(
+            testo,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
     }
 }

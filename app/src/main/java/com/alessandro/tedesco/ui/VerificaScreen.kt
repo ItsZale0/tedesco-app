@@ -75,7 +75,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().height(6.dp)
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             val e = esito
             if (e != null) {
@@ -96,14 +96,14 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                     Spacer(Modifier.height(4.dp))
                     Text("${e.punteggio.toInt()}%", style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
-                        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp)) {
                             Text("Cosa significa", style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(6.dp))
@@ -123,7 +123,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             }
                         }
                     }
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = onIndietro,
                         modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
@@ -144,7 +144,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(12.dp))
                         Button(onClick = onIndietro,
                             modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
                         ) { Text("Fatto") }
@@ -172,7 +172,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 containerColor = MaterialTheme.colorScheme.primaryContainer)
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -266,7 +266,7 @@ fun VerificaScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth().height(AltezzaBottonePrincipale())
                             ) { Text(if (indice + 1 >= totale) "Vedi risultato" else "Avanti") }
                         }
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(12.dp))
                     }
                 }
             }

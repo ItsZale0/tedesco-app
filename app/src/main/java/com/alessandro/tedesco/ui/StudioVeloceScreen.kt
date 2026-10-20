@@ -80,7 +80,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.animation.AnimatedVisibility
 
 /**
  * V2 - schermata unica: lezione + parole + esercizi, in un flusso lineare.
@@ -371,7 +370,7 @@ fun StudioVeloceScreen(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            AnimatedVisibility(visible = teoriaAperta) {
+                            if (teoriaAperta) {
                                 Column(
                                     modifier = Modifier.padding(
                                         start = Spaziature.md,
@@ -493,7 +492,7 @@ fun StudioVeloceScreen(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(

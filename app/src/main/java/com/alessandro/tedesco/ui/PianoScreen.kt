@@ -69,7 +69,7 @@ fun PianoScreen(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
                                 text = piano.obiettivo,
                                 style = MaterialTheme.typography.titleMedium,
@@ -89,7 +89,7 @@ fun PianoScreen(
                 // Progresso
                 if (progresso != null) {
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
                                 "Il tuo progresso",
                                 style = MaterialTheme.typography.titleMedium,
@@ -141,7 +141,7 @@ fun PianoScreen(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Row(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.padding(12.dp)) {
                                 Icon(
                                     Icons.Filled.EmojiEvents,
                                     contentDescription = null,
@@ -185,7 +185,7 @@ fun PianoScreen(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Row(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.padding(12.dp)) {
                                 Icon(
                                     Icons.Filled.School,
                                     contentDescription = null,
@@ -209,7 +209,7 @@ fun PianoScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
             }
 
     }
@@ -244,7 +244,7 @@ private fun TappaCard(nome: String, descrizione: String, lezioni: String, stato:
         colors = CardDefaults.cardColors(containerColor = colore)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {

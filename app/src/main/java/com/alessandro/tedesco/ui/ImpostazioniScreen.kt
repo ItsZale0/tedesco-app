@@ -2,7 +2,6 @@
 
 package com.alessandro.tedesco.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -148,7 +147,7 @@ private fun SettingsExpandableSection(
                     modifier = Modifier.size(32.dp)
                 )
             }
-            AnimatedVisibility(visible = expanded) {
+            if (expanded) {
                 Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(12.dp))
                     content()
@@ -295,7 +294,7 @@ fun ImpostazioniScreen(
                 SettingsButton(onClick = { cambiaProfilo = true }) { Text("Cambia profilo") }
                 Spacer(Modifier.height(8.dp))
                 SettingsButton(onClick = { esciSelezione = true }) { Text("Torna alla scelta del profilo") }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- LIVELLO (menu a tendina) ---
                 SettingsExpandableSection(
@@ -315,7 +314,7 @@ fun ImpostazioniScreen(
                         onSelect = { vm.cambiaLivello(it) }
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- VOCABOLARIO PERSONALIZZATO (solo profili custom) ---
                 if (customWords) {
@@ -327,7 +326,7 @@ fun ImpostazioniScreen(
                     ) {
                         SettingsButton(onClick = { aggiungiParola = true }) { Text("Aggiungi una parola") }
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     SettingsExpandableSection(
                         title = "Il tuo vocabolario",
@@ -348,16 +347,23 @@ fun ImpostazioniScreen(
                         OutlinedButton(onClick = { feedUrl = URL_VOCAB_DEFAULT }) {
                             Text("Usa il vocabolario di Alessandro")
                         }
-                        TutorialGrigio(
-                            testo = "Come creare il TUO vocabolario su GitHub:\n\n" +
+                        GlassExpandableSection(
+                            title = "Info",
+                            description = null
+                        ) {
+                            Text(
+                                text = "Come creare il TUO vocabolario su GitHub:\n\n" +
                                 "1. Vai su github.com e accedi (o crea un account gratis)\n" +
                                 "2. Crea un repository pubblico\n" +
                                 "3. Carica un file vokabeln.json\n" +
                                 "4. Copia l'URL Raw e incollalo qui\n\n" +
                                 "Formato: {\"words\":[{\"id\":\"1\",\"german\":\"der Hund\",\"" +
-                                "\"italian\":\"il cane\",\"level\":\"A1\",\"lesson\":1}]}"
-                        )
-                        Spacer(Modifier.height(16.dp))
+                                "\"italian\":\"il cane\",\"level\":\"A1\",\"lesson\":1}]}",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = guidaDocId, onValueChange = { guidaDocId = it },
                             label = { Text("Documento Google della guida") },
@@ -373,20 +379,27 @@ fun ImpostazioniScreen(
                         OutlinedButton(onClick = { guidaDocId = GUIDA_DOC_DEFAULT }) {
                             Text("Usa la guida di Alessandro")
                         }
-                        TutorialGrigio(
-                            testo = "Come usare il TUO documento Google:\n\n" +
+                        GlassExpandableSection(
+                            title = "Info",
+                            description = null
+                        ) {
+                            Text(
+                                text = "Come usare il TUO documento Google:\n\n" +
                                 "1. Apri Google Docs e crea un documento\n" +
                                 "2. Scrivi la guida (usa i Titoli)\n" +
                                 "3. Condividi → Chiunque abbia il link → Visualizzatore\n" +
-                                "4. Copia l'indirizzo e incollalo qui"
-                        )
-                        Spacer(Modifier.height(16.dp))
+                                "4. Copia l'indirizzo e incollalo qui",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
                         SettingsButton(onClick = {
                             vm.aggiornaFeedUrl(feedUrl)
                             vm.aggiornaGuidaDocId(guidaDocId)
                         }) { Text("Salva") }
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                 }
 
                 // --- TUTOR AI ---
@@ -405,18 +418,25 @@ fun ImpostazioniScreen(
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                         )
                     )
-                    TutorialGrigio(
-                        testo = "Il tutor è già configurato con una chiave Groq integrata: funziona subito.\n\n" +
+                    GlassExpandableSection(
+                            title = "Info",
+                            description = null
+                        ) {
+                            Text(
+                                text = "Il tutor è già configurato con una chiave Groq integrata: funziona subito.\n\n" +
                             "Se vuoi usare la tua chiave personale (opzionale):\n\n" +
                             "1. Vai su console.groq.com e accedi\n" +
                             "2. Profile → Keys → Create Key\n" +
                             "3. Copia la chiave (gsk_...) e incollala qui\n\n" +
-                            "L'app usa solo modelli gratuiti: non spenderai nulla."
-                    )
+                            "L'app usa solo modelli gratuiti: non spenderai nulla.",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
                     Spacer(Modifier.height(12.dp))
                     SettingsButton(onClick = { vm.aggiornaTutorApiKey(chiaveTutor) }) { Text("Salva chiave") }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- AGGIORNAMENTI ---
                 SettingsExpandableSection(
@@ -518,7 +538,7 @@ fun ImpostazioniScreen(
                         )
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- CRASH REPORTER ---
                 // Se l'app si e' interrotta, qui c'e' lo stack trace: e' l'unico modo
@@ -542,7 +562,7 @@ fun ImpostazioniScreen(
                             Text("Ho capito, cancella")
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                 }
 
                 // --- BACKUP CLOUD ---
@@ -552,12 +572,19 @@ fun ImpostazioniScreen(
                 ) {
                     SettingsButton(onClick = onVaiABackup) { Text("Apri backup cloud") }
                     Spacer(Modifier.height(6.dp))
-                    TutorialGrigio(
-                        "Il backup contiene tutti i profili (parole, ripassi, test, progressi). " +
-                            "Serve un token GitHub gratuito con permesso Contents sul repo di backup."
-                    )
+                    GlassExpandableSection(
+                            title = "Info",
+                            description = null
+                        ) {
+                            Text(
+                                text = "Il backup contiene tutti i profili (parole, ripassi, test, progressi). " +
+                            "Serve un token GitHub gratuito con permesso Contents sul repo di backup.",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- VOCABOLARIO ---
                 SettingsExpandableSection(
@@ -571,7 +598,7 @@ fun ImpostazioniScreen(
                     }
                     SettingsButton(onClick = { vm.sincronizza() }) { Text("Sincronizza adesso") }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // --- RIPASSO ---
                 SettingsExpandableSection(
@@ -585,7 +612,7 @@ fun ImpostazioniScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Spacer(Modifier.height(8.dp))
 
@@ -684,14 +711,20 @@ private fun GlassChangeProfileDialog(
 }
 
 @Composable
-private fun TutorialGrigio(testo: String) {
+private fun GlassExpandableSection(
+    title: String,
+    description: String?,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     var aperto by remember { mutableStateOf(false) }
-    Spacer(Modifier.height(8.dp))
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = GlassShape,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp)) {
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             TextButton(onClick = { aperto = !aperto }) {

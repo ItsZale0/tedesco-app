@@ -91,7 +91,7 @@ fun SessioniScreen(
                         )
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(12.dp)
                         ) {
                             Text(
                                 sessioniAdattive.messaggioMotivazionale,
@@ -128,7 +128,7 @@ fun SessioniScreen(
                             )
                         ) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -183,7 +183,7 @@ fun SessioniScreen(
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             "Sessioni non ancora caricate. Verranno sincronizzate al prossimo aggiornamento.",
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -199,7 +199,7 @@ fun SessioniScreen(
                             )
                         ) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -231,7 +231,7 @@ fun SessioniScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
             }
 
     }

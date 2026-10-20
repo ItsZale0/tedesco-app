@@ -120,7 +120,7 @@ fun VoiceChatScreen(vm: TedescoViewModel, onIndietro: () -> Unit) {
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     )
                 ) {
-                    Column(Modifier.padding(16.dp)) {
+                    Column(Modifier.padding(12.dp)) {
                         Text(
                             "Correzione",
                             style = MaterialTheme.typography.titleSmall,
