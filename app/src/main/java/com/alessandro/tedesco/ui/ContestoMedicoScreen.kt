@@ -53,7 +53,6 @@ fun ContestoMedicoScreen(
                 }
             }
     }
-}
 
 @Composable
 private fun TabLessico() {

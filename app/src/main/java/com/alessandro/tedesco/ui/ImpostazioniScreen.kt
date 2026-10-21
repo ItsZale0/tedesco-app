@@ -711,41 +711,6 @@ private fun GlassChangeProfileDialog(
 }
 
 @Composable
-private fun GlassExpandableSection(
-    title: String,
-    description: String?,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    var aperto by remember { mutableStateOf(false) }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp)) {
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            TextButton(onClick = { aperto = !aperto }) {
-                Text(
-                    text = if (aperto) "▾ Come si fa?" else "▸ Come si fa?",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (aperto) {
-                Text(
-                    text = testo,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun AggiungiParolaDialog(
     onDismiss: () -> Unit,
     onConferma: (String, String, String, String?, String?, Int) -> Unit

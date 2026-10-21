@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -61,7 +60,6 @@ fun PushToTalkButton(
     Box(
         modifier = modifier
             .size(64.dp)
-            .scale(scale)
             .background(backgroundColor, CircleShape)
             .pointerInput(enabled) {
                 if (!enabled) return@pointerInput
