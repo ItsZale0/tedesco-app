@@ -16,17 +16,56 @@ class GrammaticaPercorsoTest {
     private val adesso = 1_700_000_000_000L
 
     @Test
-    fun ciSonoTreUnitaPilota() {
-        assertEquals(3, GrammaticaSyllabus.unitaPilota.size)
+    fun ilPercorsoContieneTutteLeUnitaA0B1() {
+        assertEquals(25, GrammaticaSyllabus.unita.size)
         assertEquals(
-            listOf("a1-akkusativ", "a1-praesens", "a2-perfekt"),
-            GrammaticaSyllabus.unitaPilota.map { it.id }
+            listOf("A0", "A1", "A2", "B1"),
+            GrammaticaSyllabus.unita.map { it.livello }.distinct()
+        )
+        assertEquals(
+            "ID duplicati nel percorso",
+            GrammaticaSyllabus.unita.size,
+            GrammaticaSyllabus.unita.map { it.id }.distinct().size
+        )
+    }
+
+    @Test
+    fun leUnitaSonoInOrdineDidattico() {
+        assertEquals(
+            listOf(
+                "a0-alfabeto",
+                "a0-pronomi-sein",
+                "a0-articoli",
+                "a0-plurale",
+                "a0-frase",
+                "a1-praesens",
+                "a1-akkusativ",
+                "a1-modali",
+                "a1-separabili",
+                "a1-preposizioni-luogo",
+                "a1-preposizioni-tempo",
+                "a1-imperativo",
+                "a2-perfekt",
+                "a2-dativo",
+                "a2-praeteritum",
+                "a2-riflessivi",
+                "a2-subordinate",
+                "a2-relative",
+                "a2-passivo",
+                "b1-adjektivdeklination",
+                "b1-konnektoren",
+                "b1-konjunktiv2",
+                "b1-indirekte-rede",
+                "b1-nominalisierung",
+                "b1-genitiv"
+            ),
+            GrammaticaSyllabus.unita.map { it.id }
         )
     }
 
     @Test
     fun ogniUnitaHaTeoriaEdEsercizi() {
-        GrammaticaSyllabus.unitaPilota.forEach { unita ->
+        GrammaticaSyllabus.unita.forEach { unita ->
             assertTrue("Teoria mancante in ${unita.id}", unita.teoria.regola.size >= 3)
             assertTrue("Esempi mancanti in ${unita.id}", unita.teoria.esempi.size >= 3)
             assertTrue("Tabelle mancanti in ${unita.id}", unita.teoria.tabelle.isNotEmpty())
@@ -42,8 +81,18 @@ class GrammaticaPercorsoTest {
     }
 
     @Test
+    fun ogniUnitaHaUnaProduzioneFinale() {
+        GrammaticaSyllabus.unita.forEach { unita ->
+            assertTrue(
+                "Produzione mancante in ${unita.id}",
+                unita.esercizi.any { it.tipo == TipoEsercizioGrammatica.PRODUZIONE }
+            )
+        }
+    }
+
+    @Test
     fun ogniEsercizioHaUnaRispostaValida() {
-        GrammaticaSyllabus.unitaPilota.forEach { unita ->
+        GrammaticaSyllabus.unita.forEach { unita ->
             unita.esercizi.forEach { esercizio ->
                 when (esercizio.tipo) {
                     TipoEsercizioGrammatica.SCELTA_MULTIPLA -> {
@@ -79,8 +128,8 @@ class GrammaticaPercorsoTest {
 
     @Test
     fun iPrerequisitiEsistono() {
-        val ids = GrammaticaSyllabus.unitaPilota.map { it.id }.toSet()
-        GrammaticaSyllabus.unitaPilota.forEach { unita ->
+        val ids = GrammaticaSyllabus.unita.map { it.id }.toSet()
+        GrammaticaSyllabus.unita.forEach { unita ->
             unita.prerequisiti.forEach { prerequisito ->
                 assertTrue(
                     "Prerequisito inesistente ${prerequisito} in ${unita.id}",
@@ -91,26 +140,35 @@ class GrammaticaPercorsoTest {
     }
 
     @Test
-    fun conProfiloVuotoSoloLaPrimaUnitaEDisponibile() {
+    fun ilPercorsoVuotoHaUnaSolaUnitaDisponibile() {
         val percorso = GrammaticaSyllabus.percorso(emptyMap(), adesso)
-        assertEquals(StatoUnita.DISPONIBILE, percorso[0].stato)
-        assertEquals(StatoUnita.BLOCCATA, percorso[1].stato)
-        assertEquals(StatoUnita.BLOCCATA, percorso[2].stato)
+        assertEquals(GrammaticaSyllabus.unita.size, percorso.size)
+        assertEquals("a0-alfabeto", percorso.first().unita.id)
+        assertEquals(StatoUnita.DISPONIBILE, percorso.first().stato)
+        assertTrue(
+            percorso.drop(1).all { it.stato == StatoUnita.BLOCCATA }
+        )
     }
 
     @Test
     fun completareLaPrimaUnitaSbloccaLaSeconda() {
         val prima = GrammaticaSyllabus.valuta(
-            unitaId = "a1-akkusativ",
+            unitaId = "a0-alfabeto",
             corrette = 10,
             totali = 12,
             now = adesso
         )
-        val mappa = mapOf("a1-akkusativ" to prima)
+        val mappa = mapOf("a0-alfabeto" to prima)
         val percorso = GrammaticaSyllabus.percorso(mappa, adesso)
-        assertEquals(StatoUnita.COMPLETATA, percorso[0].stato)
-        assertEquals(StatoUnita.DISPONIBILE, percorso[1].stato)
-        assertEquals(StatoUnita.BLOCCATA, percorso[2].stato)
+        assertEquals(StatoUnita.COMPLETATA, percorso.first { it.unita.id == "a0-alfabeto" }.stato)
+        assertEquals(
+            StatoUnita.DISPONIBILE,
+            percorso.first { it.unita.id == "a0-pronomi-sein" }.stato
+        )
+        assertEquals(
+            StatoUnita.BLOCCATA,
+            percorso.first { it.unita.id == "a0-articoli" }.stato
+        )
     }
 
     @Test
@@ -189,10 +247,16 @@ class GrammaticaPercorsoTest {
         val mappa = mapOf("a1-akkusativ" to completata)
 
         val primaDellaScadenza = GrammaticaSyllabus.percorso(mappa, adesso + giorno / 2)
-        assertEquals(StatoUnita.COMPLETATA, primaDellaScadenza[0].stato)
+        assertEquals(
+            StatoUnita.COMPLETATA,
+            primaDellaScadenza.first { it.unita.id == "a1-akkusativ" }.stato
+        )
 
         val dopoLaScadenza = GrammaticaSyllabus.percorso(mappa, adesso + 2 * giorno)
-        assertEquals(StatoUnita.DA_RIPASSARE, dopoLaScadenza[0].stato)
+        assertEquals(
+            StatoUnita.DA_RIPASSARE,
+            dopoLaScadenza.first { it.unita.id == "a1-akkusativ" }.stato
+        )
     }
 
     @Test

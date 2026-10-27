@@ -123,50 +123,54 @@ object GrammaticaSyllabus {
 
     private val GIORNO_MS = TimeUnit.DAYS.toMillis(1)
 
-    val unitaPilota: List<UnitaGrammatica> = listOf(
-        unitaAkkusativ(),
+    /**
+     * Percorso completo A0 -> B1. L'ordine è didattico: prima le basi,
+     * poi i casi, i tempi del passato e infine le strutture B1.
+     * Gli ID sono stabili perché sono le chiavi della padronanza salvata.
+     */
+    val unita: List<UnitaGrammatica> = listOf(
+        unitaA0Alfabeto(),
+        unitaA0PronomiSein(),
+        unitaA0Articoli(),
+        unitaA0Plurale(),
+        unitaA0Frase(),
         unitaPraesens(),
-        unitaPerfekt()
+        unitaAkkusativ(),
+        unitaA1Modali(),
+        unitaA1Separabili(),
+        unitaA1PreposizioniLuogo(),
+        unitaA1PreposizioniTempo(),
+        unitaA1Imperativo(),
+        unitaPerfekt(),
+        unitaA2Dativo(),
+        unitaA2Praeteritum(),
+        unitaA2Riflessivi(),
+        unitaA2Subordinate(),
+        unitaA2Relative(),
+        unitaA2Passivo(),
+        unitaB1Adjektivdeklination(),
+        unitaB1Konnektoren(),
+        unitaB1Konjunktiv2(),
+        unitaB1IndirekteRede(),
+        unitaB1Nominalisierung(),
+        unitaB1Genitiv()
     )
-
-    /** Per ora il percorso contiene le tre unità pilota. */
-    val unita: List<UnitaGrammatica> get() = unitaPilota
 
     val ordineLivelli = listOf("A0", "A1", "A2", "B1")
 
     /**
-     * Tappe successive del syllabus. Non sono ancora giocabili: servono a
-     * mostrare la direzione senza inventare contenuti incompleti.
+     * Il percorso A0 -> B1 è completo. Non ci sono più tappe "in arrivo":
+     * la UI usa questa lista vuota per mostrare il messaggio di percorso completo.
      */
-    val tappeFuture: List<TappaPercorso> = listOf(
-        TappaPercorso("A0", "Alfabeto, suoni e pronuncia"),
-        TappaPercorso("A0", "Pronomi personali e sein/haben"),
-        TappaPercorso("A0", "Articoli, genere e plurale"),
-        TappaPercorso("A1", "Plurale dei sostantivi"),
-        TappaPercorso("A1", "Verbi modali"),
-        TappaPercorso("A1", "Verbi separabili"),
-        TappaPercorso("A1", "Preposizioni di luogo e tempo"),
-        TappaPercorso("A1", "Imperativo"),
-        TappaPercorso("A2", "Dativo"),
-        TappaPercorso("A2", "Präteritum"),
-        TappaPercorso("A2", "Verbi riflessivi"),
-        TappaPercorso("A2", "Frasi subordinate"),
-        TappaPercorso("A2", "Frasi relative"),
-        TappaPercorso("A2", "Passivo"),
-        TappaPercorso("B1", "Adjektivdeklination"),
-        TappaPercorso("B1", "Konnektoren"),
-        TappaPercorso("B1", "Konjunktiv II"),
-        TappaPercorso("B1", "Indirekte Rede"),
-        TappaPercorso("B1", "Nominalisierung")
-    )
+    val tappeFuture: List<TappaPercorso> = emptyList()
 
-    fun perId(id: String): UnitaGrammatica? = unitaPilota.firstOrNull { it.id == id }
+    fun perId(id: String): UnitaGrammatica? = unita.firstOrNull { it.id == id }
 
     /** Calcola lo stato di tutte le unità a partire dalla mappa salvata. */
     fun percorso(
         mappa: Map<String, PadronanzaGrammatica>,
         now: Long = System.currentTimeMillis()
-    ): List<UnitaConStato> = unitaPilota.map { unita ->
+    ): List<UnitaConStato> = unita.map { unita ->
         val padronanza = mappa[unita.id]
         val stato = when {
             padronanza?.completata == true &&
@@ -289,7 +293,7 @@ object GrammaticaSyllabus {
         sottotitolo = "Il caso del complemento oggetto",
         obiettivo = "Usare correttamente articoli, possessivi e pronomi all'accusativo.",
         minuti = 12,
-        prerequisiti = emptyList(),
+        prerequisiti = listOf("a1-praesens"),
         teoria = TeoriaGrammatica(
             regola = listOf(
                 "L'accusativo è il caso del complemento oggetto: risponde a **Wen?** (chi?) o **Was?** (cosa?).",
@@ -483,7 +487,7 @@ object GrammaticaSyllabus {
         sottotitolo = "Verbi regolari, irregolari e ordine della frase",
         obiettivo = "Coniugare i verbi al presente e costruire frasi principali corrette.",
         minuti = 15,
-        prerequisiti = listOf("a1-akkusativ"),
+        prerequisiti = listOf("a0-frase"),
         teoria = TeoriaGrammatica(
             regola = listOf(
                 "Il presente si forma dalla radice del verbo + desinenza: **-e, -st, -t, -en, -t, -en**.",
@@ -684,7 +688,7 @@ object GrammaticaSyllabus {
         sottotitolo = "Il passato prossimo del tedesco",
         obiettivo = "Raccontare azioni passate con haben/sein + Partizip II.",
         minuti = 15,
-        prerequisiti = listOf("a1-praesens"),
+        prerequisiti = listOf("a1-praesens", "a1-akkusativ"),
         teoria = TeoriaGrammatica(
             regola = listOf(
                 "Il Perfekt è il passato prossimo usato nel parlato: **haben/sein al presente + Partizip II**.",

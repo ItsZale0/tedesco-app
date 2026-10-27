@@ -179,14 +179,14 @@ fun PercorsoGrammaticaScreen(
                 Spacer(Modifier.height(Spaziature.xs))
                 PuntoAiuto("Studia la regola, guarda le tabelle e ascolta gli esempi.")
                 PuntoAiuto("Fai gli esercizi: scelta multipla, completamento, trasformazione e produzione.")
-                PuntoAiuto("Con almeno l'80% sblocchi la unità successiva.")
+                PuntoAiuto("Con almeno l'80% sblocchi le unità successive.")
                 PuntoAiuto("Il ripasso torna dopo 1, 3, 7 e 16 giorni.")
             }
         }
 
         Spacer(Modifier.height(Spaziature.md))
 
-        // ---- Roadmap: direzione, senza contenuti finti ----
+        // ---- Stato del percorso: completo oppure roadmap ----
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -195,48 +195,63 @@ fun PercorsoGrammaticaScreen(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Column(Modifier.padding(Spaziature.md)) {
-                Text(
-                    "Prossime tappe",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Dopo le tre unità pilota, il percorso si estende a tutto l'A0-B1.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(Spaziature.sm))
-                GrammaticaSyllabus.tappeFuture.take(10).forEach { tappa ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.secondaryContainer
+                if (GrammaticaSyllabus.tappeFuture.isEmpty()) {
+                    Text(
+                        "Percorso A0-B1 completo",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(Spaziature.xs))
+                    Text(
+                        "${GrammaticaSyllabus.unita.size} unità disponibili: dalle basi A0 alle strutture B1. " +
+                            "Continua con i ripassi per non perdere la padronanza.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        "Prossime tappe",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Il percorso continua ad ampliarsi.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(Spaziature.sm))
+                    GrammaticaSyllabus.tappeFuture.take(10).forEach { tappa ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Surface(
+                                shape = MaterialTheme.shapes.extraSmall,
+                                color = MaterialTheme.colorScheme.secondaryContainer
+                            ) {
+                                Text(
+                                    tappa.livello,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(Modifier.width(Spaziature.sm))
                             Text(
-                                tappa.livello,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                                tappa.titolo,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        Spacer(Modifier.width(Spaziature.sm))
-                        Text(
-                            tappa.titolo,
-                            style = MaterialTheme.typography.bodySmall
-                        )
                     }
+                    Spacer(Modifier.height(Spaziature.xs))
+                    Text(
+                        "In arrivo nelle prossime fasi.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Spacer(Modifier.height(Spaziature.xs))
-                Text(
-                    "In arrivo nelle prossime fasi.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
