@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
@@ -71,7 +72,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.ParolaTedesca
+import com.alessandro.tedesco.data.StatoUnita
 import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
@@ -86,7 +89,7 @@ import androidx.compose.material.icons.filled.ExpandMore
  * V2 - schermata unica: lezione + parole + esercizi, in un flusso lineare.
  * - Selettore di lezione nella barra in alto (chip "Lezioni").
  * - Impostazioni ed extra dentro il menu nascosto (icona in alto a destra).
- * - La teoria e' markdown renderizzato (MarkdownText), mai testo grezzo.
+ * - La teoria è markdown renderizzato (MarkdownText), mai testo grezzo.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,6 +101,7 @@ fun StudioVeloceScreen(
     onVaiAProgresso: () -> Unit = {},
     onVaiATutor: () -> Unit = {},
     onVaiABackup: () -> Unit = {},
+    onVaiAPercorsoGrammatica: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
@@ -138,6 +142,17 @@ fun StudioVeloceScreen(
 
     // Test di ingresso: mostrato finché non viene completato o saltato.
     val placementFatto by vm.placementFatto.collectAsStateWithLifecycle(false)
+
+    // Percorso grammaticale: la card in home deve mostrare subito il prossimo passo.
+    val percorsoGram by vm.percorsoGrammatica.collectAsStateWithLifecycle(
+        GrammaticaSyllabus.percorso(emptyMap())
+    )
+    val prossimaGram = remember(percorsoGram) {
+        percorsoGram.firstOrNull { it.stato == StatoUnita.DA_RIPASSARE }
+            ?: percorsoGram.firstOrNull { it.stato == StatoUnita.DISPONIBILE }
+            ?: percorsoGram.firstOrNull()
+    }
+    val completateGram = percorsoGram.count { it.padronanza?.completata == true }
 
     // Salva il miglior punteggio della lezione quando la sessione è completata:
     // serve al gate morbido ("lezione successiva") e al progresso.
@@ -321,6 +336,69 @@ fun StudioVeloceScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+                }
+            }
+
+            // ---- Percorso grammaticale: il punto di ingresso allo studio strutturato ----
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onVaiAPercorsoGrammatica() },
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Filled.Translate,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "Percorso grammaticale",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (prossimaGram != null) {
+                                    "Prossima: ${prossimaGram.unita.titolo} - ${prossimaGram.unita.livello} - ${prossimaGram.unita.minuti} min"
+                                } else {
+                                    "Teoria, esempi ed esercizi in ordine"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "$completateGram / ${percorsoGram.size} unità completate - A0 -> B1",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -854,7 +932,7 @@ fun StudioVeloceScreen(
                             )
                             Spacer(Modifier.height(Spaziature.sm))
                             Text(
-                                "La lezione non e' ancora disponibile: puoi generarla o sincronizzare il corso.",
+                                "La lezione non è ancora disponibile: puoi generarla o sincronizzare il corso.",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(Modifier.height(Spaziature.md))

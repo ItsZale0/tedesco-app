@@ -1,6 +1,7 @@
 package com.alessandro.tedesco.data.local
 
 import com.alessandro.tedesco.data.EsercizioAscolto
+import com.alessandro.tedesco.data.PadronanzaGrammatica
 import com.alessandro.tedesco.data.TestB1
 import com.alessandro.tedesco.data.ValutazioneProduzione
 import com.alessandro.tedesco.data.remote.VoceGlossario
@@ -348,7 +349,12 @@ data class ProfiloStato(
     /** Quaderno degli errori con ripetizione spaziata (SRS separato dal lessico). */
     val errori: List<com.alessandro.tedesco.data.ErroreEntity> = emptyList(),
     /** true dopo che il test di ingresso e' stato completato (o saltato). */
-    val placementFatto: Boolean = false
+    val placementFatto: Boolean = false,
+    /**
+     * Padronanza del percorso grammaticale, per id di unita'.
+     * Default vuoto = profili salvati prima di questa funzione restano validi.
+     */
+    val padronanzaGrammatica: Map<String, PadronanzaGrammatica> = emptyMap()
 )
 
 /** Piano di studio verso il B2. */

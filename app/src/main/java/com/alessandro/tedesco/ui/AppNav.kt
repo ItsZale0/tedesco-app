@@ -68,7 +68,23 @@ fun AppNav(
                     onVaiAImpostazioni = { nav.navigate("impostazioni") },
                     onVaiAProgresso = { nav.navigate("progresso") },
                     onVaiATutor = { nav.navigate("tutor") },
-                    onVaiABackup = { nav.navigate("backup") }
+                    onVaiABackup = { nav.navigate("backup") },
+                    onVaiAPercorsoGrammatica = { nav.navigate("percorso_grammatica") }
+                )
+            }
+            composable("percorso_grammatica") {
+                PercorsoGrammaticaScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() },
+                    onApriUnita = { id -> nav.navigate("unita_grammatica/$id") }
+                )
+            }
+            composable("unita_grammatica/{id}") { entry ->
+                UnitaGrammaticaScreen(
+                    vm = vm,
+                    unitaId = entry.arguments?.getString("id").orEmpty(),
+                    onIndietro = { nav.popBackStack() },
+                    onCompletata = { nav.popBackStack() }
                 )
             }
             composable("esercizi") {

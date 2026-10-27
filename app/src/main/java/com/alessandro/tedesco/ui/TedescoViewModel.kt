@@ -57,6 +57,8 @@ import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.data.local.SessioneEntity
 import com.alessandro.tedesco.data.ErroreEntity
 import com.alessandro.tedesco.data.ErroriSRS
+import com.alessandro.tedesco.data.GrammaticaSyllabus
+import com.alessandro.tedesco.data.UnitaConStato
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -166,6 +168,22 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * Percorso grammaticale strutturato: unita' + stato di sblocco/padronanza.
+     * La lista e' statica (per ora 3 unita' pilota); cambia solo lo stato salvato
+     * nel profilo attivo.
+     */
+    val percorsoGrammatica: StateFlow<List<UnitaConStato>> = profileManager.repositoryFlow
+        .map { r ->
+            val stato = r.profiloAttivoId?.let { r.profili[it]?.stato } ?: ProfiloStato()
+            GrammaticaSyllabus.percorso(stato.padronanzaGrammatica)
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            GrammaticaSyllabus.percorso(emptyMap())
+        )
 
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
@@ -1130,6 +1148,31 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             )
             profileManager.aggiornaStatoAttivo(nuovoStato)
             verificaEPromuovi()
+        }
+    }
+
+    /**
+     * Salva il risultato di una unita' del percorso grammaticale.
+     * Chiamato una sola volta alla fine della sessione, non a ogni risposta.
+     */
+    fun salvaPadronanzaGrammatica(unitaId: String, corrette: Int, totali: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val precedente = profilo.stato.padronanzaGrammatica[unitaId]
+            val nuova = GrammaticaSyllabus.valuta(
+                unitaId = unitaId,
+                corrette = corrette,
+                totali = totali,
+                precedente = precedente
+            )
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    padronanzaGrammatica = profilo.stato.padronanzaGrammatica + (unitaId to nuova)
+                ),
+                // Operazione rara e importante: scrive subito, cosi' il percorso
+                // resta aggiornato anche se l'app viene chiusa.
+                immediato = true
+            )
         }
     }
 
