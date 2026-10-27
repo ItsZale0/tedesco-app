@@ -44,6 +44,11 @@ internal suspend fun Context.scriviProfiliJson(json: String) {
 }
 
 internal suspend fun Context.profiliDataStorePulito() {
+    // I manager dei test precedenti possono avere un salvataggio coalescente in
+    // volo (400 ms). Se azzerassimo subito, quel write in ritardo ripopolerebbe
+    // il DataStore e il test successivo vedrebbe un profilo attivo "fantasma".
+    // Aspettiamo che la coda si svuoti, poi puliamo davvero.
+    kotlinx.coroutines.delay(SALVATAGGIO_ATTESA_MS + 100)
     profiliDataStore.edit { it.clear() }
 }
 

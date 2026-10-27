@@ -43,6 +43,15 @@ import com.alessandro.tedesco.data.CertificazioniUfficiali
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import com.alessandro.tedesco.data.Dialoghi
+import com.alessandro.tedesco.data.Sudtirol
+import com.alessandro.tedesco.data.WortlisteB1
 
 /**
  * Hub degli esercizi: tutti i tipi che esistevano n'app, organizzati.
@@ -59,6 +68,7 @@ fun EserciziScreen(
 ) {
     val p by vm.progressoReale.collectAsStateWithLifecycle(null)
     val pr = p
+    val erroriAperti by vm.errori.collectAsStateWithLifecycle(emptyList())
     val consiglio = ConsigliEsercizi.consiglio(pr)
 
     ScreenScaffold("Esercizi", onBack = onIndietro) {
@@ -130,7 +140,7 @@ fun EserciziScreen(
                     riga.forEach { tipo ->
                         CardTipoEsercizio(
                             tipo = tipo,
-                            stat = statPerTipo(tipo.id, pr),
+                            stat = statPerTipo(tipo.id, pr, erroriAperti.count { !it.risolto }),
                             onClick = { onVaiA(tipo.route) },
                             modifier = Modifier.weight(1f)
                         )
@@ -177,10 +187,26 @@ private val TipiEsercizio = listOf(
     TipoEsercizio("ascolto", "ascolto", "Ascolto", "Audio con domande per l'orecchio",
         Icons.Filled.Hearing),
     TipoEsercizio("ripasso", "ripasso", "Ripasso", "Ripassa le parole sbagliate o fragili",
-        Icons.Filled.Refresh)
+        Icons.Filled.Refresh),
+    TipoEsercizio("produzione_attiva", "produzione_attiva", "Produzione attiva",
+        "Scrivi, completa, riordina: recupero attivo", Icons.Filled.Create),
+    TipoEsercizio("errori", "errori", "Quaderno errori",
+        "Gli errori tornano al momento giusto (SRS)", Icons.Filled.ErrorOutline),
+    TipoEsercizio("dialoghi", "dialoghi", "Dialoghi",
+        "Conversazioni a due voci con domande", Icons.Filled.Headphones),
+    TipoEsercizio("pronuncia", "pronuncia", "Pronuncia",
+        "Coppie minime, registro e confronto", Icons.Filled.RecordVoiceOver),
+    TipoEsercizio("wortliste", "wortliste", "Wortliste B1",
+        "${WortlisteB1.tutte.size} parole d'esame da portare nel lessico", Icons.Filled.MenuBook),
+    TipoEsercizio("sudtirol", "sudtirol", "Südtirol / Austria",
+        "Varianti locali e lessico sanitario", Icons.Filled.Place)
 )
 
-private fun statPerTipo(id: String, pr: CalcoloProgresso.ProgressoReale?): String {
+private fun statPerTipo(
+    id: String,
+    pr: CalcoloProgresso.ProgressoReale?,
+    erroriAperti: Int = 0
+): String {
     if (pr == null) return "Per iniziare"
     val soglia = CertificazioniUfficiali.SOGLIA_SUPERAMENTO
     return when (id) {
@@ -192,6 +218,12 @@ private fun statPerTipo(id: String, pr: CalcoloProgresso.ProgressoReale?): Strin
         "verifica" -> "${pr.paroleImparate}/${pr.paroleDisponibili} verificate"
         "ascolto" -> "Livello ${pr.livello.label.substringBefore(" ")}"
         "ripasso" -> if (pr.paroleFragili > 0) "${pr.paroleFragili} da ripassare" else "Tutto a posto"
+        "produzione_attiva" -> "72 esercizi offline"
+        "errori" -> if (erroriAperti > 0) "$erroriAperti da consolidare" else "Nessun errore aperto"
+        "dialoghi" -> "${Dialoghi.dialoghi.size} dialoghi"
+        "pronuncia" -> "Ascolta e registrati"
+        "wortliste" -> "${WortlisteB1.tutte.size} parole B1"
+        "sudtirol" -> "${Sudtirol.varianti.size} varianti + lessico"
         else -> ""
     }
 }

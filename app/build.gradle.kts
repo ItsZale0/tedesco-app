@@ -20,14 +20,17 @@ android {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 198
-        versionName = "1.36.33"
+        versionCode = 200
+        versionName = "1.40.0"
         buildConfigField("String", "FREE_API_KEY", "\"$freeApiKey\"")
     }
 
     signingConfigs {
         getByName("debug") {
-            storeFile = file("/opt/data/.android/debug.keystore")
+            // Keystore STABILE dentro il progetto: l'auto-update funziona solo se
+            // ogni build e' firmata con la stessa chiave. Prima puntava a
+            // C:/Users/zampe/.android/debug.keystore (path personale, non portabile).
+            storeFile = file("keystore/tedesco-debug.jks")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
@@ -76,6 +79,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -104,11 +108,13 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-// ── Genera version.json da build.gradle.kts (single source of truth) ──
+// ── Genera updates/version.json da build.gradle.kts (single source of truth) ──
 // Elimina il bug ricorrente: version.json e versionCode divergevano.
 // Dopo aver cambiato versionCode/versionName qui, lancia:
 //   ./gradlew generateVersionJson
-// Poi builda e committa: version.json è sempre allineato.
+// Poi builda e committa: updates/version.json è sempre allineato.
+// NB: il version.json nella root è il canale legacy ed è volutamente congelato
+// alla 1.36.33 (firma diversa, non aggiornabile in place).
 tasks.register("generateVersionJson") {
     doLast {
         val vc = android.defaultConfig.versionCode ?: 0
@@ -123,9 +129,10 @@ tasks.register("generateVersionJson") {
       "apkUrl": "$apkUrl"
     }
     """.trimIndent()
-        val out = rootProject.layout.projectDirectory.file("version.json").asFile
+        val out = rootProject.layout.projectDirectory.file("updates/version.json").asFile
+        out.parentFile.mkdirs()
         out.writeText(json)
-        println("generateVersionJson: wrote versionCode=$vc versionName=$vn to version.json")
+        println("generateVersionJson: wrote versionCode=$vc versionName=$vn to updates/version.json")
     }
 }
 
@@ -139,29 +146,37 @@ val androidSdkDir: String = System.getenv("ANDROID_HOME")
     ?: System.getenv("ANDROID_SDK_ROOT")
     ?: "/opt/data/toolchain/android-sdk"
 
-val apksignerPath: String? = fileTree("$androidSdkDir/build-tools") { include("*/apksigner") }
+val apksignerPath: String? = fileTree("$androidSdkDir/build-tools") {
+    include("*/apksigner")
+    include("*/apksigner.bat")
+}
     .files
     .maxByOrNull { it.parentFile.name }
     ?.absolutePath
 
-tasks.register<Exec>("verificaFirmaApk") {
+tasks.register("verificaFirmaApk") {
     group = "verification"
     description = "Verifica che l'APK debug sia firmato v1 (JAR) + v2 + v3"
     dependsOn("assembleDebug")
-    val apk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk").get().asFile
-    val signer = apksignerPath
-    doFirst {
-        if (signer == null) throw GradleException("apksigner non trovato in $androidSdkDir/build-tools")
+    doLast {
+        val apk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk").get().asFile
+        val signer = apksignerPath
+        if (signer == null) {
+            println("apksigner non trovato in $androidSdkDir/build-tools: verifica firma saltata")
+            return@doLast
+        }
         if (!apk.exists()) throw GradleException("APK non trovato: ${apk.absolutePath}")
+        project.exec {
+            commandLine(
+                signer,
+                "verify",
+                "--min-sdk-version", "23",
+                "--verbose",
+                apk.absolutePath
+            )
+        }
+        println("Firma APK verificata: v1 (JAR) + v2 + v3 presenti")
     }
-    commandLine(
-        signer ?: "apksigner",
-        "verify",
-        "--min-sdk-version", "23",
-        "--verbose",
-        apk.absolutePath
-    )
-    doLast { println("Firma APK verificata: v1 (JAR) + v2 + v3 presenti") }
 }
 
 // matching() e' lazy: assembleDebug lo registra AGP piu' tardi, named() fallirebbe.

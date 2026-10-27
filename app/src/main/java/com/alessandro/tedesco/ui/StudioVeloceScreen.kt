@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -133,6 +134,18 @@ fun StudioVeloceScreen(
     var inGenerazione by remember { mutableStateOf(false) }
     var mostraSelettore by remember { mutableStateOf(false) }
     var mostraMenu by remember { mutableStateOf(false) }
+    var mostraGate by remember { mutableStateOf(false) }
+
+    // Test di ingresso: mostrato finché non viene completato o saltato.
+    val placementFatto by vm.placementFatto.collectAsStateWithLifecycle(false)
+
+    // Salva il miglior punteggio della lezione quando la sessione è completata:
+    // serve al gate morbido ("lezione successiva") e al progresso.
+    LaunchedEffect(esercizi.size, indice) {
+        if (esercizi.isNotEmpty() && indice >= esercizi.size) {
+            vm.registraPunteggioLezione(lezioneCorrente, corrette * 100 / esercizi.size)
+        }
+    }
 
     // Cambio lezione -> nuovo set di esercizi sulle parole di quella lezione.
     LaunchedEffect(lezioneCorrente, paroleLezione.size) {
@@ -309,6 +322,16 @@ fun StudioVeloceScreen(
                             )
                         }
                     }
+                }
+            }
+
+            // ---- Test di ingresso (una volta sola, finché non viene fatto) ----
+            if (!placementFatto) {
+                item {
+                    PlacementTestCard(
+                        onCompletato = { livello -> vm.impostaLivello(livello) },
+                        onSalta = { vm.saltaPlacement() }
+                    )
                 }
             }
 
@@ -783,12 +806,16 @@ fun StudioVeloceScreen(
                             Spacer(Modifier.height(Spaziature.sm))
                             Button(
                                 onClick = {
-                                    esercizi = emptyList()
-                                    indice = 0
-                                    scelta = null
-                                    corrette = 0
-                                    verificato = false
-                                    vm.avanzaLezione()
+                                    if (percentuale >= 60) {
+                                        esercizi = emptyList()
+                                        indice = 0
+                                        scelta = null
+                                        corrette = 0
+                                        verificato = false
+                                        vm.avanzaLezione()
+                                    } else {
+                                        mostraGate = true
+                                    }
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -891,6 +918,42 @@ fun StudioVeloceScreen(
                 }
             }
         }
+    }
+
+    // Gate morbido: non blocca, ma chiede conferma se l'evidenza è debole.
+    if (mostraGate) {
+        AlertDialog(
+            onDismissRequest = { mostraGate = false },
+            title = { Text("Passare alla lezione successiva?") },
+            text = {
+                Text(
+                    "Il punteggio di questa sessione è sotto il 60%. " +
+                        "Puoi ripetere gli esercizi oppure andare avanti lo stesso: " +
+                        "nessun blocco, ma il ripasso resta più efficace."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    mostraGate = false
+                    esercizi = emptyList()
+                    indice = 0
+                    scelta = null
+                    corrette = 0
+                    verificato = false
+                    vm.avanzaLezione()
+                }) { Text("Vai avanti") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    mostraGate = false
+                    esercizi = generaEserciziDaParole(paroleLezione)
+                    indice = 0
+                    scelta = null
+                    corrette = 0
+                    verificato = false
+                }) { Text("Ripeti") }
+            }
+        )
     }
 }
 

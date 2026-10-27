@@ -1,0 +1,7 @@
+{
+  "versionCode": 200,
+  "versionName": "1.40.0",
+  "changelog": "Produzione attiva, quaderno errori SRS, test di ingresso, dialoghi, pronuncia, Südtirol, Wortliste B1, task d'esame e auto-update reale.",
+  "minVersionCode": 0,
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.40.0/Tedesco-v1.40.0.apk"
+}

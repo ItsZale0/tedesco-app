@@ -144,7 +144,9 @@ data class ProgressoUtente(
     val testB1: List<com.alessandro.tedesco.data.TestB1> = emptyList(),
     val testAdattivi: List<TestAdattivo> = emptyList(),
     val testAscolto: List<TestAscolto> = emptyList(),
-    val erroriGrammatica: List<String> = emptyList()
+    val erroriGrammatica: List<String> = emptyList(),
+    /** Miglior punteggio (0-100) ottenuto in ogni lezione. Chiave = numero lezione. */
+    val punteggiLezioni: Map<Int, Int> = emptyMap()
 )
 
 /**
@@ -342,7 +344,11 @@ data class ProfiloStato(
     val eserciziGeneratiProduzione: List<EsercizioGenEntity> = emptyList(),
     val eserciziGeneratiAscolto: List<EsercizioGenEntity> = emptyList(),
     val eserciziGeneratiGrammatica: List<EsercizioGenEntity> = emptyList(),
-    val ripassiLog: List<RipassoLogEntity> = emptyList()
+    val ripassiLog: List<RipassoLogEntity> = emptyList(),
+    /** Quaderno degli errori con ripetizione spaziata (SRS separato dal lessico). */
+    val errori: List<com.alessandro.tedesco.data.ErroreEntity> = emptyList(),
+    /** true dopo che il test di ingresso e' stato completato (o saltato). */
+    val placementFatto: Boolean = false
 )
 
 /** Piano di studio verso il B2. */

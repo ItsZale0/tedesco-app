@@ -8,6 +8,7 @@ import com.alessandro.tedesco.data.WordRepository
 import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.GeneratoreEsercizi
 import com.alessandro.tedesco.data.remote.TutorService
+import com.alessandro.tedesco.data.remote.UpdateWorker
 import com.alessandro.tedesco.data.remote.VocabPublishService
 import com.alessandro.tedesco.di.AppModule
 import com.alessandro.tedesco.sync.ReminderWorker
@@ -63,6 +64,11 @@ class TedescoApp : Application(), Configuration.Provider {
         installaCrashReporter()
         SyncWorker.schedule(this)
         ReminderWorker.schedule(this)
+        // Auto-update reale: controllo periodico (24h) anche ad app chiusa + uno
+        // immediato all'avvio. Se l'utente ha attivato il download automatico,
+        // il worker scarica l'APK e manda la notifica "pronto da installare".
+        UpdateWorker.schedule(this)
+        UpdateWorker.controllaSubito(this)
         // Riprogramma il backup automatico se l'utente lo aveva attivato
         // (WorkManager perde il job se l'app viene reinstallata/aggiornata).
         appScope.launch {

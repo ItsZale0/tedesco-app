@@ -55,6 +55,8 @@ import com.alessandro.tedesco.data.local.FeedbackEntry
 import com.alessandro.tedesco.data.local.PianoEntity
 import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.data.local.SessioneEntity
+import com.alessandro.tedesco.data.ErroreEntity
+import com.alessandro.tedesco.data.ErroriSRS
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -768,7 +770,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val nuova = p.lezioneCorrente + 1
             // Selettore: prossima lezione con parole nel vocabolario o contenuto.
             val prossima = selezionaProssimaLezione(nuova, parole, lezioniFeed)
-            if (prossima == nuova) return@launch
+            if (prossima <= p.lezioneCorrente) return@launch
 
             val nuovoStato = profilo.stato.copy(
                 progresso = p.copy(
@@ -1179,6 +1181,161 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         val profilo = profileManager.profiloAttivo() ?: return emptyList()
         val errori = profilo.stato.progresso.erroriGrammatica
         return com.alessandro.tedesco.data.GrammaticaB1.esercizi.filter { it.domanda in errori }
+    }
+
+    // ==================== QUADERNO ERRORI (SRS) ====================
+
+    /** Tutti gli errori registrati nel profilo attivo. */
+    val errori: StateFlow<List<ErroreEntity>> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id?.let { r.profili[it]?.stato?.errori }.orEmpty()
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Errori non ancora risolti e arrivati alla data di ripasso. */
+    val erroriDaRipassare: StateFlow<List<ErroreEntity>> = errori
+        .map { lista -> lista.filter { !it.risolto && ErroriSRS.daRipassare(it) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * Registra un errore reale (grammatica, traduzione, dettato...).
+     * Se lo stesso errore esiste gia' non lo duplica: azzera la scadenza SRS,
+     * cosi' torna subito nel ripasso.
+     */
+    fun registraErrore(
+        tipo: String,
+        domanda: String,
+        rispostaCorretta: String,
+        rispostaData: String = "",
+        spiegazione: String = "",
+        livello: String = "A1"
+    ) {
+        if (domanda.isBlank() || rispostaCorretta.isBlank()) return
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val adesso = System.currentTimeMillis()
+            val nuovo = ErroriSRS.nuovo(
+                tipo = tipo,
+                domanda = domanda,
+                rispostaCorretta = rispostaCorretta,
+                rispostaData = rispostaData,
+                spiegazione = spiegazione,
+                livello = livello,
+                now = adesso
+            )
+            val esistenti = profilo.stato.errori
+            val indice = esistenti.indexOfFirst { it.chiave == nuovo.chiave }
+            val aggiornati = if (indice >= 0) {
+                esistenti.toMutableList().apply {
+                    this[indice] = esistenti[indice].copy(
+                        rispostaData = rispostaData,
+                        spiegazione = spiegazione.ifBlank { esistenti[indice].spiegazione },
+                        ultimaVolta = adesso,
+                        ripetizioni = 0,
+                        intervalloGiorni = 1,
+                        prossimaRipasso = adesso + 24L * 60L * 60L * 1000L,
+                        risolto = false
+                    )
+                }
+            } else {
+                (esistenti + nuovo).takeLast(300)
+            }
+            profileManager.aggiornaStatoAttivo(profilo.stato.copy(errori = aggiornati))
+        }
+    }
+
+    /** Risposta al ripasso di un errore: saputo = richiamo riuscito. */
+    fun rispondiErrore(id: String, saputo: Boolean) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val aggiornati = profilo.stato.errori.map { errore ->
+                if (errore.id == id) ErroriSRS.rispondi(errore, saputo) else errore
+            }
+            profileManager.aggiornaStatoAttivo(profilo.stato.copy(errori = aggiornati))
+        }
+    }
+
+    fun eliminaErrore(id: String) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(errori = profilo.stato.errori.filterNot { it.id == id })
+            )
+        }
+    }
+
+    fun svuotaErroriRisolti() {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(errori = profilo.stato.errori.filterNot { it.risolto })
+            )
+        }
+    }
+
+    // ==================== PLACEMENT TEST ====================
+
+    val placementFatto: StateFlow<Boolean> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id?.let { r.profili[it]?.stato?.placementFatto } ?: false
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Imposta il livello emerso dal test di ingresso (o scelto a mano). */
+    fun impostaLivello(livello: LivelloCEFR) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    progresso = profilo.stato.progresso.copy(livelloCorrente = livello),
+                    placementFatto = true
+                )
+            )
+            _messaggio.value = "Livello impostato: ${livello.label}"
+        }
+    }
+
+    /** Salta il test di ingresso: il livello resta quello attuale. */
+    fun saltaPlacement() {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            profileManager.aggiornaStatoAttivo(profilo.stato.copy(placementFatto = true))
+        }
+    }
+
+    // ==================== PUNTEGGI LEZIONI ====================
+
+    /** Miglior punteggio (0-100) della lezione: serve al gate morbido. */
+    fun registraPunteggioLezione(lezione: Int, punteggio: Int) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val precedente = profilo.stato.progresso.punteggiLezioni[lezione] ?: -1
+            val migliore = maxOf(precedente, punteggio.coerceIn(0, 100))
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    progresso = profilo.stato.progresso.copy(
+                        punteggiLezioni = profilo.stato.progresso.punteggiLezioni + (lezione to migliore)
+                    )
+                )
+            )
+        }
+    }
+
+    /** Aggiunge alla Wortliste personale una parola curata (B1). */
+    fun aggiungiParolaWortliste(tedesco: String, italiano: String, esempio: String, livello: String = "B1") {
+        val articolo = listOf("der ", "die ", "das ").firstOrNull { tedesco.startsWith(it) }
+        val parola = articolo?.let { tedesco.removePrefix(it) } ?: tedesco
+        aggiungiParolaCustom(
+            german = parola,
+            italian = italiano,
+            example = esempio,
+            article = articolo?.trim(),
+            pronunciation = null,
+            lesson = 0,
+            tags = "Wortliste"
+        )
     }
 
     /** Avvia una sessione strutturata. */

@@ -56,10 +56,14 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
     private var downloadJob: Job? = null
 
     companion object {
+        // Canale di aggiornamento attivo. Il vecchio /version.json nella root resta
+        // congelato alla 1.36.33 (canale legacy): la 1.36.33 era firmata con una chiave
+        // diversa, quindi Android non può installarne sopra una build firmata con la
+        // chiave attuale. Tenerlo fermo evita un download che fallirebbe alla firma.
         const val URL_RAW =
-            "https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/version.json"
+            "https://raw.githubusercontent.com/ItsZale0/tedesco-app/master/updates/version.json"
         const val URL_API_CONTENTS =
-            "https://api.github.com/repos/ItsZale0/tedesco-app/contents/version.json"
+            "https://api.github.com/repos/ItsZale0/tedesco-app/contents/updates/version.json"
     }
 
     val versioneCorrente: String = runCatching {
@@ -101,7 +105,7 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
-     * Legge version.json da due fonti: prima raw.githubusercontent.com (veloce, senza
+     * Legge updates/version.json da due fonti: prima raw.githubusercontent.com (veloce, senza
      * autenticazione); se non risponde (VPN, DNS, blocco Cloudflare) prova l'API
      * GitHub contents (base64). Entrambe fallite → IOException.
      */
@@ -127,7 +131,7 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Fallback: /contents/version.json di GitHub restituisce il file in base64. */
+    /** Fallback: /contents/updates/version.json di GitHub restituisce il file in base64. */
     private fun scaricaVersioneDaApi(): VersionInfo {
         val request = Request.Builder().url(URL_API_CONTENTS).build()
         client.newCall(request).execute().use { response ->

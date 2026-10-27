@@ -104,8 +104,17 @@ fun ProduzioneScrittaScreen(
     var erroreGen by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    // Lista di base + esercizi generati convertiti in EsercizioScrittura
+    // Lista di base + compiti d'esame Goethe/telc + esercizi generati dall'AI
     val listaBase = getEserciziScrittura(profilo)
+    val taskEsame = com.alessandro.tedesco.data.TaskB1.scrittura.map { task ->
+        EsercizioScrittura(
+            id = task.id,
+            titolo = "Esame B1: ${task.titolo}",
+            istruzioni = task.istruzioni(),
+            esempio = "",
+            suggerimenti = task.punti
+        )
+    }
     val eserciziGeneratiConvenieti = eserciziGen.map { gen ->
         EsercizioScrittura(
             id = gen.id,
@@ -174,7 +183,7 @@ fun ProduzioneScrittaScreen(
                     }
                 }
 
-                items(listaBase + eserciziGeneratiConvenieti) { esercizio ->
+                items(listaBase + taskEsame + eserciziGeneratiConvenieti) { esercizio ->
                     Card(
                         onClick = { esercizioSelezionato = esercizio },
                         modifier = Modifier.fillMaxWidth()

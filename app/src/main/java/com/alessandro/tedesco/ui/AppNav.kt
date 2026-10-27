@@ -111,6 +111,24 @@ fun AppNav(
                     onVaiANuove = { nav.popBackStack() }
                 )
             }
+            composable("produzione_attiva") {
+                ProduzioneAttivaScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
+            composable("errori") {
+                QuadernoErroriScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
+            composable("pronuncia") {
+                PronunciaScreen(onIndietro = { nav.popBackStack() })
+            }
+            composable("sudtirol") {
+                SudtirolScreen(onIndietro = { nav.popBackStack() })
+            }
+            composable("wortliste") {
+                WortlisteScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
+            composable("dialoghi") {
+                DialoghiScreen(onIndietro = { nav.popBackStack() })
+            }
             composable("progresso") {
                 ProgressoScreen(vm = vm, onIndietro = { nav.popBackStack() })
             }

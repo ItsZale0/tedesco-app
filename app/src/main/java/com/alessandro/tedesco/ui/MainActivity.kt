@@ -1,5 +1,8 @@
 package com.alessandro.tedesco.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
@@ -33,6 +36,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val app = application as TedescoApp
+
+        // Android 13+: senza questo permesso le notifiche del worker di
+        // auto-update (e dei promemoria) vengono scartate in silenzio.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
 
         setContent {
             // Material 3: dynamic color su Android 12+, altrimenti schema baseline.

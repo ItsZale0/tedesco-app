@@ -232,6 +232,14 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                         punteggio++
                                     } else {
                                         erroriRef.add(esercizio.domanda)
+                                        vm.registraErrore(
+                                            tipo = "grammatica",
+                                            domanda = esercizio.domanda,
+                                            rispostaCorretta = esercizio.opzioni.getOrElse(esercizio.rispostaCorretta) { "" },
+                                            rispostaData = esercizio.opzioni.getOrElse(index) { "" },
+                                            spiegazione = esercizio.spiegazione,
+                                            livello = livello.substringBefore(" ").trim()
+                                        )
                                     }
                                     vm.segnaEsercizioCompletato(TipoEsercizio.GRAMMATICA, esercizio.id)
                                 }

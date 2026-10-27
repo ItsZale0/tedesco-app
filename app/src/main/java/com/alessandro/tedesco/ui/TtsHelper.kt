@@ -36,7 +36,14 @@ object TtsCondiviso {
         private set
 
     /** Riproduce [testo]; crea il motore se non esiste ancora. */
-    fun parla(context: Context, testo: String, locale: Locale = Locale.GERMAN) {
+    fun parla(
+        context: Context,
+        testo: String,
+        locale: Locale = Locale.GERMAN,
+        velocita: Float = 1f,
+        pitch: Float = 1f,
+        voce: String? = null
+    ) {
         if (testo.isBlank()) return
         val attuale = motore
         if (attuale != null && pronto) {
@@ -47,11 +54,36 @@ object TtsCondiviso {
                 linguaCorrente = locale
             }
             if (pronto) {
+                impostaParametri(attuale, velocita, pitch, voce)
                 riproduci(attuale, testo)
                 return
             }
         }
-        crea(context, testo, locale)
+        crea(context, testo, locale, velocita, pitch, voce)
+    }
+
+    /** Voci tedesche installate sul dispositivo (nome, etichetta, paese). */
+    fun vociTedesche(): List<Pair<String, String>> {
+        val voci = motore?.voices ?: return emptyList()
+        return voci
+            .filter { it.locale.language.equals("de", ignoreCase = true) }
+            .map { it.name to "${it.locale.displayName} - ${it.name.substringAfterLast('#')}" }
+            .distinct()
+            .sortedBy { it.second }
+    }
+
+    /** true se il dispositivo ha una voce austriaca (de-AT). */
+    fun supportaAustriaco(): Boolean {
+        val voci = motore?.voices ?: return false
+        return voci.any { it.locale.language == "de" && it.locale.country == "AT" }
+    }
+
+    private fun impostaParametri(tts: TextToSpeech, velocita: Float, pitch: Float, voce: String?) {
+        tts.setSpeechRate(velocita.coerceIn(0.3f, 2f))
+        tts.setPitch(pitch.coerceIn(0.3f, 2f))
+        if (!voce.isNullOrBlank()) {
+            tts.voices?.firstOrNull { it.name == voce }?.let { tts.voice = it }
+        }
     }
 
     /** Ferma la riproduzione corrente (il motore resta caldo, pronto al riuso). */
@@ -70,7 +102,14 @@ object TtsCondiviso {
         parlando = false
     }
 
-    private fun crea(context: Context, testo: String, locale: Locale) {
+    private fun crea(
+        context: Context,
+        testo: String,
+        locale: Locale,
+        velocita: Float,
+        pitch: Float,
+        voce: String?
+    ) {
         chiudi()
         inCoda = testo
         linguaCorrente = locale
@@ -90,7 +129,10 @@ object TtsCondiviso {
                 // pronto, la richiesta e' rimasta in coda: la eseguiamo ora.
                 val daDire = inCoda
                 inCoda = null
-                if (pronto && daDire != null) riproduci(motore!!, daDire)
+                if (pronto && daDire != null) {
+                    impostaParametri(motore!!, velocita, pitch, voce)
+                    riproduci(motore!!, daDire)
+                }
             } else {
                 pronto = false
                 inCoda = null
@@ -115,6 +157,9 @@ class TtsHelper(context: Context, private val locale: Locale = Locale.GERMAN) {
         get() = TtsCondiviso.parlando
 
     fun speak(text: String) = TtsCondiviso.parla(appContext, text, locale)
+
+    fun speak(text: String, velocita: Float = 1f, pitch: Float = 1f, voce: String? = null) =
+        TtsCondiviso.parla(appContext, text, locale, velocita, pitch, voce)
 
     fun stop() = TtsCondiviso.ferma()
 

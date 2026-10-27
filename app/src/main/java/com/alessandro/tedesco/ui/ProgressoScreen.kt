@@ -1,5 +1,7 @@
 package com.alessandro.tedesco.ui
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,25 +13,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloProgresso
 import com.alessandro.tedesco.data.CertificazioniUfficiali
+import com.alessandro.tedesco.data.ErroreEntity
+import com.alessandro.tedesco.data.ReportInsegnante
+import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 
@@ -48,6 +59,8 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 @Composable
 fun ProgressoScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
     val p by vm.progressoReale.collectAsStateWithLifecycle(null)
+    val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
+    val errori by vm.errori.collectAsStateWithLifecycle(emptyList())
 
     ScreenScaffold("Progresso", onBack = onIndietro) {
         val pr = p
@@ -83,6 +96,14 @@ fun ProgressoScreen(vm: TedescoViewModel, onIndietro: (() -> Unit)? = null) {
 
             // ---- 6. Traguardi ----
             CardTraguardi(pr)
+
+            // ---- 7. Report per l'insegnante ----
+            CardReportInsegnante(
+                pr = pr,
+                profilo = profilo,
+                errori = errori,
+                data = TedescoViewModel.formattaData(System.currentTimeMillis())
+            )
 
             Spacer(Modifier.height(12.dp))
         }
@@ -505,5 +526,92 @@ private fun CardTraguardi(pr: CalcoloProgresso.ProgressoReale) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Esporta un report leggibile (o il CSV degli errori) tramite il foglio di
+ * condivisione di Android. Nessun permesso, nessun file temporaneo: il docente
+ * riceve il testo via mail, WhatsApp o Drive.
+ */
+@Composable
+private fun CardReportInsegnante(
+    pr: CalcoloProgresso.ProgressoReale,
+    profilo: ProfiloUtente?,
+    errori: List<ErroreEntity>,
+    data: String
+) {
+    val context = LocalContext.current
+    var conferma by remember { mutableStateOf<String?>(null) }
+    val punteggi = profilo?.stato?.progresso?.punteggiLezioni.orEmpty()
+    val nome = profilo?.config?.nomeVisualizzato.orEmpty()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Report per l'insegnante",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Uno snapshot dei dati reali: competenze, lessico, punteggi delle lezioni " +
+                    "e quaderno errori. Utile per un colloquio o per il tutoraggio.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = {
+                    condividi(
+                        context = context,
+                        oggetto = "Report tedesco - ${nome.ifBlank { "studente" }}",
+                        testo = ReportInsegnante.genera(
+                            nome = nome,
+                            livelloObiettivo = pr.livelloObiettivo,
+                            pr = pr,
+                            errori = errori,
+                            punteggiLezioni = punteggi,
+                            data = data
+                        )
+                    )
+                    conferma = "Report pronto: scegli come condividerlo."
+                }) {
+                    Text("Condividi report")
+                }
+                OutlinedButton(onClick = {
+                    condividi(
+                        context = context,
+                        oggetto = "Errori tedesco - ${nome.ifBlank { "studente" }}",
+                        testo = ReportInsegnante.csvErrori(errori)
+                    )
+                    conferma = "CSV pronto: aprilo con Excel o Fogli."
+                }) {
+                    Text("CSV errori")
+                }
+            }
+            conferma?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+private fun condividi(context: Context, oggetto: String, testo: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, oggetto)
+        putExtra(Intent.EXTRA_TEXT, testo)
+    }
+    runCatching {
+        context.startActivity(Intent.createChooser(intent, oggetto))
     }
 }

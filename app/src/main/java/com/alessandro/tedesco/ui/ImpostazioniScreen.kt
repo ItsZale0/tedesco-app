@@ -47,15 +47,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,10 +74,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.remote.UpdateState
+import com.alessandro.tedesco.data.remote.UpdateSettings
+import com.alessandro.tedesco.data.remote.UpdateWorker
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
+import kotlinx.coroutines.launch
 
 private const val URL_VOCAB_DEFAULT =
     "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
@@ -251,6 +257,15 @@ fun ImpostazioniScreen(
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
     val ultimoControllo by updater.ultimoControllo.collectAsStateWithLifecycle("")
+    val contestoUpdate = LocalContext.current
+    val scopeUpdate = rememberCoroutineScope()
+    val impostazioniUpdate = remember { UpdateSettings(contestoUpdate) }
+    var autoControllo by remember { mutableStateOf(true) }
+    var autoDownload by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        autoControllo = impostazioniUpdate.autoControllo()
+        autoDownload = impostazioniUpdate.autoDownload()
+    }
 
     var cambiaProfilo by remember { mutableStateOf(false) }
     var esciSelezione by remember { mutableStateOf(false) }
@@ -462,6 +477,51 @@ fun ImpostazioniScreen(
                         Spacer(Modifier.height(4.dp))
                         Text(it, style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Controllo automatico", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Ogni 24 ore, anche ad app chiusa (WorkManager)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = autoControllo,
+                            onCheckedChange = { attivo ->
+                                autoControllo = attivo
+                                scopeUpdate.launch {
+                                    impostazioniUpdate.setAutoControllo(attivo)
+                                    if (attivo) UpdateWorker.schedule(contestoUpdate)
+                                    else UpdateWorker.annulla(contestoUpdate)
+                                }
+                            }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Scarica in automatico", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Scarica l'APK in background e avvisa quando è pronto",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = autoDownload,
+                            onCheckedChange = { attivo ->
+                                autoDownload = attivo
+                                scopeUpdate.launch { impostazioniUpdate.setAutoDownload(attivo) }
+                            }
+                        )
                     }
                     Spacer(Modifier.height(10.dp))
                     when (val s = updateState) {
