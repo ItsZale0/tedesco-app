@@ -1,7 +1,7 @@
 {
-  "versionCode": 204,
-  "versionName": "1.43.1",
-  "changelog": "Versionamento automatico: ogni modifica incrementa versionCode e versionName e allinea il manifest; release GitHub pubblicata automaticamente sui tag v*.",
+  "versionCode": 205,
+  "versionName": "1.43.2",
+  "changelog": "Nuova homepage: design coerente con le sezioni rinnovate, piano di oggi più chiaro con anello di progresso, azioni rapide e card della lezione ridisegnate.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.1/Tedesco-v1.43.1.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.2/Tedesco-v1.43.2.apk"
 }
