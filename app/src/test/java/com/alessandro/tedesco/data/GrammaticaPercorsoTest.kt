@@ -17,7 +17,7 @@ class GrammaticaPercorsoTest {
 
     @Test
     fun ilPercorsoContieneTutteLeUnitaA0B1() {
-        assertEquals(25, GrammaticaSyllabus.unita.size)
+        assertEquals(31, GrammaticaSyllabus.unita.size)
         assertEquals(
             listOf("A0", "A1", "A2", "B1"),
             GrammaticaSyllabus.unita.map { it.livello }.distinct()
@@ -40,6 +40,7 @@ class GrammaticaPercorsoTest {
                 "a0-frase",
                 "a1-praesens",
                 "a1-akkusativ",
+                "a1-possessivi",
                 "a1-modali",
                 "a1-separabili",
                 "a1-preposizioni-luogo",
@@ -47,13 +48,18 @@ class GrammaticaPercorsoTest {
                 "a1-imperativo",
                 "a2-perfekt",
                 "a2-dativo",
+                "a2-wechselpraepositionen",
                 "a2-praeteritum",
                 "a2-riflessivi",
                 "a2-subordinate",
                 "a2-relative",
                 "a2-passivo",
+                "a2-komparativ",
+                "b1-futur",
                 "b1-adjektivdeklination",
+                "b1-partizipien",
                 "b1-konnektoren",
+                "b1-doppelkonnektoren",
                 "b1-konjunktiv2",
                 "b1-indirekte-rede",
                 "b1-nominalisierung",
@@ -287,6 +293,11 @@ class GrammaticaPercorsoTest {
             GrammaticaSyllabus.traslittera("Ich fähre"),
             GrammaticaSyllabus.traslittera("Ich faehre")
         )
+        assertEquals(
+            "La dettatura deve accettare ss al posto di ß",
+            GrammaticaSyllabus.traslittera("Ich heiße Anna."),
+            GrammaticaSyllabus.traslittera("Ich heisse Anna")
+        )
         assertTrue(
             GrammaticaSyllabus.rispostaTestoCorretta(
                 EsercizioUnita(
@@ -329,5 +340,82 @@ class GrammaticaPercorsoTest {
         val riletto = Json.decodeFromString<ProfiloStato>(json)
         assertEquals(83, riletto.padronanzaGrammatica["a1-akkusativ"]?.percentuale)
         assertTrue(riletto.padronanzaGrammatica["a1-akkusativ"]?.completata == true)
+    }
+
+    @Test
+    fun iPrerequisitiEsistonoESonoPrecedenti() {
+        val ids = GrammaticaSyllabus.unita.map { it.id }
+        GrammaticaSyllabus.unita.forEachIndexed { indice, unita ->
+            unita.prerequisiti.forEach { prerequisito ->
+                assertTrue(
+                    "Prerequisito inesistente '$prerequisito' in ${unita.id}",
+                    prerequisito in ids
+                )
+                assertTrue(
+                    "Il prerequisito '$prerequisito' deve venire prima di ${unita.id}",
+                    ids.indexOf(prerequisito) < indice
+                )
+            }
+        }
+    }
+
+    @Test
+    fun iContenutiNonHannoSegnaposto() {
+        val segnaposto = listOf("TODO", "FIXME", "???", "da completare", "lorem ipsum")
+        GrammaticaSyllabus.unita.forEach { unita ->
+            val testi = buildList {
+                addAll(unita.teoria.regola)
+                addAll(unita.teoria.esempi.map { it.tedesco })
+                addAll(unita.teoria.esempi.map { it.italiano })
+                addAll(unita.teoria.erroriTipici.map { it.sbagliato })
+                addAll(unita.teoria.erroriTipici.map { it.corretto })
+                addAll(unita.teoria.erroriTipici.map { it.spiegazione })
+                add(unita.teoria.merksatz)
+                unita.esercizi.forEach { esercizio ->
+                    add(esercizio.domanda)
+                    add(esercizio.spiegazione)
+                    add(esercizio.suggerimento)
+                    add(esercizio.rispostaTesto)
+                    addAll(esercizio.opzioni)
+                    addAll(esercizio.alternative)
+                }
+            }
+            testi.filter { it.isNotBlank() }.forEach { testo ->
+                segnaposto.forEach { brutto ->
+                    assertFalse(
+                        "Segnaposto '$brutto' in ${unita.id}: $testo",
+                        testo.contains(brutto, ignoreCase = true)
+                    )
+                }
+                assertFalse(
+                    "Doppio spazio in ${unita.id}: $testo",
+                    testo.contains("  ")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun leDomandeNonSonoDuplicateNellaStessaUnita() {
+        GrammaticaSyllabus.unita.forEach { unita ->
+            val domande = unita.esercizi.map { it.domanda.trim().lowercase() }
+            assertEquals(
+                "Domande duplicate in ${unita.id}",
+                domande.size,
+                domande.distinct().size
+            )
+        }
+    }
+
+    @Test
+    fun ogniEsercizioHaUnaSpiegazione() {
+        GrammaticaSyllabus.unita.forEach { unita ->
+            unita.esercizi.forEach { esercizio ->
+                assertTrue(
+                    "Spiegazione mancante in ${esercizio.id}",
+                    esercizio.spiegazione.isNotBlank()
+                )
+            }
+        }
     }
 }

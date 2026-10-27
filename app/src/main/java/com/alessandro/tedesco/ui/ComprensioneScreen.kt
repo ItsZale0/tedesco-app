@@ -360,6 +360,7 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                                     risultato = null
                                 } else {
                                     completato = true
+                                    vm.completaPassoGiornaliero("comprensione")
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

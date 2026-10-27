@@ -39,8 +39,8 @@ import com.alessandro.tedesco.data.WortlisteB1
 import com.alessandro.tedesco.ui.theme.Spaziature
 
 /**
- * Wortliste B1 curata (109 parole ad alta frequenza): ricerca, filtro per tema
- * e aggiunta al proprio lessico con un tocco.
+ * Wortliste curata A1-B1 (oltre 280 parole ad alta frequenza): ricerca,
+ * filtro per livello e tema, aggiunta al proprio lessico con un tocco.
  */
 @Composable
 fun WortlisteScreen(
@@ -49,20 +49,27 @@ fun WortlisteScreen(
 ) {
     var query by remember { mutableStateOf("") }
     var tema by remember { mutableStateOf<String?>(null) }
+    var livello by remember { mutableStateOf<String?>(null) }
     var aggiunte by remember { mutableStateOf<Set<String>>(emptySet()) }
     val temi = remember { WortlisteB1.temi }
-    val voci = remember(query, tema) {
-        if (query.isNotBlank()) {
-            WortlisteB1.cerca(query).let { lista ->
-                if (tema == null) lista else lista.filter { it.tema == tema }
-            }
-        } else {
-            tema?.let { WortlisteB1.perTema(it) } ?: WortlisteB1.tutte
+    val livelli = remember { WortlisteB1.livelli }
+    val voci = remember(query, tema, livello) {
+        var lista = when {
+            query.isNotBlank() -> WortlisteB1.cerca(query)
+            tema != null -> WortlisteB1.perTema(tema!!)
+            else -> WortlisteB1.tutte
         }
+        if (query.isNotBlank() && tema != null) {
+            lista = lista.filter { it.tema == tema }
+        }
+        if (livello != null) {
+            lista = lista.filter { it.livello == livello }
+        }
+        lista
     }
 
     Column(Modifier.fillMaxSize()) {
-        CompactTopBar(title = "Wortliste B1", onBack = onIndietro)
+        CompactTopBar(title = "Wortliste A1-B1", onBack = onIndietro)
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = Spaziature.md, vertical = Spaziature.sm)
         ) {
@@ -79,9 +86,27 @@ fun WortlisteScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spaziature.xs)
             ) {
                 FilterChip(
+                    selected = livello == null,
+                    onClick = { livello = null },
+                    label = { Text("Tutti i livelli") }
+                )
+                livelli.forEach { l ->
+                    FilterChip(
+                        selected = livello == l,
+                        onClick = { livello = if (livello == l) null else l },
+                        label = { Text(l) }
+                    )
+                }
+            }
+            Spacer(Modifier.height(Spaziature.xs))
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spaziature.xs)
+            ) {
+                FilterChip(
                     selected = tema == null,
                     onClick = { tema = null },
-                    label = { Text("Tutti") }
+                    label = { Text("Tutti i temi") }
                 )
                 temi.forEach { t ->
                     FilterChip(
@@ -145,6 +170,11 @@ fun WortlisteScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
+                            Text(
+                                "${voce.livello} · ${voce.tema}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         if (voce.tedesco in aggiunte) {
                             Icon(

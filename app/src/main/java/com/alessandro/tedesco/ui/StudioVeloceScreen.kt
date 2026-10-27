@@ -3,6 +3,7 @@ package com.alessandro.tedesco.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Quiz
@@ -35,7 +38,7 @@ import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -67,11 +70,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
 import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.ParolaTedesca
 import com.alessandro.tedesco.data.StatoUnita
@@ -102,6 +107,7 @@ fun StudioVeloceScreen(
     onVaiATutor: () -> Unit = {},
     onVaiABackup: () -> Unit = {},
     onVaiAPercorsoGrammatica: () -> Unit = {},
+    onNaviga: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
@@ -153,6 +159,7 @@ fun StudioVeloceScreen(
             ?: percorsoGram.firstOrNull()
     }
     val completateGram = percorsoGram.count { it.padronanza?.completata == true }
+    val pianoOggi by vm.percorsoGiornaliero.collectAsStateWithLifecycle(null)
 
     // Salva il miglior punteggio della lezione quando la sessione è completata:
     // serve al gate morbido ("lezione successiva") e al progresso.
@@ -274,6 +281,21 @@ fun StudioVeloceScreen(
             item {
                 UpdateBanner(updater)
             }
+            // ---- Piano di oggi: la sessione breve da circa 20 minuti ----
+            pianoOggi?.let { piano ->
+                item {
+                    PianoOggiCard(
+                        percorso = piano,
+                        onApriPasso = { passo ->
+                            if (passo.azione == "ripasso") {
+                                vm.caricaSessione()
+                            }
+                            onNaviga(passo.azione)
+                        },
+                        onCompletaPasso = { vm.completaPassoGiornaliero(it) }
+                    )
+                }
+            }
             // ---- Header: numero lezione, titolo, avanzamento ----
             item {
                 Card(
@@ -345,7 +367,10 @@ fun StudioVeloceScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onVaiAPercorsoGrammatica() },
+                        .clickable(
+                            onClickLabel = "Apri il percorso grammaticale",
+                            role = Role.Button
+                        ) { onVaiAPercorsoGrammatica() },
                     shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -447,7 +472,14 @@ fun StudioVeloceScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { teoriaAperta = !teoriaAperta }
+                                    .clickable(
+                                        onClickLabel = if (teoriaAperta) {
+                                            "Chiudi la teoria"
+                                        } else {
+                                            "Apri la teoria"
+                                        },
+                                        role = Role.Button
+                                    ) { teoriaAperta = !teoriaAperta }
                                     .padding(Spaziature.md),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -492,7 +524,7 @@ fun StudioVeloceScreen(
                                     TextButton(
                                         onClick = { ttsHelper.speak(contenuto.replace(Regex("[#*`>_\\-]"), " ")) }
                                     ) {
-                                        Icon(Icons.Filled.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(6.dp))
                                         Text("Ascolta")
                                     }
@@ -584,7 +616,10 @@ fun StudioVeloceScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onVaiAEsercizi() },
+                        .clickable(
+                            onClickLabel = "Apri gli esercizi",
+                            role = Role.Button
+                        ) { onVaiAEsercizi() },
                     shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -690,7 +725,12 @@ fun StudioVeloceScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp)
-                                        .clickable(enabled = !verificato) { scelta = i },
+                                        .selectable(
+                                            selected = selezionato,
+                                            enabled = !verificato,
+                                            role = Role.RadioButton,
+                                            onClick = { scelta = i }
+                                        ),
                                     shape = MaterialTheme.shapes.large,
                                     colors = CardDefaults.cardColors(containerColor = colore),
                                     border = if (selezionato && !verificato) {
@@ -1060,7 +1100,10 @@ private fun CardParola(
     onAscolta: () -> Unit
 ) {
     Card(
-        modifier = modifier.clickable { onAscolta() },
+        modifier = modifier.clickable(
+            onClickLabel = "Ascolta ${parola.german}",
+            role = Role.Button
+        ) { onAscolta() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -1074,7 +1117,7 @@ private fun CardParola(
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
-                    Icons.Filled.VolumeUp,
+                    Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1100,6 +1143,124 @@ private fun CardParola(
 
 }
 
+/**
+ * Piano di oggi: massimo tre passi, circa 20 minuti. Toccare una riga apre
+ * l'attività; la spunta a destra la segna come completata senza uscire.
+ */
+@Composable
+private fun PianoOggiCard(
+    percorso: CalcoloPercorsoGiornaliero.PercorsoGiornaliero,
+    onApriPasso: (CalcoloPercorsoGiornaliero.PassoPercorso) -> Unit,
+    onCompletaPasso: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(Modifier.fillMaxWidth().padding(Spaziature.md)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Piano di oggi",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "${percorso.passiCompletati}/${percorso.passiTotali} passi · ${percorso.minutiTotali} min",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+                Text(
+                    percorso.data,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            Spacer(Modifier.height(Spaziature.sm))
+            LinearProgressIndicator(
+                progress = { percorso.progressoGiornata },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
+            )
+            Spacer(Modifier.height(Spaziature.xs))
+            percorso.passi.forEach { passo ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable(
+                            onClickLabel = "Apri ${passo.titolo}",
+                            role = Role.Button
+                        ) { onApriPasso(passo) }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (passo.completato) Icons.Filled.CheckCircle
+                        else Icons.Filled.RadioButtonUnchecked,
+                        contentDescription = if (passo.completato) "Completato" else "Da fare",
+                        tint = if (passo.completato) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            passo.titolo,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = if (passo.completato) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            }
+                        )
+                        Text(
+                            passo.descrizione,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (passo.completato) {
+                        Text(
+                            "Fatto",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        IconButton(onClick = { onCompletaPasso(passo.id) }) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = "Segna come fatto",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+            if (percorso.percorsoCompletato) {
+                Text(
+                    "Piano completato. Se vuoi, fai un ripasso libero.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+        }
+    }
+}
+
 /** Una riga del pannello dal basso: icona tonda + titolo + descrizione + freccia. */
 @Composable
 private fun VocePannello(
@@ -1111,7 +1272,11 @@ private fun VocePannello(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(
+                onClickLabel = "Apri $titolo",
+                role = Role.Button,
+                onClick = onClick
+            )
             .padding(horizontal = Spaziature.md, vertical = Spaziature.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spaziature.sm)

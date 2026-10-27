@@ -316,6 +316,7 @@ fun ProduzioneScrittaScreen(
                     Button(
                         onClick = {
                             mostraCorrezione = true
+                            vm.completaPassoGiornaliero("produzione")
                             // Invia DAVVERO il testo al tutor per la correzione
                             // (prima si limitava a mostrare un messaggio fisso).
                             vm.inviaRisposta(testoUtente)

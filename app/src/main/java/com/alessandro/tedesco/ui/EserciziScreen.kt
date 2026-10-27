@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,11 +43,11 @@ import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.CertificazioniUfficiali
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Headphones
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import com.alessandro.tedesco.data.Dialoghi
@@ -181,7 +182,7 @@ private val TipiEsercizio = listOf(
     TipoEsercizio("produzione", "produzione", "Produzione scritta", "Scrivi un testo: lo corregge il tutor",
         Icons.Filled.Edit),
     TipoEsercizio("espressioni", "espressioni", "Espressioni rapide", "Quiz: scegli la frase tedesca giusta",
-        Icons.Filled.Chat),
+        Icons.AutoMirrored.Filled.Chat),
     TipoEsercizio("verifica", "verifica", "Verifica lessico", "Dimostra di sapere le parole studiate",
         Icons.Filled.Translate),
     TipoEsercizio("ascolto", "ascolto", "Ascolto", "Audio con domande per l'orecchio",
@@ -196,8 +197,8 @@ private val TipiEsercizio = listOf(
         "Conversazioni a due voci con domande", Icons.Filled.Headphones),
     TipoEsercizio("pronuncia", "pronuncia", "Pronuncia",
         "Coppie minime, registro e confronto", Icons.Filled.RecordVoiceOver),
-    TipoEsercizio("wortliste", "wortliste", "Wortliste B1",
-        "${WortlisteB1.tutte.size} parole d'esame da portare nel lessico", Icons.Filled.MenuBook),
+    TipoEsercizio("wortliste", "wortliste", "Wortliste A1-B1",
+        "${WortlisteB1.tutte.size} parole curate da portare nel lessico", Icons.AutoMirrored.Filled.MenuBook),
     TipoEsercizio("sudtirol", "sudtirol", "Südtirol / Austria",
         "Varianti locali e lessico sanitario", Icons.Filled.Place)
 )
@@ -222,7 +223,7 @@ private fun statPerTipo(
         "errori" -> if (erroriAperti > 0) "$erroriAperti da consolidare" else "Nessun errore aperto"
         "dialoghi" -> "${Dialoghi.dialoghi.size} dialoghi"
         "pronuncia" -> "Ascolta e registrati"
-        "wortliste" -> "${WortlisteB1.tutte.size} parole B1"
+        "wortliste" -> "${WortlisteB1.tutte.size} parole A1-B1"
         "sudtirol" -> "${Sudtirol.varianti.size} varianti + lessico"
         else -> ""
     }
@@ -237,7 +238,11 @@ private fun CardTipoEsercizio(
 ) {
     Card(
         modifier = modifier
-            .clickable { onClick() }
+            .clickable(
+                onClickLabel = "Apri ${tipo.nome}",
+                role = Role.Button,
+                onClick = onClick
+            )
             .padding(vertical = 2.dp),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),

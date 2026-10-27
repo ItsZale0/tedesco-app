@@ -1,7 +1,7 @@
 {
-  "versionCode": 201,
-  "versionName": "1.41.0",
-  "changelog": "Percorso grammaticale strutturato: 3 unità pilota (A1 Akkusativ, A1 Präsens, A2 Perfekt) con teoria, tabelle, esempi, esercizi, padronanza e ripasso. Nuova card in home e nuove schermate Percorso/Unità.",
+  "versionCode": 202,
+  "versionName": "1.42.0",
+  "changelog": "Percorso grammaticale completo A0-B1: 25 unità con teoria, tabelle, esempi, errori tipici, 12 esercizi, padronanza e ripasso spaziato. Aggiunte le basi A0, i modali, i separabili, le preposizioni, l'imperativo, il dativo, il Präteritum, i riflessivi, le subordinate, le relative, il passivo e le strutture B1.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.41.0/Tedesco-v1.41.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.42.0/Tedesco-v1.42.0.apk"
 }

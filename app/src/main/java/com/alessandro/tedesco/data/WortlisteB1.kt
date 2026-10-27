@@ -128,21 +128,217 @@ object WortlisteB1 {
         das Gepäck|bagaglio|Mein Gepäck ist schwer.|Viaggio
     """.trimIndent()
 
-    val tutte: List<Voce> = grezzo.lines().mapNotNull { riga ->
-        val parti = riga.split("|")
-        if (parti.size != 4) return@mapNotNull null
-        val tedesco = parti[0].trim()
-        val italiano = parti[1].trim()
-        if (tedesco.isEmpty() || italiano.isEmpty()) null
-        else Voce(
-            tedesco = tedesco,
-            italiano = italiano,
-            esempio = parti[2].trim(),
-            tema = parti[3].trim()
-        )
-    }
+    /**
+     * Nucleo A1/A2: vita quotidiana, casa, cibo, corpo e prime situazioni
+     * sanitarie. Il quinto campo è il livello CEFR.
+     */
+    private val grezzoA1A2 = """
+        die Familie|famiglia|Meine Familie wohnt in Brixen.|Famiglia|A1
+        die Mutter|madre|Meine Mutter kocht gern.|Famiglia|A1
+        der Vater|padre|Mein Vater arbeitet im Garten.|Famiglia|A1
+        die Eltern|genitori|Meine Eltern sind zu Hause.|Famiglia|A1
+        der Bruder|fratello|Mein Bruder lernt Deutsch.|Famiglia|A1
+        die Schwester|sorella|Meine Schwester wohnt in Bozen.|Famiglia|A1
+        das Kind|bambino|Das Kind spielt im Hof.|Famiglia|A1
+        der Sohn|figlio|Ihr Sohn geht zur Schule.|Famiglia|A1
+        die Tochter|figlia|Die Tochter hilft in der Küche.|Famiglia|A1
+        der Freund|amico|Mein Freund kommt aus Deutschland.|Relazioni|A1
+        die Freundin|amica|Meine Freundin spricht Italienisch.|Relazioni|A1
+        das Haus|casa|Das Haus ist alt.|Casa|A1
+        die Wohnung|appartamento|Die Wohnung ist klein.|Casa|A1
+        das Zimmer|stanza|Mein Zimmer ist hell.|Casa|A1
+        die Küche|cucina|Die Küche ist modern.|Casa|A1
+        das Bad|bagno|Das Bad ist neben dem Schlafzimmer.|Casa|A1
+        der Tisch|tavolo|Das Buch liegt auf dem Tisch.|Casa|A1
+        der Stuhl|sedia|Der Stuhl ist bequem.|Casa|A1
+        das Bett|letto|Das Bett ist groß.|Casa|A1
+        die Tür|porta|Die Tür ist offen.|Casa|A1
+        das Fenster|finestra|Das Fenster ist geschlossen.|Casa|A1
+        das Wasser|acqua|Ich trinke viel Wasser.|Alimentazione|A1
+        das Brot|pane|Das Brot ist frisch.|Alimentazione|A1
+        der Apfel|mela|Der Apfel ist rot.|Alimentazione|A1
+        die Milch|latte|Die Milch ist kalt.|Alimentazione|A1
+        der Käse|formaggio|Der Käse kommt aus Südtirol.|Alimentazione|A1
+        das Fleisch|carne|Ich esse kein Fleisch.|Alimentazione|A1
+        das Gemüse|verdura|Das Gemüse ist frisch.|Alimentazione|A1
+        die Stadt|città|Die Stadt ist klein.|Città|A1
+        das Dorf|paese|Das Dorf liegt im Tal.|Città|A1
+        die Straße|strada|Die Straße ist ruhig.|Città|A1
+        der Platz|piazza|Der Platz ist im Zentrum.|Città|A1
+        der Bahnhof|stazione|Der Bahnhof ist nah.|Città|A1
+        der Arzt|medico|Der Arzt ist heute da.|Salute|A1
+        die Ärztin|medica|Die Ärztin arbeitet im Krankenhaus.|Salute|A1
+        das Krankenhaus|ospedale|Das Krankenhaus ist groß.|Salute|A1
+        der Kopf|testa|Mein Kopf tut weh.|Corpo|A1
+        der Arm|braccio|Mein Arm ist müde.|Corpo|A1
+        das Bein|gamba|Das Bein tut weh.|Corpo|A1
+        der Bauch|pancia|Mein Bauch ist voll.|Corpo|A1
+        die Hand|mano|Wasch dir die Hände.|Corpo|A1
+        der Fuß|piede|Mein Fuß ist kalt.|Corpo|A1
+        die Schule|scuola|Die Schule beginnt um acht.|Istruzione|A1
+        der Lehrer|insegnante|Der Lehrer erklärt die Regel.|Istruzione|A1
+        die Lehrerin|insegnante (f.)|Die Lehrerin ist freundlich.|Istruzione|A1
+        der Kurs|corso|Der Kurs dauert drei Monate.|Istruzione|A1
+        das Buch|libro|Das Buch ist interessant.|Istruzione|A1
+        der Tag|giorno|Der Tag war lang.|Tempo|A1
+        die Woche|settimana|Die Woche beginnt am Montag.|Tempo|A1
+        der Monat|mese|Der Monat ist fast vorbei.|Tempo|A1
+        das Jahr|anno|Das Jahr hat zwölf Monate.|Tempo|A1
+        heute|oggi|Heute lerne ich Deutsch.|Tempo|A1
+        morgen|domani|Morgen habe ich einen Termin.|Tempo|A1
+        gestern|ieri|Gestern war ich in Bozen.|Tempo|A1
+        jetzt|adesso|Jetzt trinke ich Kaffee.|Tempo|A1
+        immer|sempre|Ich bin immer pünktlich.|Tempo|A1
+        oft|spesso|Ich gehe oft spazieren.|Tempo|A1
+        manchmal|a volte|Manchmal koche ich allein.|Tempo|A1
+        nie|mai|Ich bin nie müde.|Tempo|A1
+
+        die Anmeldung|registrazione|Die Anmeldung ist online.|Burocrazia|A2
+        das Formular|modulo|Bitte füllen Sie das Formular aus.|Burocrazia|A2
+        der Ausweis|documento d'identità|Zeigen Sie bitte Ihren Ausweis.|Burocrazia|A2
+        die Unterschrift|firma|Hier fehlt die Unterschrift.|Burocrazia|A2
+        der Antrag|richiesta|Ich stelle einen Antrag.|Burocrazia|A2
+        die Frist|termine|Die Frist endet am Freitag.|Burocrazia|A2
+        die Bestätigung|conferma|Ich warte auf die Bestätigung.|Burocrazia|A2
+        die Öffnungszeiten|orari di apertura|Die Öffnungszeiten sind im Internet.|Burocrazia|A2
+        der Schalter|sportello|Bitte gehen Sie zum Schalter drei.|Burocrazia|A2
+        die Steuer|tassa|Die Steuer ist dieses Jahr höher.|Denaro|A2
+        die Rechnung|fattura|Die Rechnung ist schon bezahlt.|Denaro|A2
+        das Konto|conto|Mein Konto ist leer.|Denaro|A2
+        die Versicherung|assicurazione|Die Versicherung zahlt den Schaden.|Denaro|A2
+        der Lohn|salario|Der Lohn kommt am Monatsende.|Lavoro|A2
+        die Pause|pausa|Wir machen eine kurze Pause.|Lavoro|A2
+        die Schicht|turno|Ich arbeite in der Frühschicht.|Lavoro|A2
+        der Urlaub|ferie|Ich nehme im August Urlaub.|Lavoro|A2
+        die Krankmeldung|comunicazione di malattia|Die Krankmeldung muss heute kommen.|Lavoro|A2
+        die Apotheke|farmacia|Die Apotheke ist nebenan.|Salute|A2
+        das Medikament|medicinale|Das Medikament hilft schnell.|Salute|A2
+        die Tablette|compressa|Nehmen Sie eine Tablette am Tag.|Salute|A2
+        die Untersuchung|visita|Die Untersuchung dauert zehn Minuten.|Salute|A2
+        der Blutdruck|pressione sanguigna|Der Blutdruck ist normal.|Salute|A2
+        das Fieber|febbre|Das Fieber ist gesunken.|Salute|A2
+        die Erkältung|raffreddore|Ich habe eine Erkältung.|Salute|A2
+        der Husten|tosse|Der Husten ist schlimm.|Salute|A2
+        die Allergie|allergia|Ich habe eine Allergie gegen Nüsse.|Salute|A2
+        der Notfall|emergenza|Im Notfall rufen Sie 112 an.|Salute|A2
+        die Notaufnahme|pronto soccorso|Die Notaufnahme ist im Erdgeschoss.|Salute|A2
+        der Zug|treno|Der Zug fährt um sieben.|Viaggio|A2
+        der Bus|autobus|Der Bus kommt in fünf Minuten.|Viaggio|A2
+        das Auto|auto|Das Auto steht vor dem Haus.|Viaggio|A2
+        das Fahrrad|bicicletta|Ich fahre mit dem Fahrrad.|Viaggio|A2
+        die Karte|biglietto o carta|Ich kaufe eine Karte.|Viaggio|A2
+        die Richtung|direzione|In welche Richtung gehen Sie?|Viaggio|A2
+        die Kreuzung|incrocio|An der Kreuzung links abbiegen.|Viaggio|A2
+        die Nähe|vicinanza|Die Wohnung ist in der Nähe vom Zentrum.|Città|A2
+        die Entfernung|distanza|Die Entfernung ist kurz.|Città|A2
+        der Lärm|rumore|Der Lärm stört mich.|Città|A2
+        die Ruhe|quiete|Ich brauche Ruhe.|Città|A2
+        die Möglichkeit|possibilità|Es gibt viele Möglichkeiten.|Società|A2
+        die Entscheidung|decisione|Die Entscheidung ist schwer.|Società|A2
+        die Hilfe|aiuto|Danke für die Hilfe.|Relazioni|A2
+        der Rat|consiglio|Danke für den Rat.|Relazioni|A2
+        die Frage|domanda|Ich habe eine Frage.|Relazioni|A2
+        die Antwort|risposta|Die Antwort ist richtig.|Relazioni|A2
+        das Gespräch|conversazione|Das Gespräch war hilfreich.|Relazioni|A2
+    """.trimIndent()
+
+    /**
+     * Lessico sanitario per il lavoro in reparto: termini che compaiono
+     * nella documentazione, nelle consegne e nella comunicazione al paziente.
+     */
+    private val grezzoSanita = """
+        die Aufnahme|accettazione, ricovero|Die Aufnahme ist um acht Uhr.|Salute|B1
+        die Visite|visita medica|Die Visite beginnt um sieben.|Salute|B1
+        die Pflege|cura|Die Pflege braucht Zeit.|Salute|B1
+        die Pflegekraft|operatore sanitario|Die Pflegekraft hilft beim Waschen.|Salute|B1
+        der Pflegebedarf|bisogno assistenziale|Der Pflegebedarf ist hoch.|Salute|B1
+        die Mobilisation|mobilizzazione|Die Mobilisation beginnt früh.|Salute|B1
+        die Lagerung|posizionamento|Die Lagerung muss regelmäßig wechseln.|Salute|B1
+        der Verband|benda|Der Verband muss gewechselt werden.|Salute|B1
+        die Wunde|ferita|Die Wunde ist sauber.|Salute|B1
+        die Narbe|cicatrice|Die Narbe ist noch rot.|Salute|B1
+        die Schwellung|gonfiore|Die Schwellung ist zurückgegangen.|Salute|B1
+        die Bewegungstherapie|terapia del movimento|Die Bewegungstherapie hilft beim Gehen.|Salute|B1
+        die Rehabilitation|riabilitazione|Die Rehabilitation dauert sechs Wochen.|Salute|B1
+        der Rollstuhl|sedia a rotelle|Der Patient braucht einen Rollstuhl.|Salute|B1
+        die Gehhilfe|ausilio per camminare|Die Gehhilfe steht neben dem Bett.|Salute|B1
+        der Stock|bastone|Er geht mit einem Stock.|Salute|B1
+        die Treppe|scala|Die Treppe ist rutschig.|Salute|B1
+        der Aufzug|ascensore|Der Aufzug ist außer Betrieb.|Salute|B1
+        die Station|reparto|Ich arbeite auf der Station.|Salute|B1
+        die Ambulanz|ambulatorio|Die Ambulanz ist geöffnet.|Salute|B1
+        die Praxis|studio medico|Die Praxis ist im ersten Stock.|Salute|B1
+        der Facharzt|medico specialista|Der Facharzt kommt morgen.|Salute|B1
+        die Krankengeschichte|storia clinica|Die Krankengeschichte ist vollständig.|Salute|B1
+        die Medikamentenliste|elenco dei farmaci|Die Medikamentenliste ist aktuell.|Salute|B1
+        die Nebenwirkung|effetto collaterale|Die Nebenwirkung ist selten.|Salute|B1
+        die Dosierung|dosaggio|Die Dosierung steht auf dem Rezept.|Salute|B1
+        die Injektion|iniezione|Die Injektion tut nicht weh.|Salute|B1
+        die Blutentnahme|prelievo del sangue|Die Blutentnahme ist um sieben.|Salute|B1
+        der Verbandwechsel|cambio della medicazione|Der Verbandwechsel erfolgt täglich.|Salute|B1
+        die Wundkontrolle|controllo della ferita|Die Wundkontrolle ist wichtig.|Salute|B1
+        die Schmerztherapie|terapia del dolore|Die Schmerztherapie wird angepasst.|Salute|B1
+        die Sturzprophylaxe|prevenzione delle cadute|Die Sturzprophylaxe ist Teil der Pflege.|Salute|B1
+        die Hygiene|igiene|Hygiene ist im Krankenhaus zentral.|Salute|B1
+        die Desinfektion|disinfezione|Die Desinfektion der Hände dauert 30 Sekunden.|Salute|B1
+        die Schutzausrüstung|dispositivi di protezione|Die Schutzausrüstung ist Pflicht.|Salute|B1
+        der Notruf|chiamata di emergenza|Der Notruf ist kostenlos.|Salute|B1
+        die Vitalzeichen|parametri vitali|Die Vitalzeichen sind stabil.|Salute|B1
+        die Atmung|respirazione|Die Atmung ist ruhig.|Salute|B1
+        der Puls|polso|Der Puls ist regelmäßig.|Salute|B1
+        die Temperatur|temperatura|Die Temperatur ist erhöht.|Salute|B1
+        der Blutzucker|glicemia|Der Blutzucker wird gemessen.|Salute|B1
+        die Inkontinenz|incontinenza|Die Inkontinenz wird behandelt.|Salute|B1
+        die Demenz|demenza|Die Demenz verändert den Alltag.|Salute|B1
+        die Orientierung|orientamento|Die Orientierung fällt schwer.|Salute|B1
+        der Sturz|caduta|Der Sturz hatte keine Folgen.|Salute|B1
+        die Prothese|protesi|Die Prothese passt gut.|Salute|B1
+        die OP|intervento|Die OP ist für morgen geplant.|Salute|B1
+        die Narkose|anestesia|Die Narkose ist ungefährlich.|Salute|B1
+        die Nachsorge|follow-up|Die Nachsorge ist wichtig.|Salute|B1
+        die Angehörigen|familiari|Die Angehörigen warten draußen.|Salute|B1
+        die Aufklärung|informazione al paziente|Die Aufklärung erfolgt vor der OP.|Salute|B1
+        die Einwilligung|consenso|Die Einwilligung fehlt noch.|Salute|B1
+        die Schweigepflicht|segreto professionale|Die Schweigepflicht gilt immer.|Salute|B1
+        die Übergabe|passaggio di consegne|Die Übergabe ist um sieben.|Salute|B1
+        der Dienstplan|piano turni|Der Dienstplan kommt am Freitag.|Lavoro|B1
+        die Dokumentation|documentazione|Die Dokumentation muss vollständig sein.|Lavoro|B1
+        die Wundversorgung|medicazione della ferita|Die Wundversorgung erfolgt steril.|Salute|B1
+        die Medikamentengabe|somministrazione dei farmaci|Die Medikamentengabe wird dokumentiert.|Salute|B1
+        die Schmerzskala|scala del dolore|Die Schmerzskala geht von null bis zehn.|Salute|B1
+        die Sturzgefahr|rischio di caduta|Bei Sturzgefahr braucht der Patient Hilfe.|Salute|B1
+        die Immobilität|immobilità|Die Immobilität erhöht das Risiko.|Salute|B1
+        die Kontraktur|contrattura|Eine Kontraktur kann vermieden werden.|Salute|B1
+        die Pneumonie|polmonite|Die Pneumonie muss früh erkannt werden.|Salute|B1
+        die Thrombose|trombosi|Bewegung senkt das Thromboserisiko.|Salute|B1
+        der Dekubitus|lesione da pressione|Der Dekubitus braucht eine spezielle Pflege.|Salute|B1
+    """.trimIndent()
+
+    val tutte: List<Voce> = (grezzo.lines() + grezzoA1A2.lines() + grezzoSanita.lines())
+        .mapNotNull { riga ->
+            val parti = riga.split("|")
+            if (parti.size !in 4..5) return@mapNotNull null
+            val tedesco = parti[0].trim()
+            val italiano = parti[1].trim()
+            if (tedesco.isEmpty() || italiano.isEmpty()) null
+            else Voce(
+                tedesco = tedesco,
+                italiano = italiano,
+                esempio = parti[2].trim(),
+                tema = parti[3].trim(),
+                livello = parti.getOrNull(4)?.trim()?.takeIf { it.isNotBlank() } ?: "B1"
+            )
+        }
 
     val temi: List<String> get() = tutte.map { it.tema }.distinct()
+
+    val livelli: List<String> get() =
+        listOf("A1", "A2", "B1", "B2").filter { livello ->
+            tutte.any { it.livello == livello }
+        }
+
+    fun perLivello(livello: String): List<Voce> =
+        tutte.filter { it.livello.equals(livello, ignoreCase = true) }
 
     fun perTema(tema: String): List<Voce> = tutte.filter { it.tema.equals(tema, ignoreCase = true) }
 

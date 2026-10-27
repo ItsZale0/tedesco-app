@@ -68,6 +68,14 @@ fun RipassoScreen(vm: TedescoViewModel, onIndietro: () -> Unit, onVaiANuove: () 
     // ripassare" a schermo aperto, "2 da ripassare" a schermo chiuso.
     LaunchedEffect(Unit) { vm.caricaSessione() }
 
+    // Se la sessione è stata completata, il passo "Ripasso" del piano di oggi
+    // si spunta da solo. La spunta manuale resta disponibile nella home.
+    LaunchedEffect(sessionState.totale, sessionState.cartaCorrente) {
+        if (sessionState.cartaCorrente == null && sessionState.totale > 0) {
+            vm.completaPassoGiornaliero("ripasso")
+        }
+    }
+
     ScreenScaffold("Ripasso", onBack = onIndietro, scrollable = false) {
 
             Column(

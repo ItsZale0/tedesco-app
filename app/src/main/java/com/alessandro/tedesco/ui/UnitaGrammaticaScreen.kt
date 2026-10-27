@@ -22,7 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -141,6 +141,7 @@ fun UnitaGrammaticaScreen(
                 corrette = corrette,
                 totali = unita.esercizi.size
             )
+            vm.completaPassoGiornaliero("grammatica")
             salvato = true
         }
     }
@@ -167,6 +168,13 @@ fun UnitaGrammaticaScreen(
                 },
                 label = { Text("Esercizi") }
             )
+            if (unita.teoria.esempi.isNotEmpty()) {
+                FilterChip(
+                    selected = scheda == 2,
+                    onClick = { scheda = 2 },
+                    label = { Text("Dettato") }
+                )
+            }
         }
 
         Spacer(Modifier.height(Spaziature.md))
@@ -179,6 +187,11 @@ fun UnitaGrammaticaScreen(
                     if (finito) resetPratica()
                     scheda = 1
                 }
+            )
+        } else if (scheda == 2) {
+            DettatoUnita(
+                unita = unita,
+                onAscolta = { tts.speak(it) }
             )
         } else if (finito) {
             RisultatoUnita(
@@ -204,7 +217,8 @@ fun UnitaGrammaticaScreen(
                 onScelta = { scelta = it },
                 onTesto = { testo = it },
                 onVerifica = { verificaRisposta() },
-                onAvanti = { prossimaDomanda() }
+                onAvanti = { prossimaDomanda() },
+                onAscolta = { tts.speak(it) }
             )
         }
 
@@ -567,7 +581,7 @@ private fun EsempioCard(
             }
             IconButton(onClick = onAscolta) {
                 Icon(
-                    Icons.Filled.VolumeUp,
+                    Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = "Ascolta l'esempio",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -587,7 +601,8 @@ private fun EsercizioUnitaCard(
     onScelta: (Int) -> Unit,
     onTesto: (String) -> Unit,
     onVerifica: () -> Unit,
-    onAvanti: () -> Unit
+    onAvanti: () -> Unit,
+    onAscolta: (String) -> Unit
 ) {
     val rispostaCorretta = when (esercizio.tipo) {
         TipoEsercizioGrammatica.SCELTA_MULTIPLA ->
@@ -718,6 +733,17 @@ private fun EsercizioUnitaCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f)
                             )
+                            IconButton(
+                                onClick = { onAscolta(opzione) },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.VolumeUp,
+                                    contentDescription = "Ascolta l'opzione",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                             if (verificato && corretta) {
                                 Icon(
                                     Icons.Filled.Check,
@@ -779,6 +805,15 @@ private fun EsercizioUnitaCard(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
+                        TextButton(onClick = { onAscolta(rispostaCorretta) }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("Ascolta la risposta")
+                        }
                     }
                 }
             }
@@ -810,6 +845,142 @@ private fun EsercizioUnitaCard(
                         if (indice < unita.esercizi.lastIndex) "Prossima domanda"
                         else "Vedi risultato"
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Dettato breve: il TTS legge una frase della unità, l'utente la scrive.
+ * Non modifica la padronanza: è un esercizio di ascolto e ortografia.
+ */
+@Composable
+private fun DettatoUnita(
+    unita: UnitaGrammatica,
+    onAscolta: (String) -> Unit
+) {
+    val esempi = remember(unita.id) {
+        unita.teoria.esempi
+            .map { it.tedesco }
+            .filter { it.length in 8..110 }
+            .ifEmpty { unita.teoria.esempi.map { it.tedesco } }
+    }
+    if (esempi.isEmpty()) {
+        Text("Questa unità non ha ancora esempi da dettare.")
+        return
+    }
+
+    var indice by rememberSaveable(unita.id) { mutableStateOf(0) }
+    var testo by rememberSaveable(unita.id) { mutableStateOf("") }
+    var verificato by rememberSaveable(unita.id) { mutableStateOf(false) }
+    val frase = esempi[indice % esempi.size]
+    // Accetta anche la scrittura senza umlaut/ß, come nel resto degli esercizi.
+    val corretta = GrammaticaSyllabus.traslittera(testo) ==
+        GrammaticaSyllabus.traslittera(frase)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.padding(Spaziature.md)) {
+            Text(
+                "Dettato ${indice + 1} di ${esempi.size}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(Spaziature.sm))
+            Text(
+                "Ascolta la frase e scrivila in tedesco.",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                "Puoi riascoltare quante volte vuoi. Non contano maiuscole e punteggiatura.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(Spaziature.sm))
+            Button(
+                onClick = { onAscolta(frase) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.VolumeUp,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(Spaziature.xs))
+                Text("Ascolta la frase")
+            }
+            Spacer(Modifier.height(Spaziature.sm))
+            OutlinedTextField(
+                value = testo,
+                onValueChange = { testo = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Scrivi ciò che senti") },
+                enabled = !verificato,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false
+                ),
+                singleLine = false,
+                minLines = 2,
+                maxLines = 4
+            )
+            if (verificato) {
+                Spacer(Modifier.height(Spaziature.sm))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (corretta) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
+                    )
+                ) {
+                    Column(Modifier.padding(Spaziature.sm)) {
+                        Text(
+                            if (corretta) "Dettato corretto!" else "Riascolta e confronta",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            frase,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(Spaziature.md))
+            if (!verificato) {
+                Button(
+                    onClick = { verificato = true },
+                    enabled = testo.isNotBlank(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AltezzaBottonePrincipale())
+                ) {
+                    Text("Verifica dettato")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        indice = (indice + 1) % esempi.size
+                        testo = ""
+                        verificato = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AltezzaBottonePrincipale())
+                ) {
+                    Text("Prossima frase")
                 }
             }
         }

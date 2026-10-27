@@ -354,7 +354,11 @@ data class ProfiloStato(
      * Padronanza del percorso grammaticale, per id di unita'.
      * Default vuoto = profili salvati prima di questa funzione restano validi.
      */
-    val padronanzaGrammatica: Map<String, PadronanzaGrammatica> = emptyMap()
+    val padronanzaGrammatica: Map<String, PadronanzaGrammatica> = emptyMap(),
+    /** Giorno (yyyy-MM-dd) a cui si riferiscono i passi del piano completati. */
+    val passiGiornoData: String = "",
+    /** IDs dei passi del piano giornaliero completati in [passiGiornoData]. */
+    val passiGiornoIds: List<String> = emptyList()
 )
 
 /** Piano di studio verso il B2. */

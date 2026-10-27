@@ -369,4 +369,106 @@ class PercorsoGiornalieroTest {
         val priorita = percorso.passi.map { it.priorita }
         assertEquals("Le priorità dovrebbero essere sequenziali", (1..priorita.size).toList(), priorita)
     }
+
+    // 21. Il piano resta dentro il budget di circa 20 minuti
+    @Test
+    fun `il piano rispetta il budget di ventidue minuti`() {
+        val s = stats(accuratezza = 0.2f, daRipassare = 40)
+        val percorso = CalcoloPercorsoGiornaliero.genera(
+            statistiche = s,
+            competenze = s.punteggiCompetenze!!,
+            daRipassare = 40,
+            livelloCorrente = LivelloCEFR.A0
+        )
+        assertTrue(
+            "Il piano non deve superare ${CalcoloPercorsoGiornaliero.MINUTI_MASSIMI} minuti",
+            percorso.minutiTotali <= CalcoloPercorsoGiornaliero.MINUTI_MASSIMI
+        )
+        assertTrue(
+            "Il piano non deve avere più di ${CalcoloPercorsoGiornaliero.MAX_PASSI} passi",
+            percorso.passi.size <= CalcoloPercorsoGiornaliero.MAX_PASSI
+        )
+    }
+
+    @Test
+    fun `le descrizioni mostrano la durata effettiva dopo il taglio del budget`() {
+        val s = stats(accuratezza = 0.2f, daRipassare = 40)
+        val percorso = CalcoloPercorsoGiornaliero.genera(
+            statistiche = s,
+            competenze = s.punteggiCompetenze!!,
+            daRipassare = 40,
+            livelloCorrente = LivelloCEFR.A0
+        )
+        percorso.passi.forEach { passo ->
+            Regex("""~(\d+) min""").find(passo.descrizione)?.let { match ->
+                assertEquals(
+                    "La descrizione di '${passo.id}' non corrisponde alla durata effettiva",
+                    passo.stimaMinuti,
+                    match.groupValues[1].toInt()
+                )
+            }
+        }
+    }
+
+    // 22. La grammatica apre direttamente la prossima unità
+    @Test
+    fun `il passo grammatica apre la prossima unita del percorso`() {
+        val s = stats(accuratezza = 0.5f)
+        val percorso = CalcoloPercorsoGiornaliero.genera(
+            statistiche = s,
+            competenze = s.punteggiCompetenze!!,
+            daRipassare = 0,
+            livelloCorrente = LivelloCEFR.A1,
+            prossimaUnitaId = "a0-alfabeto",
+            prossimaUnitaTitolo = "Alfabeto, suoni e pronuncia"
+        )
+        val grammatica = percorso.passi.firstOrNull {
+            it.tipo == CalcoloPercorsoGiornaliero.TipoPasso.GRAMMATICA
+        }
+        assertNotNull("Dovrebbe esserci il passo grammatica", grammatica)
+        assertEquals("unita_grammatica/a0-alfabeto", grammatica!!.azione)
+        assertTrue(grammatica.descrizione.contains("Alfabeto"))
+    }
+
+    // 23. La prossima unità resta nel piano anche con competenze alte
+    @Test
+    fun `la prossima unita entra nel piano anche con competenze alte`() {
+        val s = stats(accuratezza = 0.9f, paroleTotali = 1500, paroleApprese = 1500)
+        val percorso = CalcoloPercorsoGiornaliero.genera(
+            statistiche = s,
+            competenze = s.punteggiCompetenze!!,
+            daRipassare = 0,
+            livelloCorrente = LivelloCEFR.B1,
+            prossimaUnitaId = "b1-konnektoren",
+            prossimaUnitaTitolo = "I connettori"
+        )
+        assertTrue(
+            "La prossima unità deve restare nel piano",
+            percorso.passi.any { it.azione == "unita_grammatica/b1-konnektoren" }
+        )
+        assertTrue(percorso.minutiTotali <= CalcoloPercorsoGiornaliero.MINUTI_MASSIMI)
+    }
+
+    // 24. Nessun passo duplicato e azioni sempre valorizzate
+    @Test
+    fun `i passi non sono duplicati e hanno sempre un azione`() {
+        val s = stats(accuratezza = 0.2f, daRipassare = 12)
+        val percorso = CalcoloPercorsoGiornaliero.genera(
+            statistiche = s,
+            competenze = s.punteggiCompetenze!!,
+            daRipassare = 12,
+            livelloCorrente = LivelloCEFR.A1,
+            prossimaUnitaId = "a1-praesens",
+            prossimaUnitaTitolo = "Il presente"
+        )
+        assertEquals(
+            "Passi duplicati nel piano",
+            percorso.passi.size,
+            percorso.passi.map { it.id }.distinct().size
+        )
+        assertTrue(
+            "Ogni passo deve avere un'azione navigabile",
+            percorso.passi.all { it.azione.isNotBlank() }
+        )
+    }
 }

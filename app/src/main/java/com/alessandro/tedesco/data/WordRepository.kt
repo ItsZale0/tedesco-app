@@ -75,6 +75,11 @@ class WordRepository(
     val sessioniFlow: Flow<List<SessioneEntity>> = _sessioni
 
     init {
+        // Carica subito lo stato del profilo attivo. Senza questa lettura
+        // sincrona, un sync avviato appena creato il repository poteva partire
+        // con piano/guida/sessioni a null e sovrascrivere quelli già salvati.
+        caricaDaProfilo()
+
         // Ad ogni cambio di profilo (o al primo caricamento) ricarica i dati
         CoroutineScope(io).launch {
             var ultimoProfilo: String? = "__init__"

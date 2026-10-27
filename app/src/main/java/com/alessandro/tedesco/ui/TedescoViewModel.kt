@@ -47,6 +47,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -233,6 +235,15 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     private val _passiCompletatiOggi = MutableStateFlow<Set<String>>(emptySet())
     val passiCompletatiOggi: StateFlow<Set<String>> = _passiCompletatiOggi.asStateFlow()
 
+    /**
+     * Serializza le modifiche ai passi del giorno.
+     *
+     * Le due coroutine leggevano il profilo, poi scrivevano lo stato: se due
+     * passi venivano completati quasi insieme, la seconda scrittura poteva
+     * ripartire da uno stato vecchio e perdere il passo della prima.
+     */
+    private val passiGiornoMutex = Mutex()
+
     /** Percorso personalizzato del giorno, con passi sequenziali e tracking. */
     val percorsoGiornaliero: StateFlow<CalcoloPercorsoGiornaliero.PercorsoGiornaliero?> = combine(
         statistiche,
@@ -242,6 +253,13 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     ) { stats, due, repo, completati ->
         if (stats == null) return@combine null
         val profilo = repo.profiloAttivoId?.let { repo.profili[it] } ?: return@combine null
+        val oggi = oggiKey()
+        val prossima = GrammaticaSyllabus.prossimaUnita(profilo.stato.padronanzaGrammatica)
+        val persistiti = if (profilo.stato.passiGiornoData == oggi) {
+            profilo.stato.passiGiornoIds.toSet()
+        } else {
+            emptySet()
+        }
         CalcoloPercorsoGiornaliero.genera(
             statistiche = stats,
             competenze = stats.punteggiCompetenze ?: return@combine null,
@@ -249,7 +267,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             livelloCorrente = profilo.stato.progresso.livelloCorrente,
             obiettivoLivello = profilo.stato.progresso.obiettivoLivello,
             ultimoTest = profilo.stato.progresso.ultimoTest,
-            passiCompletatiOggi = completati
+            passiCompletatiOggi = persistiti + completati,
+            prossimaUnitaId = prossima?.unita?.id,
+            prossimaUnitaTitolo = prossima?.unita?.titolo
         )
     // PIGRO: questo flusso calcola (Calcolo*, AdaptiveSessionEngine, ...) e viene
         // ricostruito a ogni evento. Con Eagerly il lavoro avveniva SEMPRE, anche
@@ -309,9 +329,29 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    private fun oggiKey(): String =
+        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+
     /** IDs dei passi del percorso giornaliero completati oggi. */
     fun completaPassoGiornaliero(passoId: String) {
         _passiCompletatiOggi.value = _passiCompletatiOggi.value + passoId
+        viewModelScope.launch {
+            passiGiornoMutex.withLock {
+                val profilo = profileManager.profiloAttivo() ?: return@launch
+                val oggi = oggiKey()
+                val gia = if (profilo.stato.passiGiornoData == oggi) {
+                    profilo.stato.passiGiornoIds.toSet()
+                } else {
+                    emptySet()
+                }
+                profileManager.aggiornaStatoAttivo(
+                    profilo.stato.copy(
+                        passiGiornoData = oggi,
+                        passiGiornoIds = (gia + passoId).toList()
+                    )
+                )
+            }
+        }
     }
 
     /** Segna le parole mostrate come studiate e completa il passo vocabolario del giorno. */
@@ -321,11 +361,6 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             repo.segnaParoleStudiate(wordIds)
             completaPassoGiornaliero("vocabolario")
         }
-    }
-
-    /** Resetta il percorso giornaliero (nuovo giorno). */
-    fun resetPercorsoGiornaliero() {
-        _passiCompletatiOggi.value = emptySet()
     }
 
     val enableCustomWords: StateFlow<Boolean> = profileManager.repositoryFlow

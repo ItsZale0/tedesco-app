@@ -69,7 +69,8 @@ fun AppNav(
                     onVaiAProgresso = { nav.navigate("progresso") },
                     onVaiATutor = { nav.navigate("tutor") },
                     onVaiABackup = { nav.navigate("backup") },
-                    onVaiAPercorsoGrammatica = { nav.navigate("percorso_grammatica") }
+                    onVaiAPercorsoGrammatica = { nav.navigate("percorso_grammatica") },
+                    onNaviga = { route -> nav.navigate(route) }
                 )
             }
             composable("percorso_grammatica") {

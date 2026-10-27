@@ -28,3 +28,12 @@ captures/
 *.jks
 *.keystore
 .kotlin/
+
+# Ambiente Gradle locale (build offline)
+gradle-home/
+gradle-temp/
+gradle-8.11.1-bin.zip
+
+# File temporanei di lavoro
+CHANGES.diff
+test_java.bat

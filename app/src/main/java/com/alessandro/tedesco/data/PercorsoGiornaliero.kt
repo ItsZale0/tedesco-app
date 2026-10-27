@@ -9,18 +9,19 @@ import java.util.Locale
 /**
  * Motore del percorso personalizzato del giorno.
  *
- * A differenza di CalcoloPercorsoAdattivo (che genera raccomandazioni piatte),
- * questo motore crea un percorso strutturato e sequenziale di passi che l'utente
- * può seguire durante la giornata. Ogni passo è concreto, ha una stima di tempo
- * e può essere completato.
- *
- * Il percorso si adatta dinamicamente:
- * - Cambia in base ai punteggi di competenza
- * - Considera le parole in scadenza
- * - Si adatta al livello CEFR dell'utente
- * - Aggiorna il progresso man mano che i passi vengono completati
+ * Il piano è pensato per una sessione breve (circa 20 minuti): non somma
+ * tutte le competenze deboli, ma sceglie al massimo tre passi e riduce la
+ * durata stimata per stare dentro il budget. Il primo passo è sempre quello
+ * con la priorità più alta (ripasso in scadenza, poi la prossima unità del
+ * percorso grammaticale, poi la competenza più debole).
  */
 object CalcoloPercorsoGiornaliero {
+
+    /** Budget massimo del piano: "circa 20 minuti" con un piccolo margine. */
+    const val MINUTI_MASSIMI = 22
+
+    /** Un piano da 20 minuti non deve frammentarsi in troppe attività. */
+    const val MAX_PASSI = 3
 
     enum class TipoPasso {
         RIPASSO,
@@ -31,6 +32,12 @@ object CalcoloPercorsoGiornaliero {
         TEST_LIVELLO,
         SESSIONE_GUIDATA
     }
+
+    private data class Supporto(
+        val passo: PassoPercorso,
+        val punteggio: Float,
+        val ordine: Int
+    )
 
     data class PassoPercorso(
         val id: String,
@@ -51,7 +58,8 @@ object CalcoloPercorsoGiornaliero {
         val livelloAttuale: LivelloCEFR,
         val prossimoObiettivo: String,
         val minutiTotali: Int,
-        val minutiCompletati: Int
+        val minutiCompletati: Int,
+        val obiettivoMinuti: Int = 20
     ) {
         val progressoGiornata: Float
             get() = if (minutiTotali == 0) 0f else minutiCompletati.toFloat() / minutiTotali
@@ -78,7 +86,9 @@ object CalcoloPercorsoGiornaliero {
      * @param livelloCorrente livello CEFR dell'utente
      * @param obiettivoLivello livello obiettivo (default B1)
      * @param ultimoTest ultimo test di livello effettuato (null se mai fatto)
-     * @param passiCompletati oggi IDs dei passi già completati oggi
+     * @param passiCompletatiOggi IDs dei passi già completati oggi
+     * @param prossimaUnitaId unità grammaticale da aprire (null se il percorso è finito)
+     * @param prossimaUnitaTitolo titolo leggibile dell'unità grammaticale
      */
     fun genera(
         statistiche: Statistiche,
@@ -87,16 +97,19 @@ object CalcoloPercorsoGiornaliero {
         livelloCorrente: LivelloCEFR,
         obiettivoLivello: LivelloCEFR = LivelloCEFR.B1,
         ultimoTest: TestLivello? = null,
-        passiCompletatiOggi: Set<String> = emptySet()
+        passiCompletatiOggi: Set<String> = emptySet(),
+        prossimaUnitaId: String? = null,
+        prossimaUnitaTitolo: String? = null
     ): PercorsoGiornaliero {
         val data = SimpleDateFormat("EEEE d MMMM", Locale.ITALIAN).format(Date())
-        val passi = mutableListOf<PassoPercorso>()
+        val candidati = mutableListOf<PassoPercorso>()
         var prioritaCounter = 1
 
-        // 1. RIPASSO: sempre il primo passo se ci sono parole in scadenza
+        // 1. RIPASSO: sempre il primo passo se ci sono parole in scadenza.
+        // La stima resta breve: il piano non deve diventare una maratona.
         if (daRipassare > 0) {
-            val minuti = (daRipassare * 0.5f).toInt().coerceIn(5, 30)
-            passi.add(
+            val minuti = (daRipassare * 0.5f).toInt().coerceIn(4, 8)
+            candidati.add(
                 PassoPercorso(
                     id = "ripasso",
                     titolo = "Ripasso flashcard",
@@ -111,150 +124,146 @@ object CalcoloPercorsoGiornaliero {
             )
         }
 
-        // 2. GRAMMATICA: se sotto soglia, passo prioritario
-        if (competenze.grammatica < 60f) {
-            val minuti = when {
-                competenze.grammatica < 30f -> 20
-                competenze.grammatica < 50f -> 15
-                else -> 10
-            }
-            passi.add(
-                PassoPercorso(
-                    id = "grammatica",
-                    titolo = "Esercizi di grammatica",
-                    descrizione = "Grammatica al ${competenze.grammatica.toInt()}% · ~$minuti min",
-                    tipo = TipoPasso.GRAMMATICA,
-                    priorita = prioritaCounter++,
-                    stimaMinuti = minuti,
-                    azione = "grammatica",
-                    urgente = competenze.grammatica < 40f,
-                    completato = "grammatica" in passiCompletatiOggi
-                )
-            )
-        }
-
-        // 3. COMPRENSIONE: se sotto soglia
-        if (competenze.comprensione < 60f) {
-            val minuti = when {
-                competenze.comprensione < 30f -> 20
-                competenze.comprensione < 50f -> 15
-                else -> 10
-            }
-            passi.add(
-                PassoPercorso(
-                    id = "comprensione",
-                    titolo = "Quiz di comprensione",
-                    descrizione = "Comprensione al ${competenze.comprensione.toInt()}% · ~$minuti min",
-                    tipo = TipoPasso.COMPRENSIONE,
-                    priorita = prioritaCounter++,
-                    stimaMinuti = minuti,
-                    azione = "quiz-comprensione",
-                    urgente = competenze.comprensione < 40f,
-                    completato = "comprensione" in passiCompletatiOggi
-                )
-            )
-        }
-
-        // 4. PRODUZIONE: se sotto soglia
-        if (competenze.produzione < 60f) {
-            val minuti = when {
-                competenze.produzione < 30f -> 20
-                competenze.produzione < 50f -> 15
-                else -> 10
-            }
-            passi.add(
-                PassoPercorso(
-                    id = "produzione",
-                    titolo = "Esercizi di produzione",
-                    descrizione = "Produzione al ${competenze.produzione.toInt()}% · ~$minuti min",
-                    tipo = TipoPasso.PRODUZIONE,
-                    priorita = prioritaCounter++,
-                    stimaMinuti = minuti,
-                    azione = "quiz-produzione",
-                    urgente = competenze.produzione < 40f,
-                    completato = "produzione" in passiCompletatiOggi
-                )
-            )
-        }
-
-        // 5. VOCABOLARIO: se lessico basso
-        if (competenze.lessico < 50f) {
-            val minuti = when {
-                competenze.lessico < 20f -> 15
-                competenze.lessico < 35f -> 10
-                else -> 8
-            }
-            passi.add(
-                PassoPercorso(
-                    id = "vocabolario",
-                    titolo = "Nuove parole",
-                    descrizione = "Lessico al ${competenze.lessico.toInt()}% · ~$minuti min",
-                    tipo = TipoPasso.VOCABOLARIO,
-                    priorita = prioritaCounter++,
-                    stimaMinuti = minuti,
-                    azione = "nuove",
-                    completato = "vocabolario" in passiCompletatiOggi
-                )
-            )
-        }
-
-        // 6. TEST DI LIVELLO: se vicino all'obiettivo
+        // 2. TEST DI LIVELLO: se manca poco all'obiettivo, il test viene prima
+        // della nuova unità. È il passo più utile per capire dove si è.
         val progressoObiettivo = when (obiettivoLivello) {
             LivelloCEFR.B1 -> competenze.lessico / 100f * 0.5f +
                 competenze.grammatica / 100f * 0.3f +
                 competenze.comprensione / 100f * 0.2f
+
             else -> competenze.lessico / 100f * 0.4f +
                 competenze.grammatica / 100f * 0.3f +
                 competenze.comprensione / 100f * 0.15f +
                 competenze.produzione / 100f * 0.15f
         }
         if (progressoObiettivo > 0.7f && livelloCorrente < obiettivoLivello) {
-            passi.add(
+            val minuti = 15
+            candidati.add(
                 PassoPercorso(
                     id = "test-livello",
                     titolo = "Verifica il tuo livello",
-                    descrizione = "Test di ${obiettivoLivello.label} · ~15 min",
+                    descrizione = "Test di ${obiettivoLivello.label} · ~$minuti min",
                     tipo = TipoPasso.TEST_LIVELLO,
                     priorita = prioritaCounter++,
-                    stimaMinuti = 15,
-                    azione = "testb1",
+                    stimaMinuti = minuti,
+                    azione = "verifica",
                     completato = "test-livello" in passiCompletatiOggi
                 )
             )
         }
 
-        // 7. SESSIONE GUIDATA: se non c'è altro da fare o come approfondimento
-        if (passi.isEmpty() || (daRipassare == 0 && statistiche.paroleTotali >= 500)) {
-            passi.add(
+        // 3. GRAMMATICA: la prossima unità del percorso A0-B1 è il cuore del
+        // piano. Se non c'è un'unità successiva, resta il ripasso generico.
+        val includiGrammatica = prossimaUnitaId != null || competenze.grammatica < 60f
+        if (includiGrammatica) {
+            val minuti = 8
+            val descrizione = if (prossimaUnitaId != null) {
+                val titolo = prossimaUnitaTitolo?.takeIf { it.isNotBlank() } ?: "prossima unità"
+                "$titolo · ~$minuti min"
+            } else {
+                "Grammatica al ${competenze.grammatica.toInt()}% · ~$minuti min"
+            }
+            candidati.add(
                 PassoPercorso(
-                    id = "sessione",
-                    titolo = "Sessione di approfondimento",
-                    descrizione = "Ripasso completo e nuovi argomenti · ~20 min",
-                    tipo = TipoPasso.SESSIONE_GUIDATA,
+                    id = "grammatica",
+                    titolo = if (prossimaUnitaId != null) "Percorso grammaticale" else "Esercizi di grammatica",
+                    descrizione = descrizione,
+                    tipo = TipoPasso.GRAMMATICA,
                     priorita = prioritaCounter++,
-                    stimaMinuti = 20,
-                    azione = "sessioni",
-                    completato = "sessione" in passiCompletatiOggi
+                    stimaMinuti = minuti,
+                    azione = prossimaUnitaId?.let { "unita_grammatica/$it" } ?: "grammatica",
+                    urgente = competenze.grammatica < 40f,
+                    completato = "grammatica" in passiCompletatiOggi
                 )
             )
         }
 
-        // Se ancora vuoto (caso estremo), crea un passo di sessione
-        if (passi.isEmpty()) {
-            passi.add(
+        // 4. SUPPORTI: una sola competenza debole, scelta per punteggio più
+        // basso. Così il piano resta da 20 minuti invece di sommare tutto.
+        val supporti = mutableListOf<Supporto>()
+        if (competenze.comprensione < 60f) {
+            val minuti = if (competenze.comprensione < 30f) 6 else 4
+            supporti.add(
+                Supporto(
+                    PassoPercorso(
+                        id = "comprensione",
+                        titolo = "Comprensione",
+                        descrizione = "Ascolto e lettura · ~$minuti min",
+                        tipo = TipoPasso.COMPRENSIONE,
+                        priorita = 0,
+                        stimaMinuti = minuti,
+                        azione = "comprensione",
+                        urgente = competenze.comprensione < 40f,
+                        completato = "comprensione" in passiCompletatiOggi
+                    ),
+                    competenze.comprensione,
+                    1
+                )
+            )
+        }
+        if (competenze.produzione < 60f) {
+            val minuti = if (competenze.produzione < 30f) 6 else 4
+            supporti.add(
+                Supporto(
+                    PassoPercorso(
+                        id = "produzione",
+                        titolo = "Produzione",
+                        descrizione = "Scrivi e rivedi un testo · ~$minuti min",
+                        tipo = TipoPasso.PRODUZIONE,
+                        priorita = 0,
+                        stimaMinuti = minuti,
+                        azione = "produzione",
+                        urgente = competenze.produzione < 40f,
+                        completato = "produzione" in passiCompletatiOggi
+                    ),
+                    competenze.produzione,
+                    2
+                )
+            )
+        }
+        if (competenze.lessico < 50f) {
+            val minuti = if (competenze.lessico < 20f) 6 else 4
+            supporti.add(
+                Supporto(
+                    PassoPercorso(
+                        id = "vocabolario",
+                        titolo = "Lessico",
+                        descrizione = "Parole utili per il livello · ~$minuti min",
+                        tipo = TipoPasso.VOCABOLARIO,
+                        priorita = 0,
+                        stimaMinuti = minuti,
+                        azione = "wortliste",
+                        urgente = competenze.lessico < 25f,
+                        completato = "vocabolario" in passiCompletatiOggi
+                    ),
+                    competenze.lessico,
+                    0
+                )
+            )
+        }
+        candidati.addAll(
+            supporti
+                .sortedWith(compareBy({ it.punteggio }, { it.ordine }))
+                .map { it.passo }
+        )
+
+        // 5. FALLBACK: nessuna priorità -> una sessione guidata da 20 minuti.
+        if (candidati.isEmpty()) {
+            candidati.add(
                 PassoPercorso(
                     id = "sessione",
                     titolo = "Sessione di studio",
-                    descrizione = "Inizia il tuo percorso di studio · ~15 min",
+                    descrizione = "Ripasso completo e nuovi argomenti · ~20 min",
                     tipo = TipoPasso.SESSIONE_GUIDATA,
                     priorita = 1,
-                    stimaMinuti = 15,
-                    azione = "sessioni",
+                    stimaMinuti = 20,
+                    azione = "esercizi",
                     completato = "sessione" in passiCompletatiOggi
                 )
             )
         }
 
+        val passi = limitaAlBudget(candidati)
         val minutiTotali = passi.sumOf { it.stimaMinuti }
         val minutiCompletati = passi.filter { it.completato }.sumOf { it.stimaMinuti }
 
@@ -285,6 +294,33 @@ object CalcoloPercorsoGiornaliero {
             minutiTotali = minutiTotali,
             minutiCompletati = minutiCompletati
         )
+    }
+
+    /**
+     * Prende i primi passi fino al budget, riducendo l'ultimo se serve.
+     * Non scende sotto i 4 minuti per passo: meglio togliere un passo che
+     * proporre un'attività troppo frammentata.
+     */
+    private fun limitaAlBudget(candidati: List<PassoPercorso>): List<PassoPercorso> {
+        val scelti = mutableListOf<PassoPercorso>()
+        var totale = 0
+        for (passo in candidati) {
+            if (scelti.size >= MAX_PASSI) break
+            val restante = MINUTI_MASSIMI - totale
+            if (restante < 4) break
+            val minuti = passo.stimaMinuti.coerceAtMost(restante).coerceAtLeast(4)
+            // La descrizione contiene la stima: se il budget accorcia il passo,
+            // deve mostrare la durata reale, non quella teorica.
+            val descrizione = passo.descrizione.replace(
+                Regex("""~\d+ min"""),
+                "~$minuti min"
+            )
+            scelti.add(passo.copy(stimaMinuti = minuti, descrizione = descrizione))
+            totale += minuti
+        }
+        return scelti.mapIndexed { indice, passo ->
+            passo.copy(priorita = indice + 1)
+        }
     }
 
     /**
