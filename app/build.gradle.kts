@@ -7,6 +7,16 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Versione centralizzata: version.properties è l'unica fonte di verità.
+// bumpVersion incrementa versionCode e patch di versionName, poi allinea
+// updates/version.json. Non modificare la versione a mano nei due posti.
+val versionProps = Properties().apply {
+    val f = rootProject.file("version.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val appVersionCode = versionProps.getProperty("VERSION_CODE", "203").toInt()
+val appVersionName = versionProps.getProperty("VERSION_NAME", "1.43.0")
+
 android {
     namespace = "com.alessandro.tedesco"
     compileSdk = 35
@@ -20,8 +30,8 @@ android {
         applicationId = "com.alessandro.tedesco"
         minSdk = 26
         targetSdk = 35
-        versionCode = 203
-        versionName = "1.43.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
         buildConfigField("String", "FREE_API_KEY", "\"$freeApiKey\"")
     }
 
@@ -108,31 +118,85 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-// ── Genera updates/version.json da build.gradle.kts (single source of truth) ──
-// Elimina il bug ricorrente: version.json e versionCode divergevano.
-// Dopo aver cambiato versionCode/versionName qui, lancia:
-//   ./gradlew generateVersionJson
-// Poi builda e committa: updates/version.json è sempre allineato.
-// NB: il version.json nella root è il canale legacy ed è volutamente congelato
-// alla 1.36.33 (firma diversa, non aggiornabile in place).
-tasks.register("generateVersionJson") {
+// ── Versionamento centralizzato ───────────────────────────────────────
+// La versione vive in version.properties. bumpVersion incrementa versionCode
+// e la patch di versionName, poi aggiorna updates/version.json.
+// Uso: gradle bumpVersion -Pchangelog="Cosa è cambiato"
+// Va eseguito PRIMA di ogni commit che modifica l'app o i metadati di release.
+tasks.register("bumpVersion") {
+    group = "release"
+    description = "Incrementa versionCode e patch di versionName, aggiorna updates/version.json"
     doLast {
-        val vc = android.defaultConfig.versionCode ?: 0
-        val vn = android.defaultConfig.versionName ?: "0.0.0"
-        val apkUrl = "https://github.com/ItsZale0/tedesco-app/releases/download/v$vn/Tedesco-v$vn.apk"
+        val f = rootProject.file("version.properties")
+        val props = Properties()
+        if (f.exists()) f.inputStream().use { props.load(it) }
+        val oldCode = props.getProperty("VERSION_CODE", "0").toIntOrNull()
+            ?: throw GradleException("VERSION_CODE mancante o non numerico in version.properties")
+        val oldName = props.getProperty("VERSION_NAME", "0.0.0")
+        val parts = oldName.split(".")
+        if (parts.size != 3) {
+            throw GradleException("VERSION_NAME deve essere major.minor.patch, trovato: $oldName")
+        }
+        val major = parts[0].toIntOrNull()
+            ?: throw GradleException("VERSION_NAME non valido: $oldName")
+        val minor = parts[1].toIntOrNull()
+            ?: throw GradleException("VERSION_NAME non valido: $oldName")
+        val patch = parts[2].toIntOrNull()
+            ?: throw GradleException("VERSION_NAME non valido: $oldName")
+        val newName = "$major.$minor.${patch + 1}"
+        val newCode = oldCode + 1
+        f.writeText("VERSION_CODE=$newCode\nVERSION_NAME=$newName\n")
+
+        val changelog = (project.findProperty("changelog") as String?)?.trim().orEmpty()
+        val escaped = changelog
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+        val apkUrl = "https://github.com/ItsZale0/tedesco-app/releases/download/v$newName/Tedesco-v$newName.apk"
         val json = """
-    {
-      "versionCode": $vc,
-      "versionName": "$vn",
-      "changelog": "",
-      "minVersionCode": 0,
-      "apkUrl": "$apkUrl"
-    }
-    """.trimIndent()
+            {
+              "versionCode": $newCode,
+              "versionName": "$newName",
+              "changelog": "$escaped",
+              "minVersionCode": 0,
+              "apkUrl": "$apkUrl"
+            }
+        """.trimIndent()
         val out = rootProject.layout.projectDirectory.file("updates/version.json").asFile
         out.parentFile.mkdirs()
         out.writeText(json)
-        println("generateVersionJson: wrote versionCode=$vc versionName=$vn to updates/version.json")
+        println("Versione: $oldName ($oldCode) -> $newName ($newCode)")
+        println("version.json aggiornato: $apkUrl")
+    }
+}
+
+// Rigenera solo il manifest dalla versione corrente, senza incrementare.
+// Utile se version.json è stato modificato a mano o è rimasto indietro.
+tasks.register("generateVersionJson") {
+    group = "release"
+    description = "Allinea updates/version.json a version.properties"
+    doLast {
+        val props = Properties()
+        val f = rootProject.file("version.properties")
+        if (f.exists()) f.inputStream().use { props.load(it) }
+        val vc = props.getProperty("VERSION_CODE", "0").toIntOrNull() ?: 0
+        val vn = props.getProperty("VERSION_NAME", "0.0.0")
+        val apkUrl = "https://github.com/ItsZale0/tedesco-app/releases/download/v$vn/Tedesco-v$vn.apk"
+        val json = """
+            {
+              "versionCode": $vc,
+              "versionName": "$vn",
+              "changelog": "",
+              "minVersionCode": 0,
+              "apkUrl": "$apkUrl"
+            }
+        """.trimIndent()
+        val out = rootProject.layout.projectDirectory.file("updates/version.json").asFile
+        out.parentFile.mkdirs()
+        out.writeText(json)
+        println("generateVersionJson: versionCode=$vc versionName=$vn")
     }
 }
 

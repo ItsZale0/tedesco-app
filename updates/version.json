@@ -1,7 +1,7 @@
 {
-  "versionCode": 203,
-  "versionName": "1.43.0",
-  "changelog": "Percorso grammaticale A0-B1 completo e Wortliste ampliata. Correzioni di stabilità: salvataggio dei passi giornalieri serializzato, primo sync senza perdita di piano/guida/sessioni, accessibilità TalkBack migliorata e pulizia delle schermate non utilizzate.",
+  "versionCode": 204,
+  "versionName": "1.43.1",
+  "changelog": "Versionamento automatico: ogni modifica incrementa versionCode e versionName e allinea il manifest; release GitHub pubblicata automaticamente sui tag v*.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.0/Tedesco-v1.43.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.1/Tedesco-v1.43.1.apk"
 }
