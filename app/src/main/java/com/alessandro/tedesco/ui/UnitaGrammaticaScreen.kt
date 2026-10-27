@@ -5,6 +5,7 @@ package com.alessandro.tedesco.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
@@ -37,7 +40,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.EsempioGrammatica
@@ -82,10 +85,10 @@ fun UnitaGrammaticaScreen(
     val context = LocalContext.current
     val tts = rememberTtsHelper(context)
 
-    var scheda by rememberSaveable(unitaId) { mutableIntStateOf(0) }
-    var indice by rememberSaveable(unitaId) { mutableIntStateOf(0) }
-    var corrette by rememberSaveable(unitaId) { mutableIntStateOf(0) }
-    var scelta by rememberSaveable(unitaId) { mutableIntStateOf(-1) }
+    var scheda by rememberSaveable(unitaId) { mutableStateOf(0) }
+    var indice by rememberSaveable(unitaId) { mutableStateOf(0) }
+    var corrette by rememberSaveable(unitaId) { mutableStateOf(0) }
+    var scelta by rememberSaveable(unitaId) { mutableStateOf(-1) }
     var testo by rememberSaveable(unitaId) { mutableStateOf("") }
     var verificato by rememberSaveable(unitaId) { mutableStateOf(false) }
     var finito by rememberSaveable(unitaId) { mutableStateOf(false) }
@@ -204,6 +207,9 @@ fun UnitaGrammaticaScreen(
                 onAvanti = { prossimaDomanda() }
             )
         }
+
+        // Spazio per non finire sotto la bolla del tutor.
+        Spacer(Modifier.height(80.dp))
     }
 }
 
@@ -431,40 +437,49 @@ private fun TabellaCard(tabella: TabellaGrammatica) {
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
-            Row(Modifier.fillMaxWidth()) {
-                tabella.intestazioni.forEach { cella ->
-                    Text(
-                        cella,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+
+            // Con 4+ colonne la tabella non entra su un telefono: meglio
+            // scorrere in orizzontale che spezzare "Nominativo" in due righe.
+            val molteColonne = tabella.intestazioni.size >= 4
+            if (molteColonne) {
+                val scroll = rememberScrollState()
+                Column(Modifier.horizontalScroll(scroll)) {
+                    TabellaRiga(
+                        celle = tabella.intestazioni,
+                        intestazione = true,
+                        larghezzeFisse = true
                     )
-                }
-            }
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-            tabella.righe.forEach { riga ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp)
-                ) {
-                    riga.forEach { cella ->
-                        Text(
-                            cella,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 2.dp),
-                            style = MaterialTheme.typography.bodySmall
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                    tabella.righe.forEach { riga ->
+                        TabellaRiga(
+                            celle = riga,
+                            intestazione = false,
+                            larghezzeFisse = true
                         )
                     }
                 }
+            } else {
+                TabellaRiga(
+                    celle = tabella.intestazioni,
+                    intestazione = true,
+                    larghezzeFisse = false
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                tabella.righe.forEach { riga ->
+                    TabellaRiga(
+                        celle = riga,
+                        intestazione = false,
+                        larghezzeFisse = false
+                    )
+                }
             }
+
             if (tabella.nota.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -473,6 +488,42 @@ private fun TabellaCard(tabella: TabellaGrammatica) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TabellaRiga(
+    celle: List<String>,
+    intestazione: Boolean,
+    larghezzeFisse: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+    ) {
+        celle.forEachIndexed { indice, cella ->
+            val modifier = if (larghezzeFisse) {
+                Modifier.width(if (indice == 0) 112.dp else 92.dp)
+            } else {
+                Modifier.weight(1f)
+            }
+            Text(
+                cella,
+                modifier = modifier.padding(horizontal = 2.dp),
+                style = if (intestazione) {
+                    MaterialTheme.typography.labelSmall
+                } else {
+                    MaterialTheme.typography.bodySmall
+                },
+                fontWeight = if (intestazione) FontWeight.Bold else FontWeight.Normal,
+                color = if (intestazione) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
         }
     }
 }
@@ -685,6 +736,10 @@ private fun EsercizioUnitaCard(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(etichettaInput) },
                     enabled = !verificato,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false
+                    ),
                     singleLine = false,
                     minLines = 1,
                     maxLines = 3

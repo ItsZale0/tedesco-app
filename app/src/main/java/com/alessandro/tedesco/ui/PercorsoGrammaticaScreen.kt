@@ -239,6 +239,9 @@ fun PercorsoGrammaticaScreen(
                 )
             }
         }
+
+        // Spazio per non finire sotto la bolla del tutor.
+        Spacer(Modifier.height(80.dp))
     }
 }
 
