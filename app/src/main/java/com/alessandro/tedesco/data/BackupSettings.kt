@@ -47,7 +47,7 @@ class BackupSettings(private val context: Context) {
 
     // ---- Backup automatico ----
 
-    val autoFlow: Flow<Boolean> = context.backupDataStore.data.map { it[BackupKeys.AUTO] ?: false }
+    val autoFlow: Flow<Boolean> = context.backupDataStore.data.map { it[BackupKeys.AUTO] ?: true }
     val ultimoAutoFlow: Flow<Long> = context.backupDataStore.data.map {
         it[BackupKeys.ULTIMO_AUTO]?.toLongOrNull() ?: 0L
     }
@@ -57,7 +57,7 @@ class BackupSettings(private val context: Context) {
     }
 
     suspend fun autoAbilitato(): Boolean =
-        context.backupDataStore.data.map { it[BackupKeys.AUTO] ?: false }.first()
+        context.backupDataStore.data.map { it[BackupKeys.AUTO] ?: true }.first()
 
     /** Hash del contenuto dell'ultimo backup: evita di ricaricare se nulla è cambiato. */
     suspend fun ultimoHash(): String =

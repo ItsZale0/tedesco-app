@@ -4,7 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.activity.compose.setContent
@@ -26,9 +27,10 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         TtsCondiviso.chiudi()
-        // Salva subito le ultime modifiche (il salvataggio normale e' coalescente).
-        lifecycleScope.launch {
-            TedescoApp.get(this@MainActivity).profileManagerInstance.flush()
+        // Salva SUBITO e in modo sincrono: se aspettiamo una coroutine, Android
+        // puo' killare il processo prima che il salvataggio finisca (dati persi).
+        runBlocking(Dispatchers.IO) {
+            runCatching { TedescoApp.get(this@MainActivity).profileManagerInstance.flush() }
         }
     }
 
