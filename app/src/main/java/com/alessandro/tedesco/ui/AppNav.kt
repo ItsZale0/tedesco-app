@@ -189,5 +189,8 @@ fun AppNav(
 
         // Bolla del tutor: sopra ogni schermata, come Meta AI su WhatsApp
         TutorBubble(vm = vm)
+
+        // Popup aggiornamenti: sovraimposto a tutto, non scorre con il contenuto
+        UpdateOverlay(updater = updater)
     }
 }

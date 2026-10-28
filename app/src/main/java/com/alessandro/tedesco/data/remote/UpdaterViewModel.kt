@@ -44,6 +44,8 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
 
     private val app = application as TedescoApp
 
+    private val updateSettings = UpdateSettings(app)
+
     private val client = HttpCondiviso.client
 
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
@@ -105,7 +107,9 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
                 _ultimoControllo.value =
                     "Server: v${version.versionName} (${version.versionCode}) — locale: $versioneCorrente"
 
-                _state.value = if (version.versionCode > versioneCorrenteCode) {
+                _state.value = if (version.versionCode > versioneCorrenteCode &&
+                    version.versionCode != updateSettings.versioneSaltata()
+                ) {
                     UpdateState.Available(version)
                 } else {
                     UpdateState.UpToDate
@@ -317,6 +321,15 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
     fun dismiss() {
         downloadJob?.cancel()
         _state.value = UpdateState.Idle
+    }
+
+    fun skipUpdate(version: VersionInfo) {
+        viewModelScope.launch {
+            updateSettings.salvaVersioneSaltata(version.versionCode)
+            downloadJob?.cancel()
+            _state.value = UpdateState.Idle
+            android.util.Log.d("Updater", "Aggiornamento v${version.versionName} saltato dall'utente")
+        }
     }
 
     private fun messaggioErrore(e: Exception): String {

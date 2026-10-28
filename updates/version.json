@@ -1,7 +1,7 @@
 {
-  "versionCode": 221,
-  "versionName": "1.45.4",
-  "changelog": "Pulizia logica: rimossi StateFlow inutilizzati (piano, progressoFeed, sessioni, livelloIniziale), ridotta allocazione memoria. Fix coalescenza salvataggio livello. Nessun cambio funzionale.",
+  "versionCode": 222,
+  "versionName": "1.45.5",
+  "changelog": "Auto-update come popup sovraimposto (non più banner nella lista): resta sopra ogni schermata, non scorre col contenuto. Aggiunto tasto 'Salta questo aggiornamento' (persistente: non ripropone la stessa versione). Affidabilità migliorata: doppia fonte versione, fallback URL, verifica APK.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.4/Tedesco-v1.45.4.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.5/Tedesco-v1.45.5.apk"
 }

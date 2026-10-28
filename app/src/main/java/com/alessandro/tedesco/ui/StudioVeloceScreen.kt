@@ -221,10 +221,6 @@ fun StudioVeloceScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spaziature.md)
             ) {
-            // ---- Banner aggiornamento (sempre in alto) ----
-            item {
-                UpdateBanner(updater)
-            }
             // ---- Hero: piano di oggi ----
             pianoOggi?.let { piano ->
                 item {

@@ -2,6 +2,7 @@ package com.alessandro.tedesco.data.remote
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
@@ -29,8 +30,17 @@ class UpdateSettings(private val context: Context) {
         context.updateSettingsStore.edit { it[AUTO_DOWNLOAD] = attivo }
     }
 
+    /** Versione saltata dall'utente: non viene più proposta. */
+    suspend fun versioneSaltata(): Int =
+        context.updateSettingsStore.data.first()[VERSIONE_SALTATA] ?: 0
+
+    suspend fun salvaVersioneSaltata(code: Int) {
+        context.updateSettingsStore.edit { it[VERSIONE_SALTATA] = code }
+    }
+
     companion object {
         val AUTO_CONTROLLO = booleanPreferencesKey("auto_controllo")
         val AUTO_DOWNLOAD = booleanPreferencesKey("auto_download")
+        val VERSIONE_SALTATA = intPreferencesKey("versione_saltata")
     }
 }
