@@ -158,6 +158,8 @@ object GrammaticaSyllabus {
         unitaA2VerbenPraepositionen(),
         unitaA2Indefinitpronomen(),
         unitaA2IndirekteFragen(),
+        // ---- A2 residui (Grammatik Aktiv) ----
+        unitaA2VerbenAkkDativ(),
         unitaB1Futur(),
         unitaB1Adjektivdeklination(),
         unitaB1Partizipien(),
@@ -174,6 +176,9 @@ object GrammaticaSyllabus {
         unitaB1AdjektiveAlsNomen(),
         unitaB1Praepositionaladverbien(),
         unitaB1Komparativsaetze(),
+        // ---- B1 residui (Grammatik Aktiv) ----
+        unitaB1PassivVergangenheit(),
+        unitaB1TemporaleNebensaetze(),
         // ---- B2 ----
         unitaB2PassivModal(),
         unitaB2Konjunktiv2Vergangenheit(),

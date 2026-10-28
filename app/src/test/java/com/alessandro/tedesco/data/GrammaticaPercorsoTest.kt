@@ -17,7 +17,7 @@ class GrammaticaPercorsoTest {
 
     @Test
     fun ilPercorsoContieneTutteLeUnitaA0B2() {
-        assertEquals(53, GrammaticaSyllabus.unita.size)
+        assertEquals(56, GrammaticaSyllabus.unita.size)
         assertEquals(
             listOf("A0", "A1", "A2", "B1", "B2"),
             GrammaticaSyllabus.unita.map { it.livello }.distinct()
@@ -61,6 +61,7 @@ class GrammaticaPercorsoTest {
                 "a2-verben-praepositionen",
                 "a2-indefinitpronomen",
                 "a2-indirekte-fragen",
+                "a2-verben-akk-dativ",
                 "b1-futur",
                 "b1-adjektivdeklination",
                 "b1-partizipien",
@@ -76,6 +77,8 @@ class GrammaticaPercorsoTest {
                 "b1-adjektive-als-nomen",
                 "b1-praepositionaladverbien",
                 "b1-komparativsaetze",
+                "b1-passiv-vergangenheit",
+                "b1-temporale-nebensaetze",
                 "b2-passiv-modal",
                 "b2-konjunktiv2-vergangenheit",
                 "b2-partizipialkonstruktionen",

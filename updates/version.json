@@ -1,7 +1,7 @@
 {
-  "versionCode": 218,
-  "versionName": "1.45.1",
-  "changelog": "Il selettore del livello aggiorna subito e in modo persistente tutte le risorse (immersione, piano giornaliero, esercizi, tutor, competenze). Il cambio livello viene salvato immediatamente, non più in modo differito.",
+  "versionCode": 219,
+  "versionName": "1.45.2",
+  "changelog": "Percorso grammaticale: +3 unità residue vs Grammatik Aktiv (verbi con accusativo e dativo, passivo al Perfekt/Präteritum, frasi temporali). Totale 56 unità, copertura completa dei capitoli A1-B1 del libro di riferimento.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.1/Tedesco-v1.45.1.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.2/Tedesco-v1.45.2.apk"
 }
