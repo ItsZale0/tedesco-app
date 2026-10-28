@@ -152,7 +152,7 @@ object CalcoloPercorsoGiornaliero {
             )
         }
 
-        // 3. GRAMMATICA: la prossima unità del percorso A0-B1 è il cuore del
+        // 3. GRAMMATICA: la prossima unità del percorso A0-B2 è il cuore del
         // piano. Se non c'è un'unità successiva, resta il ripasso generico.
         val includiGrammatica = prossimaUnitaId != null || competenze.grammatica < 60f
         if (includiGrammatica) {

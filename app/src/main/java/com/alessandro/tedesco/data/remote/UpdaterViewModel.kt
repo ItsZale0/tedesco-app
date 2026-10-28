@@ -76,6 +76,21 @@ class UpdaterViewModel(application: Application) : AndroidViewModel(application)
         pm.getPackageInfo(getApplication<Application>().packageName, 0).longVersionCode.toInt()
     }.getOrDefault(0)
 
+    /** Timestamp dell'ultimo controllo automatico (0 = mai). */
+    private var ultimoControlloAutomatico = 0L
+
+    /**
+     * Controllo automatico con throttling: al massimo una volta ogni
+     * [intervalloMs]. Evita una richiesta di rete a ogni ritorno in primo piano
+     * (consumo di batteria e dati senza alcun beneficio).
+     */
+    fun checkForUpdateSeNecessario(intervalloMs: Long = 6 * 60 * 60 * 1000L) {
+        val adesso = System.currentTimeMillis()
+        if (adesso - ultimoControlloAutomatico < intervalloMs) return
+        ultimoControlloAutomatico = adesso
+        checkForUpdate()
+    }
+
     fun checkForUpdate() {
         if (_state.value is UpdateState.Checking) return
         _state.value = UpdateState.Checking

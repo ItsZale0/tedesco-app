@@ -312,8 +312,8 @@ class ProfileManager(
 
     /**
      * Canale ntfy su cui pubblicare le parole nuove.
-     * Solo per i profili personalizzati (Emma e Alessandro Personalizzato):
-     * gli altri non hanno un vocabolario su GitHub da aggiornare.
+     * Solo per i profili con le parole personalizzate abilitate (Emma e
+     * Alessandro): gli altri non hanno un vocabolario su GitHub da aggiornare.
      */
     fun topicPubblicazione(): String =
         if (isCustomWordsEnabled()) ProfiliPreset.NTFY_TOPIC_EMMA else ""

@@ -1,8 +1,7 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import com.alessandro.tedesco.data.remote.EsercizioGenerato
-import com.alessandro.tedesco.data.remote.GeneratoreEsercizi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,108 +10,141 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.alessandro.tedesco.data.local.ProfiloUtente
-import com.alessandro.tedesco.data.EsercizioAscolto
-import com.alessandro.tedesco.ui.theme.Spaziature
-import com.alessandro.tedesco.ui.theme.dimensioneContenuto
-import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
-import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
-import com.alessandro.tedesco.ui.theme.TitoloSchermata
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.AscoltoData
+import com.alessandro.tedesco.data.EsercizioAscolto
+import com.alessandro.tedesco.data.local.ProfiloUtente
+
+import com.alessandro.tedesco.data.remote.EsercizioGenerato
 import com.alessandro.tedesco.data.remote.TipoEsercizio
-import com.alessandro.tedesco.data.local.toEsercizioAscolto
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.rememberCoroutineScope
+import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
+import com.alessandro.tedesco.ui.theme.Spaziature
 import kotlinx.coroutines.launch
 
+/**
+ * Ascolto (Hörverstehen).
+ *
+ * Prima regola: funziona SEMPRE, anche senza rete e senza AI. Gli esercizi
+ * locali di [AscoltoData] sono già calibrati per livello e vengono mostrati
+ * subito; la generazione con l'AI è un extra su richiesta, non un requisito.
+ * Così la schermata non resta più vuota quando la generazione fallisce.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto: () -> Unit = {}) {
-    val livelli = remember { AscoltoData.livelliDisponibili(profilo) }
-    var livelloSelezionato by remember { mutableStateOf(livelli.firstOrNull() ?: "A1") }
-    var esercizi by remember { mutableStateOf<List<EsercizioAscolto>>(emptyList()) }
+    val livelloProfilo = profilo?.stato?.progresso?.livelloCorrente?.codiceBreve()
+    val livelli = remember(profilo) {
+        (AscoltoData.livelliDisponibili(profilo) + listOfNotNull(livelloProfilo))
+            .distinct()
+            .sorted()
+    }
+    var livelloSelezionato by remember(profilo) {
+        mutableStateOf(
+            livelloProfilo?.takeIf { it in livelli } ?: livelli.firstOrNull() ?: "A1"
+        )
+    }
+
+    // Giro corrente: cambiarlo ricostruisce la serie locale (mescolata).
+    var giro by remember { mutableIntStateOf(0) }
     var indice by remember { mutableIntStateOf(0) }
     var rispostaSelezionata by remember { mutableStateOf<Int?>(null) }
     var risultato by remember { mutableStateOf<Boolean?>(null) }
     var punteggio by remember { mutableIntStateOf(0) }
     var completato by remember { mutableStateOf(false) }
     var mostraTraduzione by remember { mutableStateOf(false) }
-    val eserciziGen by vm.eserciziGenAscolto.collectAsStateWithLifecycle()
+
+    var eserciziAi by remember { mutableStateOf<List<EsercizioAscolto>>(emptyList()) }
     var generaInCorso by remember { mutableStateOf(false) }
     var erroreGen by remember { mutableStateOf<String?>(null) }
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    // Batch SEMPRE fresco: mai il set statico "vecchio" (frasi fisse che non vanno
-    // bene). Se la generazione fallisce si riusa l'ultimo batch AI non completato,
-    // altrimenti si mostra "Riprova" — mai esercizi riciclati.
-    var freschi by remember { mutableStateOf<List<EsercizioAscolto>>(emptyList()) }
-    var tentativo by remember { mutableIntStateOf(0) }
+    // Serie locale: sempre disponibile, nessuna rete.
+    val eserciziLocali = remember(livelloSelezionato, profilo, giro) {
+        val esatti = AscoltoData.eserciziPerLivello(livelloSelezionato, profilo)
+        if (esatti.isNotEmpty()) esatti.shuffled()
+        else {
+            // Livello senza esercizi locali (es. B2): si usa il più alto disponibile.
+            val disponibili = AscoltoData.livelliDisponibili(profilo)
+            val ripiego = disponibili.lastOrNull { it <= livelloSelezionato }
+                ?: disponibili.lastOrNull().orEmpty()
+            AscoltoData.eserciziPerLivello(ripiego, profilo).shuffled()
+        }
+    }
 
-    LaunchedEffect(tentativo) {
-        erroreGen = null
-        esercizi = emptyList()
-        vm.caricaEserciziGenerati()
-        val generati: List<EsercizioGenerato> = try {
-            vm.generaEsercizi(TipoEsercizio.ASCOLTO, quanti = 10)
-        } catch (e: Throwable) {
-            // Throwable, non Exception: un errore del modello o della rete non deve
-            // poter chiudere l'app.
-            erroreGen = (e.localizedMessage ?: e.javaClass.simpleName)
-            emptyList()
-        }
-        val lista: List<EsercizioAscolto> = if (generati.isNotEmpty()) {
-            generati.map { esercizioGeneratoAAscolto(it) }
-        } else {
-            eserciziGen.filterNot { it.completato }.map { it.toEsercizioAscolto() }
-        }
-        freschi = lista
-        esercizi = lista
+    val esercizi = remember(eserciziLocali, eserciziAi) {
+        (eserciziAi + eserciziLocali).distinctBy { it.id }
+    }
+
+    // Reset quando cambia livello o serie: niente punteggi "ereditati".
+    LaunchedEffect(livelloSelezionato, giro) {
         indice = 0
         rispostaSelezionata = null
         risultato = null
+        punteggio = 0
         completato = false
+        mostraTraduzione = false
     }
 
-    // Il selettore di livello filtra il batch; se il filtro svuota tutto (il
-    // generatore usa etichette leggermente diverse) si mostra comunque il batch.
-    LaunchedEffect(livelloSelezionato, freschi) {
-        val filtrato = freschi.filter { it.livello.equals(livelloSelezionato, ignoreCase = true) }
-        esercizi = if (filtrato.isNotEmpty()) filtrato else freschi
-        if (indice >= esercizi.size) indice = (esercizi.size - 1).coerceAtLeast(0)
+    fun generaConAi() {
+        if (generaInCorso) return
+        generaInCorso = true
+        erroreGen = null
+        scope.launch {
+            try {
+                val generati: List<EsercizioGenerato> = vm.generaEsercizi(
+                    TipoEsercizio.ASCOLTO,
+                    quanti = 8
+                )
+                if (generati.isNotEmpty()) {
+                    val nuovi = generati.map { esercizioGeneratoAAscolto(it) }
+                    eserciziAi = (nuovi + eserciziAi).distinctBy { it.id }
+                    indice = 0
+                    rispostaSelezionata = null
+                    risultato = null
+                    punteggio = 0
+                    completato = false
+                    mostraTraduzione = false
+                } else {
+                    erroreGen = "Nessun esercizio generato. La serie locale resta disponibile."
+                }
+            } catch (e: Throwable) {
+                // Throwable: un errore di rete non deve chiudere l'app.
+                erroreGen = e.localizedMessage ?: e.javaClass.simpleName
+            } finally {
+                generaInCorso = false
+            }
+        }
     }
 
     ScreenScaffold(
@@ -126,7 +158,7 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Spaziature.md)
         ) {
-            // Selettore livello
+            // Selettore livello: stabile, costruito dai livelli realmente disponibili.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -137,10 +169,11 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                         onClick = { livelloSelezionato = livello },
                         modifier = Modifier.weight(1f),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (selezionato)
+                            containerColor = if (selezionato) {
                                 MaterialTheme.colorScheme.primary
-                            else
+                            } else {
                                 MaterialTheme.colorScheme.surfaceContainer
+                            }
                         )
                     ) {
                         Text(
@@ -148,10 +181,11 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (selezionato) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selezionato)
+                            color = if (selezionato) {
                                 MaterialTheme.colorScheme.onPrimary
-                            else
+                            } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
+                            }
                         )
                     }
                 }
@@ -159,17 +193,20 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
 
             if (!completato && esercizi.isEmpty()) {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Nessun esercizio generato", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
+                    Column(modifier = Modifier.padding(Spaziature.md)) {
                         Text(
-                            erroreGen ?: "Controlla la connessione e riprova.",
+                            "Nessun esercizio per ${livelloSelezionato}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Scegli un altro livello oppure genera una serie nuova.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = { tentativo++ }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Riprova")
+                        Button(onClick = { giro++ }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Ricarica esercizi")
                         }
                     }
                 }
@@ -178,14 +215,12 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
             if (!completato && esercizi.isNotEmpty() && indice in esercizi.indices) {
                 val esercizio = esercizi[indice]
 
-                // Progress
                 Text(
                     text = "Esercizio ${indice + 1}/${esercizi.size}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Frase da ascoltare (con TTS, stessa frase sia che esista o no)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
@@ -204,35 +239,32 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                         )
                         Spacer(Modifier.height(8.dp))
                         Button(
-                            onClick = { ttsHelper.speak(esercizio.fraseTedesca ?: esercizio.domanda) },
+                            onClick = { ttsHelper.speak(esercizio.fraseTedesca) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Ascolta"
                             )
-                            Spacer(Modifier.padding(4.dp))
+                            Spacer(Modifier.width(6.dp))
                             Text("Ascolta")
                         }
                         if (mostraTraduzione) {
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = esercizio.traduzioneItaliana ?: "",
+                                text = esercizio.traduzioneItaliana,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         } else {
                             Spacer(Modifier.height(4.dp))
-                            Button(
-                                onClick = { mostraTraduzione = true }
-                            ) {
+                            TextButton(onClick = { mostraTraduzione = true }) {
                                 Text("Mostra traduzione", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
                 }
 
-                // Domanda
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium
@@ -244,13 +276,12 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                     )
                 }
 
-                // Opzioni
                 esercizio.opzioni.forEachIndexed { index, opzione ->
                     val selezionato = rispostaSelezionata == index
                     val colore = when {
                         risultato == null -> MaterialTheme.colorScheme.surface
-                        index == esercizio.rispostaCorretta -> MaterialTheme.colorScheme.primary
-                        selezionato -> MaterialTheme.colorScheme.error
+                        index == esercizio.rispostaCorretta -> MaterialTheme.colorScheme.primaryContainer
+                        selezionato -> MaterialTheme.colorScheme.errorContainer
                         else -> MaterialTheme.colorScheme.surface
                     }
 
@@ -258,9 +289,15 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                         onClick = {
                             if (risultato == null) {
                                 rispostaSelezionata = index
-                                risultato = index == esercizio.rispostaCorretta
-                                if (risultato == true) punteggio++
-                                vm.segnaEsercizioCompletato(TipoEsercizio.ASCOLTO, esercizio.id)
+                                val giusto = index == esercizio.rispostaCorretta
+                                risultato = giusto
+                                if (giusto) punteggio++
+                                // Solo gli esercizi AI hanno un id da segnare come
+                                // completato: per quelli locali evitiamo una scrittura
+                                // su DataStore a ogni risposta.
+                                if (eserciziAi.any { it.id == esercizio.id }) {
+                                    vm.segnaEsercizioCompletato(TipoEsercizio.ASCOLTO, esercizio.id)
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -273,20 +310,20 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                     }
                 }
 
-                // Spiegazione
                 if (risultato != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (risultato == true)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
+                            containerColor = if (risultato == true) {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            } else {
                                 MaterialTheme.colorScheme.errorContainer
+                            }
                         )
                     ) {
                         Column(modifier = Modifier.padding(Spaziature.md)) {
                             Text(
-                                text = if (risultato == true) "✓ Corretto!" else "✗ Sbagliato",
+                                text = if (risultato == true) "Corretto!" else "Sbagliato",
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(Modifier.height(4.dp))
@@ -294,13 +331,10 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                         }
                     }
 
-                    val idsCompletati = eserciziGen.filter { it.completato }.map { it.id }.toSet() + esercizio.id
-                    var prossimoIdx = indice + 1
-                    while (prossimoIdx < esercizi.size && esercizi[prossimoIdx].id in idsCompletati) prossimoIdx++
                     Button(
                         onClick = {
-                            if (prossimoIdx < esercizi.size) {
-                                indice = prossimoIdx
+                            if (indice < esercizi.lastIndex) {
+                                indice += 1
                                 rispostaSelezionata = null
                                 risultato = null
                                 mostraTraduzione = false
@@ -310,14 +344,13 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (prossimoIdx < esercizi.size) "Prossimo" else "Vedi risultato")
+                        Text(if (indice < esercizi.lastIndex) "Prossimo" else "Vedi risultato")
                     }
                 }
             } else if (completato) {
-                // Risultato finale
-                val eserciziTotali = if (esercizi.isNotEmpty()) esercizi.size else 10
-                val punteggioPct = if (esercizi.isNotEmpty()) (punteggio * 100 / esercizi.size) else 0
-                val errori = if (esercizi.isNotEmpty()) esercizi.size - punteggio else 0
+                val eserciziTotali = esercizi.size.coerceAtLeast(1)
+                val punteggioPct = punteggio * 100 / eserciziTotali
+                val errori = eserciziTotali - punteggio
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -360,6 +393,21 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                 Spacer(Modifier.height(12.dp))
 
                 Button(
+                    onClick = {
+                        giro++
+                        indice = 0
+                        rispostaSelezionata = null
+                        risultato = null
+                        punteggio = 0
+                        completato = false
+                        mostraTraduzione = false
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Nuova serie")
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
                     onClick = onFatto,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -367,14 +415,31 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                     Spacer(Modifier.width(8.dp))
                     Text("Fatto")
                 }
-            } else {
-                // Stato vuoto (generazione finita)
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "Hai finito questa serie di esercizi.",
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            }
+
+            // AI: extra, non prerequisito. Non parte da sola: risparmia rete e batteria.
+            if (!completato) {
+                Spacer(Modifier.height(4.dp))
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    if (generaInCorso) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.height(18.dp).width(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Genero esercizi nuovi…",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        TextButton(onClick = { generaConAi() }) {
+                            Text("Genera esercizi nuovi con AI")
+                        }
+                    }
                 }
             }
 
@@ -382,16 +447,20 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
         }
     }
 
-    if (erroreGen?.contains("Chiave API") == true) {
+    if (erroreGen != null) {
         AlertDialog(
             onDismissRequest = { erroreGen = null },
-            title = { Text("Chiave API necessaria") },
-            text = { Text("Per generare esercizi di ascolto inserisci una chiave Groq gratuita in Profilo → Tutor AI.") },
+            title = { Text("AI non disponibile") },
+            text = {
+                Text(
+                    "${erroreGen}\n\nGli esercizi locali funzionano comunque: " +
+                        "puoi continuare senza connessione."
+                )
+            },
             confirmButton = { TextButton(onClick = { erroreGen = null }) { Text("OK") } }
         )
     }
 }
-
 
 /** Conversione EsercizioGenerato (AI) -> EsercizioAscolto. */
 fun esercizioGeneratoAAscolto(g: EsercizioGenerato): EsercizioAscolto = EsercizioAscolto(

@@ -38,12 +38,14 @@ import com.alessandro.tedesco.data.remote.TutorService
 import com.alessandro.tedesco.data.remote.EsercizioGenerato
 import com.alessandro.tedesco.data.remote.TipoEsercizio
 import com.alessandro.tedesco.data.local.EsercizioGenEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -61,6 +63,11 @@ import com.alessandro.tedesco.data.ErroreEntity
 import com.alessandro.tedesco.data.ErroriSRS
 import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.UnitaConStato
+import com.alessandro.tedesco.data.PercorsoLezioni
+import com.alessandro.tedesco.data.LezionePercorso
+import com.alessandro.tedesco.data.LezioneAperta
+import com.alessandro.tedesco.data.local.ProgressoLezione
+import com.alessandro.tedesco.data.local.ProfiliRepository
 
 class TedescoViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -103,17 +110,70 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         repo.observeWords(),
         profileManager.repositoryFlow
     ) { words, repo ->
-        val livello = repo.profiloAttivoId?.let { repo.profili[it]?.stato?.progresso?.livelloCorrente?.label } ?: "A0"
+        // Le parole salvano il codice breve ("B1"), non il label lungo.
+        val livello = repo.profiloAttivoId
+            ?.let { repo.profili[it]?.stato?.progresso?.livelloCorrente?.codiceBreve() }
+            ?: "A0"
         words.filter { !it.archived && it.level == livello }.sortedBy { it.german }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        // Filtro + sort fuori dal main thread; pigro perché serve solo alla
+        // schermata Parole e non a ogni avvio.
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Lezione corrente dal profilo attivo. */
+    /**
+     * Lezione corrente = unità del percorso scelta (o consigliata dal livello).
+     * Il numero è solo l'etichetta: la vera chiave è l'id dell'unità.
+     */
     val lezioneCorrente: StateFlow<Int> = profileManager.repositoryFlow
-        .map { r ->
-            val id = r.profiloAttivoId
-            id?.let { r.profili[it]?.stato?.progresso?.lezioneCorrente } ?: 1
-        }
+        .map { r -> lezioneAttiva(r)?.numero ?: 1 }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 1)
+
+    /** Tutte le lezioni del percorso, con stato, blocchi e livello del profilo. */
+    val lezioniPercorso: StateFlow<List<LezionePercorso>> = profileManager.repositoryFlow
+        .map { r ->
+            val profilo = r.profiloAttivoId?.let { r.profili[it] }
+            PercorsoLezioni.tutte(
+                mappa = profilo?.stato?.padronanzaGrammatica ?: emptyMap(),
+                livelloProfilo = profilo?.stato?.progresso?.livelloCorrente?.label
+            )
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            PercorsoLezioni.tutte(emptyMap(), null)
+        )
+
+    /** Lezione del percorso aperta in home (mai null: c'è sempre la prima unità). */
+    val lezionePercorso: StateFlow<LezionePercorso?> = profileManager.repositoryFlow
+        .map { r -> lezioneAttiva(r) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * Lezione aperta + progresso salvato, in un'unica emissione.
+     * È la sorgente della sezione lezione in home: se l'app viene chiusa,
+     * alla riapertura si riparte esattamente dalla domanda salvata.
+     */
+    val lezioneAperta: StateFlow<LezioneAperta?> = profileManager.repositoryFlow
+        .map { r ->
+            val lezione = lezioneAttiva(r) ?: return@map null
+            val progresso = r.profiloAttivoId
+                ?.let { r.profili[it] }
+                ?.stato?.progressiLezioni?.get(lezione.id)
+                ?: ProgressoLezione()
+            LezioneAperta(lezione, progresso)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+
+    private fun lezioneAttiva(r: ProfiliRepository): LezionePercorso? {
+        val profilo = r.profiloAttivoId?.let { r.profili[it] } ?: return null
+        val stato = profilo.stato
+        val livello = stato.progresso.livelloCorrente.codiceBreve()
+        val scelta = stato.lezionePercorsoId
+            .takeIf { it.isNotBlank() }
+            ?.let { PercorsoLezioni.perId(it, stato.padronanzaGrammatica, livello) }
+        return scelta ?: PercorsoLezioni.consigliata(stato.padronanzaGrammatica, livello)
+    }
 
     /** URL dell'audio della lezione corrente (vuoto se non disponibile). */
     val lezioneAudioUrl: StateFlow<String> = combine(
@@ -148,7 +208,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
      * Parole da ripassare: STESSA lista che alimenta il contatore `paroleFragili`.
@@ -169,7 +230,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**
      * Percorso grammaticale strutturato: unita' + stato di sblocco/padronanza.
@@ -206,7 +268,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Percorso adattivo calcolato dai progressi dell'utente. */
     val percorsoAdattivo: StateFlow<CalcoloPercorsoAdattivo.PercorsoAdattivo?> = combine(
@@ -229,7 +292,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** IDs dei passi del percorso giornaliero completati oggi. */
     private val _passiCompletatiOggi = MutableStateFlow<Set<String>>(emptySet())
@@ -276,7 +340,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Sessioni adattive generate dinamicamente dai progressi dell'utente. */
     val sessioniAdattive: StateFlow<AdaptiveSessionEngine.RisultatoGenerazione?> = combine(
@@ -303,7 +368,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Domande di test adattive generate dinamicamente dai progressi dell'utente. */
     val testiAdattivi: StateFlow<List<com.alessandro.tedesco.data.local.DomandaTest>?> = combine(
@@ -327,7 +393,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // quando nessuna schermata mostrava il valore: era il grosso delle
         // allocazioni che riempivano l'heap. Con WhileSubscribed si calcola solo
         // mentre una schermata lo osserva (5s di grazia per la navigazione).
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private fun oggiKey(): String =
         SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
@@ -775,16 +842,150 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /**
+     * Apre una lezione del percorso. Il numero è solo l'etichetta mostrata:
+     * si salva l'id stabile dell'unità, così il percorso resta coerente anche
+     * se in futuro cambia l'ordine delle lezioni.
+     */
     fun cambiaLezione(nuovaLezione: Int) {
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
-            val nuovoStato = profilo.stato.copy(
-                progresso = profilo.stato.progresso.copy(lezioneCorrente = nuovaLezione)
+            val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
+            val lezione = PercorsoLezioni.tutte(profilo.stato.padronanzaGrammatica, livello)
+                .firstOrNull { it.numero == nuovaLezione }
+                ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    lezionePercorsoId = lezione.id,
+                    progresso = profilo.stato.progresso.copy(lezioneCorrente = lezione.numero)
+                ),
+                immediato = true
             )
-            profileManager.aggiornaStatoAttivo(nuovoStato)
-            // Aggiorna subito il contenuto mostrato
-            repo.aggiornaLezioneContenuto(nuovaLezione)
-            _messaggio.value = "Lezione ${nuovaLezione} selezionata"
+            _messaggio.value = "Lezione ${lezione.numero}: ${lezione.titolo}"
+        }
+    }
+
+    /** Apre direttamente una unità del percorso (usato dal selettore per id). */
+    fun apriLezionePercorso(id: String) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
+            val lezione = PercorsoLezioni.perId(id, profilo.stato.padronanzaGrammatica, livello)
+                ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    lezionePercorsoId = lezione.id,
+                    progresso = profilo.stato.progresso.copy(lezioneCorrente = lezione.numero)
+                ),
+                immediato = true
+            )
+        }
+    }
+
+    /**
+     * Salva il punto raggiunto nella lezione: indice della domanda, risposte
+     * corrette e completamento. Viene chiamato a ogni verifica, così chiudendo
+     * l'app la lezione riparte da dove si era rimasti.
+     */
+    /**
+     * Salva il punto raggiunto nella lezione: indice della domanda, risposte
+     * corrette e completamento. Viene chiamato a ogni verifica, così chiudendo
+     * l'app la lezione riparte da dove si era rimasti.
+     *
+     * [immediato] scrive subito su disco: usato alla fine della lezione, quando
+     * non c'è tempo di aspettare il salvataggio coalescente.
+     */
+    fun salvaProgressoLezione(
+        lezioneId: String,
+        indice: Int,
+        corrette: Int,
+        totali: Int,
+        completata: Boolean,
+        immediato: Boolean = false
+    ) {
+        if (lezioneId.isBlank()) return
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val precedente = profilo.stato.progressiLezioni[lezioneId]
+            val nuovo = ProgressoLezione(
+                indice = indice.coerceAtLeast(0),
+                corrette = corrette.coerceAtLeast(0),
+                totali = totali.coerceAtLeast(0),
+                completata = completata,
+                aggiornato = System.currentTimeMillis()
+            )
+            if (precedente != null &&
+                precedente.indice == nuovo.indice &&
+                precedente.corrette == nuovo.corrette &&
+                precedente.totali == nuovo.totali &&
+                precedente.completata == nuovo.completata
+            ) return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    progressiLezioni = profilo.stato.progressiLezioni + (lezioneId to nuovo)
+                ),
+                immediato = immediato
+            )
+        }
+    }
+
+    /**
+     * Chiude la sessione di una lezione: salva punteggio, padronanza e progresso
+     * in un'unica scrittura immediata. La "lezione successiva" è un gesto
+     * separato, così l'utente può rileggere il risultato con calma.
+     */
+    fun completaLezionePercorso(lezioneId: String, corrette: Int, totali: Int) {
+        if (lezioneId.isBlank() || totali <= 0) return
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val precedente = profilo.stato.padronanzaGrammatica[lezioneId]
+            val nuova = GrammaticaSyllabus.valuta(
+                unitaId = lezioneId,
+                corrette = corrette,
+                totali = totali,
+                precedente = precedente
+            )
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    padronanzaGrammatica = profilo.stato.padronanzaGrammatica + (lezioneId to nuova),
+                    progressiLezioni = profilo.stato.progressiLezioni + (
+                        lezioneId to ProgressoLezione(
+                            indice = totali,
+                            corrette = corrette,
+                            totali = totali,
+                            completata = true,
+                            aggiornato = System.currentTimeMillis()
+                        )
+                        )
+                ),
+                // Punteggio e padronanza non si possono perdere: scrittura subito.
+                immediato = true
+            )
+        }
+    }
+
+    /** Apre la lezione successiva del percorso e salva il completamento di quella conclusa. */
+    fun avanzaLezionePercorso(lezioneConclusaId: String) {
+        viewModelScope.launch {
+            val profilo = profileManager.profiloAttivo() ?: return@launch
+            val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
+            val prossima = PercorsoLezioni.prossima(
+                lezioneConclusaId,
+                profilo.stato.padronanzaGrammatica,
+                livello
+            ) ?: return@launch
+            profileManager.aggiornaStatoAttivo(
+                profilo.stato.copy(
+                    lezionePercorsoId = prossima.id,
+                    progresso = profilo.stato.progresso.copy(
+                        lezioneCorrente = prossima.numero,
+                        dataInizioLezione = System.currentTimeMillis(),
+                        lezioniCompletate = profilo.stato.progresso.lezioniCompletate + 1
+                    )
+                ),
+                immediato = true
+            )
+            _messaggio.value = "Lezione ${prossima.numero}: ${prossima.titolo}"
         }
     }
 
@@ -812,36 +1013,18 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Avanza alla lezione successiva, solo se sono passati >= 2 giorni dall'inizio della corrente. */
+    /**
+     * Avanza alla lezione successiva del PERCORSO (non al numero successivo):
+     * rispetta prerequisiti, livello del profilo e ripassi.
+     */
     fun avanzaLezione() {
-        viewModelScope.launch {
-            val profilo = profileManager.profiloAttivo() ?: return@launch
-            val p = profilo.stato.progresso
-            // Parole disponibili e lezioni del feed per capire che lezioni sono "vere".
-            val parole = repo.observeWords().first().filter { !it.archived }
-            val lezioniFeed = repo.observeLessons().first()
-            val nuova = p.lezioneCorrente + 1
-            // Selettore: prossima lezione con parole nel vocabolario o contenuto.
-            val prossima = selezionaProssimaLezione(nuova, parole, lezioniFeed)
-            if (prossima <= p.lezioneCorrente) return@launch
+        val corrente = lezionePercorso.value?.id
+            ?: profileManager.profiloAttivo()?.stato?.lezionePercorsoId
+            ?: return
+        avanzaLezionePercorso(corrente)
+    }
 
-            val nuovoStato = profilo.stato.copy(
-                progresso = p.copy(
-                    lezioneCorrente = prossima,
-                    dataInizioLezione = System.currentTimeMillis(),
-                    lezioniCompletate = p.lezioniCompletate + 1
-                )
-            )
-            profileManager.aggiornaStatoAttivo(nuovoStato)
-            repo.aggiornaLezioneContenuto(prossima)
-            // Genera SUBITO il contenuto della lezione appena raggiunta: cosi'
-            // quando l'utente la apre e' già pronta.
-            if (repo.observeLezioneContenuto().first().isBlank()) {
-                generaLezioneDinamica(prossima)
-            }
-            _messaggio.value = "Lezione $prossima iniziata. La prossima la clicca quando e' pronta!"
-        }
-    }    private val _lezioneStato = MutableStateFlow<StatoLezione>(StatoLezione.Idle)
+    private val _lezioneStato = MutableStateFlow<StatoLezione>(StatoLezione.Idle)
     val lezioneStato: StateFlow<StatoLezione> = _lezioneStato.asStateFlow()
 
     private val generatoreLezioni = GeneratoreLezioni()
@@ -878,7 +1061,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val profilo = profileManager.profiloAttivo() ?: return@launch
             val n = if (numero > 0) numero else profilo.stato.progresso.lezioneCorrente
-            val livello = profilo.stato.progresso.livelloCorrente.label.substringBefore(" ")
+            val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
             if (_lezioneStato.value is StatoLezione.InCorso) return@launch
 
             _lezioneStato.value = StatoLezione.InCorso
@@ -1449,7 +1632,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             _correzioneInCorso.value = true
             try {
                 val profilo = profileManager.profiloAttivo() ?: return@launch
-                val livello = profilo.stato.progresso.livelloCorrente.label.substringBefore(" ")
+                val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
                 val lezione = lezioneCorrente.value
                 // Valutazione STRUTTURATA (criteri ufficiali Goethe), non solo testo.
                 val rispostaGrezza = app.tutorServiceInstance.valutaProduzione(

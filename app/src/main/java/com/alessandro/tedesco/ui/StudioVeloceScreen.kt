@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,10 +22,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.BarChart
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -45,8 +47,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -55,6 +55,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Surface
@@ -63,9 +64,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,25 +77,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
 import com.alessandro.tedesco.data.GrammaticaSyllabus
-import com.alessandro.tedesco.data.ParolaTedesca
+import com.alessandro.tedesco.data.LezioneAperta
+import com.alessandro.tedesco.data.LezionePercorso
+import com.alessandro.tedesco.data.PercorsoLezioni
 import com.alessandro.tedesco.data.StatoUnita
+import com.alessandro.tedesco.data.TipoEsercizioGrammatica
 import com.alessandro.tedesco.data.UnitaConStato
-import com.alessandro.tedesco.data.local.WordEntity
 import com.alessandro.tedesco.data.ConsigliEsercizi
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 import com.alessandro.tedesco.ui.theme.AltezzaBottonePrincipale
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -116,27 +115,16 @@ fun StudioVeloceScreen(
     onVaiATutor: () -> Unit = {},
     onVaiABackup: () -> Unit = {},
     onVaiAPercorsoGrammatica: () -> Unit = {},
+    onVaiANuoveParole: () -> Unit = {},
     onNaviga: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
-    val scope = rememberCoroutineScope()
 
     val lezioneCorrente by vm.lezioneCorrente.collectAsStateWithLifecycle(1)
-    val contenuto by vm.lezioneContenuto.collectAsStateWithLifecycle("")
+    val lezioneAperta by vm.lezioneAperta.collectAsStateWithLifecycle(null)
+    val lezioniPercorso by vm.lezioniPercorso.collectAsStateWithLifecycle(emptyList())
     val parole by vm.parole.collectAsStateWithLifecycle(emptyList())
-    val lezioniFeed by vm.lezioni.collectAsStateWithLifecycle(emptyList())
-    val lezioneStato by vm.lezioneStato.collectAsStateWithLifecycle<StatoLezione>(StatoLezione.Idle)
-
-    // Lezioni disponibili: quelle del feed + quelle che hanno parole nel vocabolario.
-    val numeriLezioni = remember(lezioniFeed, parole, lezioneCorrente) {
-        (lezioniFeed.map { it.numero } + parole.map { it.lesson } + lezioneCorrente)
-            .filter { it > 0 }
-            .distinct()
-            .sorted()
-    }
-    val titoliLezioni = remember(lezioniFeed) { lezioniFeed.associate { it.numero to it.titolo } }
-    val paroleLezione = remember(parole, lezioneCorrente) { parole.filter { it.lesson == lezioneCorrente } }
 
     val pr by vm.progressoReale.collectAsStateWithLifecycle(null)
     val consiglio = remember(pr) { ConsigliEsercizi.consiglio(pr) }
@@ -151,15 +139,9 @@ fun StudioVeloceScreen(
             ?.takeIf { it.isNotBlank() }
     }
 
-    var esercizi by remember { mutableStateOf<List<EsercizioStudio>>(emptyList()) }
-    var indice by remember { mutableStateOf(0) }
-    var scelta by remember { mutableStateOf<Int?>(null) }
-    var corrette by remember { mutableStateOf(0) }
-    var verificato by remember { mutableStateOf(false) }
-    var inGenerazione by remember { mutableStateOf(false) }
     var mostraSelettore by remember { mutableStateOf(false) }
     var mostraMenu by remember { mutableStateOf(false) }
-    var mostraGate by remember { mutableStateOf(false) }
+    val paroleCustomAbilitate by vm.enableCustomWords.collectAsStateWithLifecycle(false)
 
     // Test di ingresso: mostrato finché non viene completato o saltato.
     val placementFatto by vm.placementFatto.collectAsStateWithLifecycle(false)
@@ -176,42 +158,11 @@ fun StudioVeloceScreen(
     val completateGram = percorsoGram.count { it.padronanza?.completata == true }
     val pianoOggi by vm.percorsoGiornaliero.collectAsStateWithLifecycle(null)
 
-    // Salva il miglior punteggio della lezione quando la sessione è completata:
-    // serve al gate morbido ("lezione successiva") e al progresso.
-    LaunchedEffect(esercizi.size, indice) {
-        if (esercizi.isNotEmpty() && indice >= esercizi.size) {
-            vm.registraPunteggioLezione(lezioneCorrente, corrette * 100 / esercizi.size)
-        }
-    }
-
-    // Cambio lezione -> nuovo set di esercizi sulle parole di quella lezione.
-    LaunchedEffect(lezioneCorrente, paroleLezione.size) {
-        if (esercizi.isEmpty() && paroleLezione.size >= 2) {
-            inGenerazione = true
-            esercizi = generaEserciziDaParole(paroleLezione)
-            indice = 0
-            scelta = null
-            corrette = 0
-            verificato = false
-            inGenerazione = false
-        }
-    }
-
-    // Primo avvio senza vocabolario -> sincronizza dal feed.
+    // Primo avvio senza vocabolario -> sincronizza dal feed (una sola volta).
     LaunchedEffect(parole.isEmpty()) {
         if (parole.isEmpty()) vm.sincronizza()
     }
 
-    // Contenuto o parole mancanti -> la lezione la genera l'AI e le parole entrano nel lessico.
-    LaunchedEffect(lezioneCorrente, contenuto.isBlank(), paroleLezione.isEmpty()) {
-        if ((contenuto.isBlank() || paroleLezione.isEmpty()) && lezioneStato !is StatoLezione.InCorso) {
-            vm.generaLezioneDinamica(lezioneCorrente)
-        }
-    }
-
-    val progressoEsercizi = if (esercizi.isEmpty()) 0f else (indice.toFloat() / esercizi.size).coerceIn(0f, 1f)
-    val titoloLezione = titoliLezioni[lezioneCorrente]
-        ?.takeIf { it.isNotBlank() && !it.startsWith("Lezione generata") }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -220,45 +171,14 @@ fun StudioVeloceScreen(
             CompactTopBar(
                 title = "Studio",
                 actions = {
-                    // ---- Selettore di lezione ----
-                    Box {
-                        AssistChip(
-                            onClick = { mostraSelettore = true },
-                            label = { Text("Lezione $lezioneCorrente") },
-                            trailingIcon = {
-                                Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp))
-                            }
-                        )
-                        DropdownMenu(
-                            expanded = mostraSelettore,
-                            onDismissRequest = { mostraSelettore = false }
-                        ) {
-                            numeriLezioni.forEach { numero ->
-                                val titolo = titoliLezioni[numero]?.takeIf { it.isNotBlank() && !it.startsWith("Lezione generata") }
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (titolo != null) "Lezione $numero - $titolo" else "Lezione $numero",
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    },
-                                    onClick = {
-                                        mostraSelettore = false
-                                        if (numero != lezioneCorrente) {
-                                            esercizi = emptyList()
-                                            vm.cambiaLezione(numero)
-                                        }
-                                    },
-                                    trailingIcon = {
-                                        if (numero == lezioneCorrente) {
-                                            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        }
-                                    }
-                                )
-                            }
+                    // ---- Selettore di lezione: apre il pannello per livello ----
+                    AssistChip(
+                        onClick = { mostraSelettore = true },
+                        label = { Text("Lezione $lezioneCorrente") },
+                        trailingIcon = {
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp))
                         }
-                    }
+                    )
                     // ---- Profilo ed extra: avatar tondo -> pannello dal basso ----
                     // Niente tre puntini: un solo tocco apre un pannello ordinato.
                     Surface(
@@ -354,17 +274,16 @@ fun StudioVeloceScreen(
                     )
                 }
             }
-            // ---- Lezione di oggi: intestazione ----
-            item {
-                LezioneHeaderCard(
-                    numero = lezioneCorrente,
-                    titolo = titoloLezione ?: "Lezione $lezioneCorrente",
-                    parole = paroleLezione.size,
-                    esercizi = esercizi.size,
-                    indice = indice,
-                    corrette = corrette,
-                    progresso = progressoEsercizi
-                )
+            // ---- Lezione del percorso: intestazione, teoria, esercizi ----
+            lezioneAperta?.let { aperta ->
+                item {
+                    SezioneLezionePercorso(
+                        vm = vm,
+                        stato = aperta,
+                        onAscolta = { ttsHelper.speak(it) },
+                        onVaiAPercorso = onVaiAPercorsoGrammatica
+                    )
+                }
             }
 
             // ---- Percorso grammaticale: il prossimo passo ----
@@ -387,110 +306,6 @@ fun StudioVeloceScreen(
                 }
             }
 
-            // ---- Stato: generazione in corso ----
-            if (lezioneStato is StatoLezione.InCorso) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(Spaziature.sm))
-                        Text(
-                            "Preparo la lezione $lezioneCorrente...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // ---- Teoria: espandibile, la home resta corta ----
-            if (contenuto.isNotBlank()) {
-                item {
-                    TeoriaCard(
-                        contenuto = contenuto,
-                        onAscolta = { ttsHelper.speak(contenuto.replace(Regex("[#*`>_\\-]"), " ")) }
-                    )
-                }
-            }
-
-            // ---- Parole chiave della lezione ----
-            if (paroleLezione.isNotEmpty()) {
-                item {
-                    SezioneTitolo(
-                        titolo = "Parole chiave",
-                        sottotitolo = "Scorri: ${paroleLezione.size} parole - tocca per ascoltare"
-                    )
-                }
-                // Slider orizzontale: la home resta corta anche con 30 parole.
-                item {
-                    val statoLista = rememberLazyListState()
-                    val paginaCorrente = statoLista.firstVisibleItemIndex
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        LazyRow(
-                            state = statoLista,
-                            flingBehavior = rememberSnapFlingBehavior(lazyListState = statoLista),
-                            horizontalArrangement = Arrangement.spacedBy(Spaziature.sm),
-                            contentPadding = PaddingValues(end = Spaziature.xxl)
-                        ) {
-                            items(paroleLezione, key = { it.id }) { parola ->
-                                CardParola(
-                                    parola = parola,
-                                    modifier = Modifier.fillParentMaxWidth(0.86f),
-                                    onAscolta = {
-                                        ttsHelper.speak(ParolaTedesca.conArticolo(parola.article, parola.german))
-                                    }
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(Spaziature.xs))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                "${(paginaCorrente + 1).coerceAtMost(paroleLezione.size)} / ${paroleLezione.size}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (paroleLezione.size > 1) {
-                                Spacer(Modifier.width(Spaziature.sm))
-                                TextButton(
-                                    onClick = {
-                                        scope.launch {
-                                            statoLista.animateScrollToItem(
-                                                (paginaCorrente + 1) % paroleLezione.size
-                                            )
-                                        }
-                                    }
-                                ) { Text("Prossima") }
-                            }
-                        }
-                        if (paroleLezione.size in 2..14) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                repeat(paroleLezione.size) { i ->
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(2.dp)
-                                            .size(if (i == paginaCorrente) 8.dp else 6.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (i == paginaCorrente) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.outlineVariant
-                                            )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // ---- Consiglio dinamico ----
             item {
                 ConsiglioCard(
@@ -498,378 +313,6 @@ fun StudioVeloceScreen(
                     motivo = consiglio.motivo,
                     onApri = onVaiAEsercizi
                 )
-            }
-
-            // ---- Esercizi ----
-            if (inGenerazione) {
-                item {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(Spaziature.sm))
-                        Text(
-                            "Preparo gli esercizi...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            if (esercizi.isNotEmpty() && indice < esercizi.size) {
-                item {
-                    SezioneTitolo("Esercizi", "Rispondi e verifica la comprensione")
-                }
-                item {
-                    val esercizio = esercizi[indice]
-                    val sceltaCorrente = scelta
-                    val esitoGiusto = verificato && sceltaCorrente == esercizio.rispostaCorretta
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(modifier = Modifier.padding(Spaziature.md)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "DOMANDA ${indice + 1} DI ${esercizi.size}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    "$corrette corrette",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(Modifier.height(6.dp))
-                            LinearProgressIndicator(
-                                progress = { (indice + 1f) / esercizi.size },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(5.dp)
-                                    .clip(MaterialTheme.shapes.extraSmall)
-                            )
-                            Spacer(Modifier.height(Spaziature.md))
-                            Text(
-                                esercizio.domanda,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(Spaziature.sm))
-
-                            esercizio.opzioni.forEachIndexed { i, opzione ->
-                                val selezionato = sceltaCorrente == i
-                                val corretta = i == esercizio.rispostaCorretta
-                                val colore = when {
-                                    verificato && corretta -> MaterialTheme.colorScheme.primaryContainer
-                                    verificato && selezionato -> MaterialTheme.colorScheme.errorContainer
-                                    selezionato -> MaterialTheme.colorScheme.secondaryContainer
-                                    else -> MaterialTheme.colorScheme.surface
-                                }
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .selectable(
-                                            selected = selezionato,
-                                            enabled = !verificato,
-                                            role = Role.RadioButton,
-                                            onClick = { scelta = i }
-                                        ),
-                                    shape = MaterialTheme.shapes.large,
-                                    colors = CardDefaults.cardColors(containerColor = colore),
-                                    border = if (selezionato && !verificato) {
-                                        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                                    } else {
-                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                    }
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(Spaziature.sm),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = if (selezionato) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.surfaceContainer
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Text(
-                                                    "ABCD".getOrElse(i) { '?' }.toString(),
-                                                    style = MaterialTheme.typography.labelLarge,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (selezionato) {
-                                                        MaterialTheme.colorScheme.onPrimary
-                                                    } else {
-                                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                                    }
-                                                )
-                                            }
-                                        }
-                                        Spacer(Modifier.width(Spaziature.sm))
-                                        Text(
-                                            opzione,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        if (verificato && corretta) {
-                                            Icon(
-                                                Icons.Filled.Check,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (verificato) {
-                                Spacer(Modifier.height(Spaziature.sm))
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.large,
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (esitoGiusto) {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.errorContainer
-                                        }
-                                    )
-                                ) {
-                                    Column(modifier = Modifier.padding(Spaziature.sm)) {
-                                        Text(
-                                            if (esitoGiusto) "Corretto!" else "Non corretto",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        if (!esitoGiusto) {
-                                            Spacer(Modifier.height(2.dp))
-                                            Text(
-                                                "Risposta giusta: ${esercizio.opzioni[esercizio.rispostaCorretta]}",
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                        if (esercizio.spiegazione.isNotBlank()) {
-                                            Spacer(Modifier.height(4.dp))
-                                            MarkdownText(
-                                                markdown = esercizio.spiegazione,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                stile = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(Modifier.height(Spaziature.md))
-
-                            if (!verificato) {
-                                Button(
-                                    onClick = {
-                                        verificato = true
-                                        if (sceltaCorrente == esercizio.rispostaCorretta) corrette++
-                                    },
-                                    enabled = sceltaCorrente != null,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(AltezzaBottonePrincipale()),
-                                    shape = MaterialTheme.shapes.large
-                                ) {
-                                    Text("Verifica risposta")
-                                }
-                            } else {
-                                Button(
-                                    onClick = {
-                                        indice++
-                                        scelta = null
-                                        verificato = false
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(AltezzaBottonePrincipale()),
-                                    shape = MaterialTheme.shapes.large
-                                ) {
-                                    Text(if (indice < esercizi.size - 1) "Prossima domanda" else "Vedi risultato")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ---- Risultato finale ----
-            if (esercizi.isNotEmpty() && indice >= esercizi.size) {
-                item {
-                    val percentuale = corrette * 100 / esercizi.size
-                    val messaggio = when {
-                        percentuale >= 80 -> "Ottimo lavoro, hai padroneggiato queste parole."
-                        percentuale >= 60 -> "Buon risultato. Rivedi gli errori e vai avanti."
-                        else -> "Serve un altro giro su questa lezione."
-                    }
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spaziature.md),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(56.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Filled.EmojiEvents,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(Spaziature.sm))
-                            Text(
-                                "Sessione completata",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(Modifier.height(Spaziature.xs))
-                            Text(
-                                "$corrette / ${esercizi.size}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                "$percentuale% di risposte corrette",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                            )
-                            Spacer(Modifier.height(Spaziature.sm))
-                            Text(
-                                messaggio,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                            )
-                            Spacer(Modifier.height(Spaziature.md))
-                            OutlinedButton(
-                                onClick = {
-                                    esercizi = generaEserciziDaParole(paroleLezione)
-                                    indice = 0
-                                    scelta = null
-                                    corrette = 0
-                                    verificato = false
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(AltezzaBottonePrincipale()),
-                                shape = MaterialTheme.shapes.large
-                            ) {
-                                Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(Spaziature.sm))
-                                Text("Ripeti gli esercizi")
-                            }
-                            Spacer(Modifier.height(Spaziature.sm))
-                            Button(
-                                onClick = {
-                                    if (percentuale >= 60) {
-                                        esercizi = emptyList()
-                                        indice = 0
-                                        scelta = null
-                                        corrette = 0
-                                        verificato = false
-                                        vm.avanzaLezione()
-                                    } else {
-                                        mostraGate = true
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(AltezzaBottonePrincipale()),
-                                shape = MaterialTheme.shapes.large
-                            ) {
-                                Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(Spaziature.sm))
-                                Text("Lezione successiva")
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ---- Stato vuoto ----
-            if (contenuto.isBlank() && paroleLezione.isEmpty() && lezioneStato !is StatoLezione.InCorso) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                                            ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(Spaziature.lg),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Nessun contenuto per la lezione $lezioneCorrente",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(Spaziature.sm))
-                            Text(
-                                "La lezione non è ancora disponibile: puoi generarla o sincronizzare il corso.",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(Modifier.height(Spaziature.md))
-                            Button(
-                                onClick = { vm.generaLezioneDinamica(lezioneCorrente) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(AltezzaBottonePrincipale()),
-                                shape = MaterialTheme.shapes.large
-                            ) {
-                                Text("Genera la lezione")
-                            }
-                            Spacer(Modifier.height(Spaziature.sm))
-                            TextButton(onClick = { vm.sincronizza() }) {
-                                Text("Sincronizza il corso")
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (esercizi.isEmpty() && paroleLezione.isNotEmpty() && paroleLezione.size < 2) {
-                item {
-                    Text(
-                        "Servono almeno 2 parole nella lezione per generare gli esercizi.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
         }
@@ -891,6 +334,11 @@ fun StudioVeloceScreen(
                 VocePannello(Icons.Filled.Quiz, "Esercizi", "Tutti i tipi, sempre nuovi") {
                     mostraMenu = false; onVaiAEsercizi()
                 }
+                if (paroleCustomAbilitate) {
+                    VocePannello(Icons.Filled.Add, "Aggiungi parola", "Nuove parole nel ripasso") {
+                        mostraMenu = false; onVaiANuoveParole()
+                    }
+                }
                 VocePannello(Icons.Filled.EmojiEvents, "Progresso", "Livello, competenze, numeri") {
                     mostraMenu = false; onVaiAProgresso()
                 }
@@ -907,150 +355,17 @@ fun StudioVeloceScreen(
         }
     }
 
-    // Gate morbido: non blocca, ma chiede conferma se l'evidenza è debole.
-    if (mostraGate) {
-        AlertDialog(
-            onDismissRequest = { mostraGate = false },
-            title = { Text("Passare alla lezione successiva?") },
-            text = {
-                Text(
-                    "Il punteggio di questa sessione è sotto il 60%. " +
-                        "Puoi ripetere gli esercizi oppure andare avanti lo stesso: " +
-                        "nessun blocco, ma il ripasso resta più efficace."
-                )
+    // Selettore lezioni: pannello dal basso, raggruppato per livello.
+    if (mostraSelettore) {
+        SelettoreLezioniSheet(
+            lezioni = lezioniPercorso,
+            correnteId = lezioneAperta?.id,
+            onSeleziona = { lezione ->
+                mostraSelettore = false
+                vm.apriLezionePercorso(lezione.id)
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    mostraGate = false
-                    esercizi = emptyList()
-                    indice = 0
-                    scelta = null
-                    corrette = 0
-                    verificato = false
-                    vm.avanzaLezione()
-                }) { Text("Vai avanti") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    mostraGate = false
-                    esercizi = generaEserciziDaParole(paroleLezione)
-                    indice = 0
-                    scelta = null
-                    corrette = 0
-                    verificato = false
-                }) { Text("Ripeti") }
-            }
+            onDismiss = { mostraSelettore = false }
         )
-    }
-}
-
-@Composable
-private fun SezioneTitolo(titolo: String, sottotitolo: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(20.dp)
-                .clip(MaterialTheme.shapes.extraSmall)
-                .background(MaterialTheme.colorScheme.primary)
-        )
-        Spacer(Modifier.width(Spaziature.sm))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                titolo,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            if (sottotitolo.isNotBlank()) {
-                Text(
-                    sottotitolo,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CardParola(
-    parola: WordEntity,
-    modifier: Modifier = Modifier,
-    onAscolta: () -> Unit
-) {
-    val coloreArticolo = MaterialTheme.colorScheme.primary
-    val articolo = parola.article?.takeIf { it.isNotBlank() }
-    Card(
-        modifier = modifier.clickable(
-            onClickLabel = "Ascolta ${parola.german}",
-            role = Role.Button
-        ) { onAscolta() },
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(modifier = Modifier.padding(Spaziature.md)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    buildAnnotatedString {
-                        if (articolo != null) {
-                            withStyle(SpanStyle(color = coloreArticolo, fontWeight = FontWeight.Bold)) {
-                                append(articolo)
-                                append(" ")
-                            }
-                        }
-                        append(parola.german)
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(Spaziature.sm))
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.height(2.dp))
-            Text(
-                parola.italian,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (parola.example.isNotBlank()) {
-                Spacer(Modifier.height(Spaziature.sm))
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        parola.example,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -1317,86 +632,6 @@ private fun AzioneRapida(
     }
 }
 
-@Composable
-private fun LezioneHeaderCard(
-    numero: Int,
-    titolo: String,
-    parole: Int,
-    esercizi: Int,
-    indice: Int,
-    corrette: Int,
-    progresso: Float
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(Modifier.fillMaxWidth().padding(Spaziature.md)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "$numero",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-                Spacer(Modifier.width(Spaziature.sm))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "LEZIONE $numero",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        titolo,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        buildString {
-                            append("$parole parole")
-                            if (esercizi > 0) append(" · $esercizi esercizi")
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            if (esercizi > 0) {
-                Spacer(Modifier.height(Spaziature.sm))
-                LinearProgressIndicator(
-                    progress = { progresso },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(MaterialTheme.shapes.extraSmall)
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    if (indice >= esercizi) "Esercizi completati: $corrette/$esercizi"
-                    else "Esercizio ${indice + 1} di $esercizi",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun PercorsoGrammaticaCard(
@@ -1481,7 +716,7 @@ private fun PercorsoGrammaticaCard(
                 )
                 Spacer(Modifier.weight(1f))
                 Text(
-                    "A0 → B1",
+                    "A0 → B2",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
@@ -1721,33 +956,581 @@ private fun VocePannello(
 }
 
 /**
- * Esercizi sulla lezione: significato della parola (con articolo) e frase d'esempio
- * come spiegazione. Sempre 4 opzioni quando il vocabolario della lezione lo consente.
+ * La lezione del percorso in home: intestazione, teoria offline e esercizi.
+ *
+ * Il punto raggiunto è salvato nel profilo a ogni risposta, quindi chiudendo
+ * l'app la lezione riparte dalla domanda giusta invece che da zero.
  */
-private fun generaEserciziDaParole(parole: List<WordEntity>): List<EsercizioStudio> {
-    val utilizzabili = parole.filter { it.german.isNotBlank() && it.italian.isNotBlank() }
-    if (utilizzabili.size < 2) return emptyList()
+@Composable
+private fun SezioneLezionePercorso(
+    vm: TedescoViewModel,
+    stato: LezioneAperta,
+    onAscolta: (String) -> Unit,
+    onVaiAPercorso: () -> Unit
+) {
+    val unita = stato.lezione.unita
+    val totale = stato.totale
 
-    val mescolate = utilizzabili.shuffled()
-    return mescolate.take(5).map { parola ->
-        val distrattori = utilizzabili
-            .filter { it.id != parola.id && it.italian != parola.italian }
-            .shuffled()
-            .take(3)
-            .map { it.italian }
-        val opzioni = (distrattori + parola.italian).shuffled()
-        EsercizioStudio(
-            domanda = "Cosa significa \"${ParolaTedesca.conArticolo(parola.article, parola.german)}\"?",
-            opzioni = opzioni,
-            rispostaCorretta = opzioni.indexOf(parola.italian),
-            spiegazione = if (parola.example.isNotBlank()) "Esempio: ${parola.example}" else ""
+    var indice by rememberSaveable(stato.id) {
+        mutableIntStateOf(stato.progresso.indice.coerceIn(0, totale))
+    }
+    var corrette by rememberSaveable(stato.id) {
+        mutableIntStateOf(stato.progresso.corrette.coerceIn(0, totale))
+    }
+    var scelta by rememberSaveable(stato.id) { mutableIntStateOf(-1) }
+    var testo by rememberSaveable(stato.id) { mutableStateOf("") }
+    var verificato by rememberSaveable(stato.id) { mutableStateOf(false) }
+
+    val finita = indice >= totale
+    val esercizio = unita.esercizi.getOrNull(indice)
+    val ultimaDomanda = indice == totale - 1
+    val rispostaGiusta = verificato && esercizio != null && when (esercizio.tipo) {
+        TipoEsercizioGrammatica.SCELTA_MULTIPLA ->
+            GrammaticaSyllabus.rispostaSceltaCorretta(esercizio, scelta.takeIf { it >= 0 })
+        else -> GrammaticaSyllabus.rispostaTestoCorretta(esercizio, testo)
+    }
+
+    fun verifica() {
+        val e = esercizio ?: return
+        val giusto = when (e.tipo) {
+            TipoEsercizioGrammatica.SCELTA_MULTIPLA ->
+                GrammaticaSyllabus.rispostaSceltaCorretta(e, scelta.takeIf { it >= 0 })
+            else -> GrammaticaSyllabus.rispostaTestoCorretta(e, testo)
+        }
+        verificato = true
+        if (giusto) corrette += 1
+        vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+    }
+
+    fun avanti() {
+        if (indice < totale - 1) {
+            indice += 1
+            scelta = -1
+            testo = ""
+            verificato = false
+            vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+        } else {
+            indice = totale
+            vm.salvaProgressoLezione(stato.id, totale, corrette, totale, completata = true)
+            vm.salvaPadronanzaGrammatica(stato.id, corrette, totale)
+            vm.completaPassoGiornaliero("grammatica")
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spaziature.md)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "LEZIONE ${stato.lezione.numero}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "${unita.livello} · ${unita.minuti} min",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                unita.titolo,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            if (unita.sottotitolo.isNotBlank()) {
+                Text(
+                    unita.sottotitolo,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(Modifier.height(Spaziature.sm))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spaziature.sm)
+            ) {
+                AssistChip(
+                    onClick = onVaiAPercorso,
+                    label = {
+                        Text(
+                            when {
+                                finita -> "Lezione conclusa"
+                                indice > 0 -> "Domanda ${indice + 1} di $totale"
+                                else -> "Inizia · $totale esercizi"
+                            }
+                        )
+                    }
+                )
+                TextButton(onClick = onVaiAPercorso) {
+                    Text("Percorso")
+                }
+            }
+        }
+    }
+
+    Spacer(Modifier.height(Spaziature.sm))
+
+    TeoriaCard(
+        contenuto = PercorsoLezioni.teoriaMarkdown(unita),
+        onAscolta = {
+            onAscolta((listOf(unita.titolo) + unita.teoria.regola).joinToString(". "))
+        }
+    )
+
+    Spacer(Modifier.height(Spaziature.sm))
+
+    if (finita) {
+        RisultatoLezione(
+            stato = stato,
+            corrette = corrette,
+            onRiprova = {
+                indice = 0
+                corrette = 0
+                scelta = -1
+                testo = ""
+                verificato = false
+                vm.salvaProgressoLezione(stato.id, 0, 0, totale, completata = false)
+            },
+            onAvanti = { vm.avanzaLezionePercorso(stato.id) }
+        )
+        return
+    }
+
+    if (esercizio == null) return
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(modifier = Modifier.padding(Spaziature.md)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "ESERCIZI",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "${indice + 1}/$totale",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            LinearProgressIndicator(
+                progress = { (indice + if (verificato) 1 else 0).toFloat() / totale.coerceAtLeast(1) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(MaterialTheme.shapes.extraSmall),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.outlineVariant
+            )
+            Spacer(Modifier.height(Spaziature.md))
+            Text(
+                esercizio.domanda,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(Spaziature.sm))
+
+            if (esercizio.tipo == TipoEsercizioGrammatica.SCELTA_MULTIPLA) {
+                val lettere = "ABCD"
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    esercizio.opzioni.forEachIndexed { i, opzione ->
+                        RigaOpzione(
+                            testo = opzione,
+                            lettera = lettere.getOrElse(i) { '?' },
+                            selezionata = scelta == i,
+                            corretta = verificato && esercizio.rispostaCorretta == i,
+                            verificato = verificato,
+                            onClick = { if (!verificato) scelta = i }
+                        )
+                    }
+                }
+            } else {
+                OutlinedTextField(
+                    value = testo,
+                    onValueChange = { if (!verificato) testo = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !verificato,
+                    singleLine = true,
+                    placeholder = { Text("Scrivi la risposta in tedesco") }
+                )
+            }
+
+            if (verificato) {
+                Spacer(Modifier.height(Spaziature.sm))
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = if (rispostaGiusta) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer
+                    }
+                ) {
+                    Column(modifier = Modifier.padding(Spaziature.sm)) {
+                        Text(
+                            if (rispostaGiusta) "Giusto!" else "Non ancora",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (esercizio.spiegazione.isNotBlank()) {
+                            Text(
+                                esercizio.spiegazione,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(Spaziature.md))
+            Button(
+                onClick = { if (verificato) avanti() else verifica() },
+                enabled = verificato || scelta >= 0 || testo.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AltezzaBottonePrincipale())
+            ) {
+                Text(
+                    when {
+                        !verificato -> "Verifica"
+                        ultimaDomanda -> "Concludi lezione"
+                        else -> "Avanti"
+                    }
+                )
+            }
+        }
+    }
+}
+
+/** Una opzione di risposta: A/B/C/D + testo, colorata dopo la verifica. */
+@Composable
+private fun RigaOpzione(
+    testo: String,
+    lettera: Char,
+    selezionata: Boolean,
+    corretta: Boolean,
+    verificato: Boolean,
+    onClick: () -> Unit
+) {
+    val colore = when {
+        corretta -> MaterialTheme.colorScheme.primaryContainer
+        verificato && selezionata -> MaterialTheme.colorScheme.errorContainer
+        selezionata -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surface
+    }
+    Surface(
+        onClick = onClick,
+        enabled = !verificato,
+        shape = MaterialTheme.shapes.medium,
+        color = colore,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spaziature.sm, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (selezionata || corretta) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    lettera.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (selezionata || corretta) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+            Spacer(Modifier.width(Spaziature.sm))
+            Text(testo, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+/** Risultato della lezione: punteggio, ripasso e passaggio al passo successivo. */
+@Composable
+private fun RisultatoLezione(
+    stato: LezioneAperta,
+    corrette: Int,
+    onRiprova: () -> Unit,
+    onAvanti: () -> Unit
+) {
+    val totale = stato.totale.coerceAtLeast(1)
+    val percentuale = corrette * 100 / totale
+    val promosso = percentuale >= GrammaticaSyllabus.SOGLIA_PADRONANZA
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spaziature.md)) {
+            Text(
+                if (promosso) "Lezione superata" else "Lezione conclusa",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                "$corrette risposte corrette su $totale · $percentuale%",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+            )
+            if (!promosso) {
+                Text(
+                    "Ti servono almeno ${GrammaticaSyllabus.SOGLIA_PADRONANZA}% per la padronanza: ripeti la lezione quando vuoi.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(Modifier.height(Spaziature.md))
+            Button(
+                onClick = onAvanti,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AltezzaBottonePrincipale())
+            ) {
+                Text("Lezione successiva")
+            }
+            Spacer(Modifier.height(Spaziature.xs))
+            TextButton(
+                onClick = onRiprova,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ripeti questa lezione")
+            }
+        }
+    }
+}
+
+/**
+ * Selettore lezioni: pannello dal basso raggruppato per livello.
+ *
+ * Non è una lista di numeri: mostra il percorso reale, con lezioni concluse,
+ * da ripassare e ancora bloccate (prerequisiti mancanti).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelettoreLezioniSheet(
+    lezioni: List<LezionePercorso>,
+    correnteId: String?,
+    onSeleziona: (LezionePercorso) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val completate = lezioni.count { it.completata }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spaziature.md)
+        ) {
+            Text(
+                "Lezioni",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "$completate di ${lezioni.size} completate · percorso A0 → B2",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(Spaziature.sm))
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 520.dp),
+            contentPadding = PaddingValues(
+                start = Spaziature.md,
+                end = Spaziature.md,
+                bottom = Spaziature.xl
+            ),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            lezioni.groupBy { it.livello }.forEach { (livello, gruppo) ->
+                item(key = "livello-$livello") {
+                    IntestazioneLivello(livello, gruppo)
+                }
+                items(gruppo, key = { it.id }) { lezione ->
+                    RigaLezione(
+                        lezione = lezione,
+                        corrente = lezione.id == correnteId,
+                        onSeleziona = { onSeleziona(lezione) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IntestazioneLivello(livello: String, gruppo: List<LezionePercorso>) {
+    val fatte = gruppo.count { it.completata }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Spaziature.sm, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            livello,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            descrizioneLivello(livello),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            "$fatte/${gruppo.size}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
-data class EsercizioStudio(
-    val domanda: String,
-    val opzioni: List<String>,
-    val rispostaCorretta: Int,
-    val spiegazione: String = ""
-)
+@Composable
+private fun RigaLezione(
+    lezione: LezionePercorso,
+    corrente: Boolean,
+    onSeleziona: () -> Unit
+) {
+    val statoTesto = when {
+        !lezione.accessibile -> "Bloccata"
+        lezione.stato == StatoUnita.DA_RIPASSARE -> "Da ripassare"
+        lezione.completata -> "Completata"
+        corrente -> "In corso"
+        else -> "Da fare"
+    }
+    Surface(
+        onClick = onSeleziona,
+        enabled = lezione.accessibile,
+        shape = MaterialTheme.shapes.medium,
+        color = if (corrente) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        },
+        border = if (corrente) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spaziature.sm, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            !lezione.accessibile -> MaterialTheme.colorScheme.surface
+                            lezione.completata -> MaterialTheme.colorScheme.secondaryContainer
+                            else -> MaterialTheme.colorScheme.primaryContainer
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (lezione.accessibile) {
+                    Text(
+                        lezione.numero.toString(),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Icon(
+                        Icons.Filled.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(Modifier.width(Spaziature.sm))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    lezione.titolo,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = if (lezione.accessibile) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    statoTesto,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (corrente) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+            if (lezione.completata) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+private fun descrizioneLivello(livello: String): String = when (livello.uppercase()) {
+    "A0" -> "Basi"
+    "A1" -> "Elementare"
+    "A2" -> "Base"
+    "B1" -> "Intermedio"
+    "B2" -> "Avanzato"
+    else -> ""
+}
+

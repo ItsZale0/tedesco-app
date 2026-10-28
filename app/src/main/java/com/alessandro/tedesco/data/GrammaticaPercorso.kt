@@ -5,7 +5,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /*
- * Percorso grammaticale strutturato A0 -> B1.
+ * Percorso grammaticale strutturato A0 -> B2.
  *
  * La grammatica non è più una raccolta di quiz casuali: ogni unità ha
  * una regola, tabelle, esempi, errori tipici, esercizi e una verifica di
@@ -124,8 +124,8 @@ object GrammaticaSyllabus {
     private val GIORNO_MS = TimeUnit.DAYS.toMillis(1)
 
     /**
-     * Percorso completo A0 -> B1. L'ordine è didattico: prima le basi,
-     * poi i casi, i tempi del passato e infine le strutture B1.
+     * Percorso completo A0 -> B2. L'ordine è didattico: prima le basi,
+     * poi i casi, i tempi del passato, le strutture B1 e infine il B2.
      * Gli ID sono stabili perché sono le chiavi della padronanza salvata.
      */
     val unita: List<UnitaGrammatica> = listOf(
@@ -159,13 +159,20 @@ object GrammaticaSyllabus {
         unitaB1Konjunktiv2(),
         unitaB1IndirekteRede(),
         unitaB1Nominalisierung(),
-        unitaB1Genitiv()
+        unitaB1Genitiv(),
+        // ---- B2 ----
+        unitaB2PassivModal(),
+        unitaB2Konjunktiv2Vergangenheit(),
+        unitaB2Partizipialkonstruktionen(),
+        unitaB2VerbenPraepositionen(),
+        unitaB2RelativeWasWo(),
+        unitaB2Nominalstil()
     )
 
-    val ordineLivelli = listOf("A0", "A1", "A2", "B1")
+    val ordineLivelli = listOf("A0", "A1", "A2", "B1", "B2")
 
     /**
-     * Il percorso A0 -> B1 è completo. Non ci sono più tappe "in arrivo":
+     * Il percorso A0 -> B2 è completo. Non ci sono più tappe "in arrivo":
      * la UI usa questa lista vuota per mostrare il messaggio di percorso completo.
      */
     val tappeFuture: List<TappaPercorso> = emptyList()

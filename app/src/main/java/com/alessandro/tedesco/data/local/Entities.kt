@@ -256,17 +256,8 @@ enum class TipoProfilo(
         id = "alessandro",
         nome = "Alessandro",
         descrizione = "Percorso A0→B2 per lavoro in sanità a Bressanone, con contesto medico",
-        enableCustomWords = false,
-        enableGoogleSheets = false,
-        livelloIniziale = LivelloIniziale.A0,
-        mostraContestoMedico = true
-    ),
-    ALESSANDRO_CUSTOM(
-        id = "alessandro_custom",
-        nome = "Alessandro Personalizzato",
-        descrizione = "Standard + parole personalizzate e sincronizzazione Google Sheets, con contesto medico",
         enableCustomWords = true,
-        enableGoogleSheets = true,
+        enableGoogleSheets = false,
         livelloIniziale = LivelloIniziale.A0,
         mostraContestoMedico = true
     ),
@@ -282,7 +273,7 @@ enum class TipoProfilo(
     EMMA(
         id = "emma",
         nome = "Emma",
-        descrizione = "Percorso B1+: parole custom e Google Sheets, niente contesto medico",
+        descrizione = "Percorso B1→B2 con parole custom e Google Sheets, niente contesto medico",
         enableCustomWords = true,
         enableGoogleSheets = true,
         livelloIniziale = LivelloIniziale.B1,
@@ -355,10 +346,33 @@ data class ProfiloStato(
      * Default vuoto = profili salvati prima di questa funzione restano validi.
      */
     val padronanzaGrammatica: Map<String, PadronanzaGrammatica> = emptyMap(),
+    /**
+     * Lezione del percorso attualmente aperta. Vuoto = il percorso sceglie la
+     * lezione consigliata in base al livello del profilo.
+     */
+    val lezionePercorsoId: String = "",
+    /**
+     * Progresso di ogni lezione del percorso, per id di unità.
+     * Persiste indice della domanda, risposte corrette e completamento: chiudendo
+     * l'app la lezione riparte da dove si era rimasti.
+     */
+    val progressiLezioni: Map<String, ProgressoLezione> = emptyMap(),
     /** Giorno (yyyy-MM-dd) a cui si riferiscono i passi del piano completati. */
     val passiGiornoData: String = "",
     /** IDs dei passi del piano giornaliero completati in [passiGiornoData]. */
     val passiGiornoIds: List<String> = emptyList()
+)
+
+/** Progresso persistente di una lezione del percorso. */
+@Serializable
+data class ProgressoLezione(
+    /** Indice della prossima domanda da mostrare (0 = inizio). */
+    val indice: Int = 0,
+    val corrette: Int = 0,
+    val totali: Int = 0,
+    /** True quando la sessione di esercizi è stata portata a termine. */
+    val completata: Boolean = false,
+    val aggiornato: Long = 0L
 )
 
 /** Piano di studio verso il B2. */

@@ -591,7 +591,7 @@ private fun EsempioCard(
 }
 
 @Composable
-private fun EsercizioUnitaCard(
+internal fun EsercizioUnitaCard(
     unita: UnitaGrammatica,
     esercizio: EsercizioUnita,
     indice: Int,

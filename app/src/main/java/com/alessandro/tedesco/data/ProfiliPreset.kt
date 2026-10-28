@@ -6,6 +6,7 @@ import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.TipoProfilo
+import com.alessandro.tedesco.data.local.WordSource
 
 /**
  * Logica pura per la gestione dei preset dei profili.
@@ -67,7 +68,6 @@ object ProfiliPreset {
 
         return mapOf(
             TipoProfilo.ALESSANDRO.id to preset(TipoProfilo.ALESSANDRO, null, FEED_URL, GUIDA_DOC_ID),
-            TipoProfilo.ALESSANDRO_CUSTOM.id to preset(TipoProfilo.ALESSANDRO_CUSTOM, SHEET_CUSTOM, FEED_URL, GUIDA_DOC_ID),
             // Emma: vocabolario suo, ospitato sul GitHub di Alessandro.
             // Parte vuota e si popola con le parole che aggiunge nell'app.
             TipoProfilo.EMMA.id to preset(TipoProfilo.EMMA, SHEET_CUSTOM, FEED_URL_EMMA, GUIDA_DOC_ID)
@@ -75,14 +75,75 @@ object ProfiliPreset {
     }
 
     /**
+     * Id del vecchio profilo "Alessandro Personalizzato", rimosso nell'1.43.3.
+     * Serve solo alla migrazione dei dati già salvati.
+     */
+    private const val VECCHIO_ALESSANDRO_CUSTOM = "alessandro_custom"
+
+    /**
      * Riconcilia quanto letto da DataStore con i preset previsti:
      * i preset mancanti vengono aggiunti, quelli già presenti (con i loro
-     * progressi) restano intatti. `profiloAttivoId` non viene mai forzato.
+     * progressi) restano intatti.
+     *
+     * Migrazioni incluse:
+     * - il profilo "Alessandro Personalizzato" viene eliminato e le sue parole
+     *   personalizzate passano al profilo Alessandro base;
+     * - le parole personalizzate vengono abilitate su Alessandro e Emma;
+     * - se il profilo attivo era quello rimosso, si passa ad Alessandro.
      */
     fun riconcilia(letto: ProfiliRepository): ProfiliRepository {
-        val mancanti = mancanti(letto.profili.keys)
-        if (mancanti.isEmpty()) return letto
+        val migrato = migraAlessandroCustom(letto)
+        val aggiornato = abilitaParoleCustom(migrato)
+        val mancanti = mancanti(aggiornato.profili.keys)
+        if (mancanti.isEmpty()) return aggiornato
         val aggiunte = crea().filterKeys { it in mancanti }
-        return letto.copy(profili = letto.profili + aggiunte)
+        return aggiornato.copy(profili = aggiornato.profili + aggiunte)
+    }
+
+    /** Elimina il vecchio profilo custom e ne assorbe le parole in Alessandro. */
+    private fun migraAlessandroCustom(letto: ProfiliRepository): ProfiliRepository {
+        val vecchio = letto.profili[VECCHIO_ALESSANDRO_CUSTOM] ?: return letto
+        val base = letto.profili[TipoProfilo.ALESSANDRO.id]
+        val restanti = letto.profili - VECCHIO_ALESSANDRO_CUSTOM
+
+        if (base == null) {
+            return letto.copy(
+                profili = restanti,
+                profiloAttivoId = if (letto.profiloAttivoId == VECCHIO_ALESSANDRO_CUSTOM) null else letto.profiloAttivoId
+            )
+        }
+
+        val idEsistenti = base.stato.parole.map { it.id }.toSet()
+        val paroleCustom = vecchio.stato.parole.filter {
+            it.source == WordSource.CUSTOM && it.id !in idEsistenti
+        }
+        val idCustom = paroleCustom.map { it.id }.toSet()
+        val reviewsCustom = vecchio.stato.reviews.filterKeys { it in idCustom }
+
+        val unito = base.copy(
+            config = base.config.copy(enableCustomWords = true),
+            stato = base.stato.copy(
+                parole = base.stato.parole + paroleCustom,
+                reviews = base.stato.reviews + reviewsCustom
+            )
+        )
+
+        return letto.copy(
+            profili = restanti + (unito.id to unito),
+            profiloAttivoId = if (letto.profiloAttivoId == VECCHIO_ALESSANDRO_CUSTOM) unito.id else letto.profiloAttivoId
+        )
+    }
+
+    /** I profili che possono aggiungere parole devono poterlo fare dopo l'update. */
+    private fun abilitaParoleCustom(letto: ProfiliRepository): ProfiliRepository {
+        val profili = letto.profili.mapValues { (_, profilo) ->
+            val tipo = profilo.config.tipo
+            if (tipo.enableCustomWords && !profilo.config.enableCustomWords) {
+                profilo.copy(config = profilo.config.copy(enableCustomWords = true))
+            } else {
+                profilo
+            }
+        }
+        return if (profili == letto.profili) letto else letto.copy(profili = profili)
     }
 }

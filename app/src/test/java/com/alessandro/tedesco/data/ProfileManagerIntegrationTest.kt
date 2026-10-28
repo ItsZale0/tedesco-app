@@ -51,7 +51,7 @@ class ProfileManagerIntegrationTest {
         manager.inizializza()
 
         val profili = manager.profiliDisponibili()
-        assertEquals("La selezione deve mostrare 3 profili", 3, profili.size)
+        assertEquals("La selezione deve mostrare 2 profili", 2, profili.size)
     }
 
     @Test
@@ -70,7 +70,7 @@ class ProfileManagerIntegrationTest {
         manager.inizializza()
 
         assertTrue(manager.prontoFlow.firstValue())
-        assertEquals(3, manager.repositoryFlow.firstValue().profili.size)
+        assertEquals(2, manager.repositoryFlow.firstValue().profili.size)
     }
 
     @Test
@@ -80,7 +80,7 @@ class ProfileManagerIntegrationTest {
         val esiti = (1..8).map { async(Dispatchers.IO) { manager.inizializza() } }.awaitAll()
 
         assertEquals(8, esiti.size)
-        assertEquals(3, manager.profiliDisponibili().size)
+        assertEquals(2, manager.profiliDisponibili().size)
     }
 
     @Test
@@ -103,7 +103,7 @@ class ProfileManagerIntegrationTest {
     fun `uscire dal profilo riporta alla selezione senza perdere i dati`() = runBlocking {
         val manager = nuovoManager()
         manager.inizializza()
-        manager.selezionaProfilo(TipoProfilo.ALESSANDRO_CUSTOM.id)
+        manager.selezionaProfilo(TipoProfilo.EMMA.id)
         manager.aggiornaStatoAttivo(
             manager.statoAttivo().copy(etag = "MIO-ETAG")
         )
@@ -111,20 +111,21 @@ class ProfileManagerIntegrationTest {
         manager.esciDalProfilo()
         assertNull(manager.profiloAttivoId())
         // I profili restano disponibili per una nuova scelta
-        assertEquals(3, manager.profiliDisponibili().size)
+        assertEquals(2, manager.profiliDisponibili().size)
 
         // Rientrando, i dati sono ancora li'
-        manager.selezionaProfilo(TipoProfilo.ALESSANDRO_CUSTOM.id)
+        manager.selezionaProfilo(TipoProfilo.EMMA.id)
         assertEquals("MIO-ETAG", manager.statoAttivo().etag)
     }
 
     @Test
-    fun `il profilo standard non abilita le parole personalizzate`() = runBlocking {
+    fun `il profilo standard abilita le parole personalizzate ma non i fogli`() = runBlocking {
         val manager = nuovoManager()
         manager.inizializza()
         manager.selezionaProfilo(TipoProfilo.ALESSANDRO.id)
 
-        assertFalse(manager.isCustomWordsEnabled())
+        // Da 1.43.3 anche Alessandro può aggiungere parole al ripasso.
+        assertTrue(manager.isCustomWordsEnabled())
         assertFalse(manager.isGoogleSheetsEnabled())
         assertNotNull(manager.getFeedUrl())
     }
@@ -153,7 +154,7 @@ class ProfileManagerIntegrationTest {
         val manager = nuovoManager()
         manager.inizializza()
 
-        assertEquals(3, manager.profiliDisponibili().size)
+        assertEquals(2, manager.profiliDisponibili().size)
     }
 
     @Test

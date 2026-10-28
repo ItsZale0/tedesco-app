@@ -63,7 +63,7 @@ import com.alessandro.tedesco.ui.theme.TitoloSchermata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NuoveParoleScreen(vm: TedescoViewModel) {
+fun NuoveParoleScreen(vm: TedescoViewModel, onIndietro: () -> Unit = {}) {
     val parole: List<WordEntity> by vm.parole.collectAsStateWithLifecycle(emptyList())
     val lezioni: List<Int> by vm.numeriLezioni.collectAsStateWithLifecycle(emptyList())
     val caricamento: Boolean by vm.caricamento.collectAsStateWithLifecycle(false)
@@ -77,7 +77,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
     val context = LocalContext.current
     val ttsHelper = rememberTtsHelper(context)
 
-    // Titoli descrittivi delle lezioni (A0 → B1)
+    // Titoli descrittivi delle lezioni del vocabolario (A0 → B2)
     val lezioneTitoli = mapOf(
         1 to "Presentarsi (ich bin, ich heiße, ich wohne)",
         2 to "Verbi regolari (-en → ich lerne, du lernst)",
@@ -101,7 +101,7 @@ fun NuoveParoleScreen(vm: TedescoViewModel) {
 
     val maxLarghezza = dimensioneContenuto()
 
-    ScreenScaffold("Parole", actions = {
+    ScreenScaffold("Parole", onBack = onIndietro, actions = {
         if (customWordsAbilitate) {
             IconButton(onClick = { mostraAggiungiParola = true }) {
                 Icon(Icons.Filled.Add, contentDescription = "Aggiungi parola")

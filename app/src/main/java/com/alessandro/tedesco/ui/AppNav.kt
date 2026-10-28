@@ -39,15 +39,15 @@ fun AppNav(
     val vm = viewModel<TedescoViewModel>(factory = factory)
     val updater = viewModel<UpdaterViewModel>(factory = factory)
 
-    // Auto-update: controllo all'apertura E a ogni ripristino in primo piano.
-    // Il ViewModel fa da solo fallback (raw.githubusercontent -> API GitHub).
+    // Auto-update: un controllo all'apertura e poi al massimo ogni 6 ore quando
+    // l'app torna in primo piano. Prima ogni ON_RESUME faceva una richiesta HTTP.
     LaunchedEffect(Unit) {
-        updater.checkForUpdate()
+        updater.checkForUpdateSeNecessario()
     }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val osservatore = LifecycleEventObserver { _, evento ->
-            if (evento == Lifecycle.Event.ON_RESUME) updater.checkForUpdate()
+            if (evento == Lifecycle.Event.ON_RESUME) updater.checkForUpdateSeNecessario()
         }
         lifecycleOwner.lifecycle.addObserver(osservatore)
         onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
@@ -70,6 +70,7 @@ fun AppNav(
                     onVaiATutor = { nav.navigate("tutor") },
                     onVaiABackup = { nav.navigate("backup") },
                     onVaiAPercorsoGrammatica = { nav.navigate("percorso_grammatica") },
+                    onVaiANuoveParole = { nav.navigate("nuove_parole") },
                     onNaviga = { route -> nav.navigate(route) }
                 )
             }
@@ -125,7 +126,13 @@ fun AppNav(
                 RipassoScreen(
                     vm = vm,
                     onIndietro = { nav.popBackStack() },
-                    onVaiANuove = { nav.popBackStack() }
+                    onVaiANuove = { nav.navigate("nuove_parole") }
+                )
+            }
+            composable("nuove_parole") {
+                NuoveParoleScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() }
                 )
             }
             composable("produzione_attiva") {

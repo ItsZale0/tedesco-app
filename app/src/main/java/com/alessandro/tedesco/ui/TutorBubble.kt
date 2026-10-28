@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,48 +72,51 @@ fun TutorBubble(vm: TedescoViewModel) {
     var aperto by remember { mutableStateOf(false) }
     var messaggi by remember { mutableStateOf<List<MessaggioTutor>>(emptyList()) }
     var contatoreId by remember { mutableLongStateOf(0L) }
-    var storicoCaricato by remember { mutableStateOf(false) }
+    /** Messaggi già presenti nello storico: si salva solo oltre questo numero. */
+    var messaggiCaricati by remember { mutableIntStateOf(0) }
     var input by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue("")) }
     var caricamento by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val keyboard = LocalSoftwareKeyboardController.current
 
-    // Carica la conversazione salvata (o il messaggio di benvenuto)
+    // Carica la conversazione salvata (o il messaggio di benvenuto).
+    // La chiave è SOLO l'id del profilo: cambiando profilo si ricarica il suo
+    // storico, senza risalvare in loop la stessa conversazione.
     LaunchedEffect(profilo?.id) {
-        val p = profilo
-        if (p != null && !storicoCaricato) {
-            val storico = p.stato.conversazioni
-                .filter { it.tipo == "tutor" }
-                .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
-            // Id unici per posizione: piu' messaggi identici devono restare distinguibili.
-            messaggi = (if (storico.isNotEmpty()) storico else listOf(
-                MessaggioTutor(
-                    testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi grammatica, esempi o dubbi. Rispondo in italiano.",
-                    daUtente = false
-                )
-            )).mapIndexed { i, m -> m.copy(id = i.toLong()) }
-            contatoreId = messaggi.size.toLong()
-            storicoCaricato = true
-        }
+        val p = profilo ?: return@LaunchedEffect
+        val storico = p.stato.conversazioni
+            .filter { it.tipo == "tutor" }
+            .map { MessaggioTutor(it.testo, it.ruolo == "utente", it.correzione != null) }
+        // Id unici per posizione: piu' messaggi identici devono restare distinguibili.
+        messaggi = (if (storico.isNotEmpty()) storico else listOf(
+            MessaggioTutor(
+                testo = "Ciao! Sono il tuo tutor di tedesco. Chiedimi grammatica, esempi o dubbi. Rispondo in italiano.",
+                daUtente = false
+            )
+        )).mapIndexed { i, m -> m.copy(id = i.toLong()) }
+        contatoreId = messaggi.size.toLong()
+        messaggiCaricati = messaggi.size
     }
 
-    // Salva la conversazione quando cambia
-    LaunchedEffect(messaggi, profilo) {
-        val p = profilo
-        if (p != null && storicoCaricato) {
-            val conversazioni = messaggi.mapIndexed { index, msg ->
-                ConversazioneEntry(
-                    id = "tutor_${System.currentTimeMillis()}_$index",
-                    tipo = "tutor",
-                    ruolo = if (msg.daUtente) "utente" else "tutor",
-                    testo = msg.testo,
-                    timestamp = System.currentTimeMillis() - (messaggi.size - index) * 1000,
-                    correzione = if (msg.errore) msg.testo else null
-                )
-            }
-            vm.saveConversazioni(p.id, "tutor", conversazioni)
+    // Salva solo quando arrivano messaggi NUOVI (non a ogni ricomposizione e
+    // non quando cambia solo il profilo): prima questo effetto riscriveva la
+    // conversazione intera in loop, consumando CPU e batteria.
+    LaunchedEffect(messaggi.size, profilo?.id) {
+        val p = profilo ?: return@LaunchedEffect
+        if (messaggi.size <= messaggiCaricati) return@LaunchedEffect
+        val conversazioni = messaggi.mapIndexed { index, msg ->
+            ConversazioneEntry(
+                id = "tutor_${System.currentTimeMillis()}_$index",
+                tipo = "tutor",
+                ruolo = if (msg.daUtente) "utente" else "tutor",
+                testo = msg.testo,
+                timestamp = System.currentTimeMillis() - (messaggi.size - index) * 1000,
+                correzione = if (msg.errore) msg.testo else null
+            )
         }
+        vm.saveConversazioni(p.id, "tutor", conversazioni)
+        messaggiCaricati = messaggi.size
     }
 
     /** Aggiunge un messaggio con id unico e tiene in memoria solo gli ultimi LIMITE_CHAT. */

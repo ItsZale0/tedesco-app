@@ -1,7 +1,7 @@
 {
-  "versionCode": 205,
-  "versionName": "1.43.2",
-  "changelog": "Nuova homepage: design coerente con le sezioni rinnovate, piano di oggi più chiaro con anello di progresso, azioni rapide e card della lezione ridisegnate.",
+  "versionCode": 206,
+  "versionName": "1.43.3",
+  "changelog": "Lezioni come percorso A0-B2, selettore ridisegnato, Ascolto offline, progressi salvati, parole personalizzate per Emma e Alessandro, meno lag e batteria",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.2/Tedesco-v1.43.2.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.3/Tedesco-v1.43.3.apk"
 }

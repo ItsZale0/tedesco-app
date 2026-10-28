@@ -16,9 +16,11 @@ import com.alessandro.tedesco.data.remote.FeedService
 import com.alessandro.tedesco.data.remote.WordDto
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -230,7 +232,10 @@ class WordRepository(
     }
 
     fun observeWords() = wordsFlow
+        // L'ordinamento di migliaia di parole e' lavoro CPU: va fatto sul
+        // dispatcher di default, mai sul thread principale della UI.
         .map { it.filter { !it.archived }.sortedWith(compareBy({ it.lesson }, { it.german })) }
+        .flowOn(Dispatchers.Default)
 
     fun observeWordsByLesson(lesson: Int) = wordsFlow
         .map { it.filter { !it.archived && it.lesson == lesson }.sortedBy { it.german } }
@@ -551,6 +556,11 @@ class WordRepository(
             throw UnsupportedOperationException("Parole personalizzate non abilitate per questo profilo")
         }
         val now = System.currentTimeMillis()
+        // Il livello della parola e' quello reale del profilo (Emma parte da B1,
+        // Alessandro da A0): prima era sempre "A1" e falsava le statistiche.
+        val livelloProfilo = profileManager.profiloAttivo()
+            ?.stato?.progresso?.livelloCorrente?.codiceBreve()
+            ?: "A1"
         val word = WordEntity(
             id = "custom_${now}_${german.hashCode()}",
             german = german.trim(),
@@ -558,7 +568,7 @@ class WordRepository(
             example = example.trim(),
             article = article?.trim()?.ifBlank { null },
             pronunciation = pronunciation?.trim()?.ifBlank { null },
-            level = "A1",
+            level = livelloProfilo,
             lesson = lesson,
             tags = tags.trim(),
             archived = false,

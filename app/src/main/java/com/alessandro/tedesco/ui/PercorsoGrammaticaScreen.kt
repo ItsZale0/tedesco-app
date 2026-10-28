@@ -84,7 +84,7 @@ fun PercorsoGrammaticaScreen(
         ) {
             Column(modifier = Modifier.padding(Spaziature.md)) {
                 Text(
-                    "A0 -> B1",
+                    "A0 -> B2",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -197,7 +197,7 @@ fun PercorsoGrammaticaScreen(
             Column(Modifier.padding(Spaziature.md)) {
                 if (GrammaticaSyllabus.tappeFuture.isEmpty()) {
                     Text(
-                        "Percorso A0-B1 completo",
+                        "Percorso A0-B2 completo",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )

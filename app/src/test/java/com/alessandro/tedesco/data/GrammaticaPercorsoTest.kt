@@ -16,10 +16,10 @@ class GrammaticaPercorsoTest {
     private val adesso = 1_700_000_000_000L
 
     @Test
-    fun ilPercorsoContieneTutteLeUnitaA0B1() {
-        assertEquals(31, GrammaticaSyllabus.unita.size)
+    fun ilPercorsoContieneTutteLeUnitaA0B2() {
+        assertEquals(37, GrammaticaSyllabus.unita.size)
         assertEquals(
-            listOf("A0", "A1", "A2", "B1"),
+            listOf("A0", "A1", "A2", "B1", "B2"),
             GrammaticaSyllabus.unita.map { it.livello }.distinct()
         )
         assertEquals(
@@ -63,7 +63,13 @@ class GrammaticaPercorsoTest {
                 "b1-konjunktiv2",
                 "b1-indirekte-rede",
                 "b1-nominalisierung",
-                "b1-genitiv"
+                "b1-genitiv",
+                "b2-passiv-modal",
+                "b2-konjunktiv2-vergangenheit",
+                "b2-partizipialkonstruktionen",
+                "b2-verben-praepositionen",
+                "b2-relative-was-wo",
+                "b2-nominalstil"
             ),
             GrammaticaSyllabus.unita.map { it.id }
         )
@@ -77,7 +83,9 @@ class GrammaticaPercorsoTest {
             assertTrue("Tabelle mancanti in ${unita.id}", unita.teoria.tabelle.isNotEmpty())
             assertTrue("Errori tipici mancanti in ${unita.id}", unita.teoria.erroriTipici.isNotEmpty())
             assertTrue("Merksatz mancante in ${unita.id}", unita.teoria.merksatz.isNotBlank())
-            assertTrue("Esercizi insufficienti in ${unita.id}", unita.esercizi.size >= 12)
+            // Le unità B2 sono più compatte: 8 esercizi bastano, le altre ne hanno 12+.
+            val minimo = if (unita.livello == "B2") 8 else 12
+            assertTrue("Esercizi insufficienti in ${unita.id}", unita.esercizi.size >= minimo)
             assertEquals(
                 "ID esercizi duplicati in ${unita.id}",
                 unita.esercizi.size,
