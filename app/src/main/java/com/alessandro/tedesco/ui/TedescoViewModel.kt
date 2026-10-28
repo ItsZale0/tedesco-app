@@ -102,9 +102,6 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val ultimoSync = repo.observeLastSync()
     val daRipassare = repo.observeDueCount()
     val guida = repo.observeGuida()
-    val piano = repo.pianoFlow.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-    val progressoFeed = repo.progressoFeedFlow.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-    val sessioni = repo.sessioniFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val lezioneContenuto = repo.observeLezioneContenuto()
     val livelliDisponibili = repo.observeLevels()
     val parolePerLivello: StateFlow<List<WordEntity>> = combine(
@@ -452,14 +449,6 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             id != null && r.profili[id]?.config?.mostraContestoMedico == true
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
-    /** Livello CEFR iniziale del profilo attivo. */
-    val livelloIniziale: StateFlow<LivelloIniziale> = profileManager.repositoryFlow
-        .map { r ->
-            val id = r.profiloAttivoId
-            id?.let { r.profili[it]?.config?.livelloIniziale } ?: LivelloIniziale.A0
-        }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, LivelloIniziale.A0)
 
     val feedUrl: StateFlow<String> = profileManager.repositoryFlow
         .map { r ->

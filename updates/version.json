@@ -1,7 +1,7 @@
 {
-  "versionCode": 220,
-  "versionName": "1.45.3",
-  "changelog": "Nuova sezione Sprechübungen: esercizi di produzione orale (parlato) con prompt per livello A1-B2, registrazione e confronto con il modello. Copre i formati Goethe Sprechen e le Partnerseiten della Grammatik Aktiv.",
+  "versionCode": 221,
+  "versionName": "1.45.4",
+  "changelog": "Pulizia logica: rimossi StateFlow inutilizzati (piano, progressoFeed, sessioni, livelloIniziale), ridotta allocazione memoria. Fix coalescenza salvataggio livello. Nessun cambio funzionale.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.3/Tedesco-v1.45.3.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.4/Tedesco-v1.45.4.apk"
 }
