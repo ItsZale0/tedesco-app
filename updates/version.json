@@ -1,7 +1,7 @@
 {
-  "versionCode": 215,
-  "versionName": "1.44.2",
-  "changelog": "Salvataggio sincrono alla chiusura dell'app (niente perdita di progressi). Backup automatico attivo di default.",
+  "versionCode": 216,
+  "versionName": "1.44.3",
+  "changelog": "Backup completo: oltre ai profili (vocabolario, ripassi, grammatica, guida, piano, errori, badge, streak, sessioni, conversazioni) ora salva anche le preferenze delle notifiche. Formato backup v2, retrocompatibile con i backup v1.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.44.2/Tedesco-v1.44.2.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.44.3/Tedesco-v1.44.3.apk"
 }

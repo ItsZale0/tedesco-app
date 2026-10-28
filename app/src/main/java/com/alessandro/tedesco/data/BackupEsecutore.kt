@@ -3,6 +3,7 @@ package com.alessandro.tedesco.data
 import android.content.Context
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.BackupGitHubClient
+import com.alessandro.tedesco.sync.NotificheSettings
 import kotlinx.coroutines.flow.first
 import java.security.MessageDigest
 
@@ -46,7 +47,8 @@ object BackupEsecutore {
         val repository = app.profileManagerInstance.repositoryFlow.first()
         if (repository.profili.isEmpty()) return Esito.NonConfigurato("Nessun profilo da salvare")
 
-        val json = BackupCloud.serializza(repository, versioneApp, System.currentTimeMillis())
+        val notifiche = NotificheSettings(app).leggi()
+        val json = BackupCloud.serializza(repository, versioneApp, System.currentTimeMillis(), notifiche)
         val hash = sha256(json)
 
         // Salta se identico all'ultimo backup (solo in automatico)

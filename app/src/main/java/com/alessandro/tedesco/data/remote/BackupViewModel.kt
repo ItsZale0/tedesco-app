@@ -7,6 +7,7 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.BackupCloud
 import com.alessandro.tedesco.data.BackupEsecutore
 import com.alessandro.tedesco.data.BackupSettings
+import com.alessandro.tedesco.sync.NotificheSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -180,6 +181,9 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                 val pacchetto = BackupCloud.deserializza(json)
                 withContext(Dispatchers.IO) {
                     app.profileManagerInstance.sostituisciRepository(pacchetto.dati)
+                    pacchetto.notifiche?.let { n: BackupCloud.NotificheBackup ->
+                        NotificheSettings(getApplication()).applica(n)
+                    }
                 }
                 _daRipristinare.value = null
                 contenutoDaRipristinare = null

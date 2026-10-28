@@ -1,6 +1,7 @@
 package com.alessandro.tedesco.sync
 
 import android.content.Context
+import com.alessandro.tedesco.data.BackupCloud
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -45,6 +46,18 @@ class NotificheSettings(private val context: Context) {
             it[IMMERSIONE_ATTIVA] = attiva
             ora?.let { o -> it[IMMERSIONE_ORA] = o }
         }
+    }
+
+    suspend fun leggi(): BackupCloud.NotificheBackup = BackupCloud.NotificheBackup(
+        ripassoAttivo = ripassoAttivo(),
+        ripassoOra = ripassoOra(),
+        immersioneSeraleAttiva = immersioneSeraleAttiva(),
+        immersioneSeraleOra = immersioneSeraleOra()
+    )
+
+    suspend fun applica(b: BackupCloud.NotificheBackup) {
+        setRipasso(b.ripassoAttivo, b.ripassoOra)
+        setImmersioneSerale(b.immersioneSeraleAttiva, b.immersioneSeraleOra)
     }
 
     companion object {

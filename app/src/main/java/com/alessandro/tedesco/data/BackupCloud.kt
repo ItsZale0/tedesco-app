@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 object BackupCloud {
 
     /** Versione del formato: serve a rifiutare backup di versioni future. */
-    const val VERSIONE_FORMATO = 1
+    const val VERSIONE_FORMATO = 2
 
     /** Nome file usato nel repo di backup. */
     const val NOME_FILE = "tedesco-backup.json"
@@ -48,7 +48,12 @@ object BackupCloud {
         val creatoIl: Long,
         val versioneApp: String = "",
         /** I dati veri: tutti i profili. */
-        val dati: ProfiliRepository
+        val dati: ProfiliRepository,
+        /**
+         * Preferenze delle notifiche (promemoria ripasso e ascolto serale).
+         * Opzionale per retrocompatibilita' con i backup di formato 1.
+         */
+        val notifiche: NotificheBackup? = null
     )
 
     /** Esito di un'operazione di backup, per messaggi onesti all'utente. */
@@ -57,13 +62,28 @@ object BackupCloud {
         data class Errore(val messaggio: String, val ritentabile: Boolean = false) : Esito
     }
 
+    /** Preferenze delle notifiche, serializzabili nel backup. */
+    @Serializable
+    data class NotificheBackup(
+        val ripassoAttivo: Boolean = true,
+        val ripassoOra: Int = 20,
+        val immersioneSeraleAttiva: Boolean = false,
+        val immersioneSeraleOra: Int = 21
+    )
+
     /** Serializza il pacchetto di backup. */
-    fun serializza(repo: ProfiliRepository, versioneApp: String, now: Long): String {
+    fun serializza(
+        repo: ProfiliRepository,
+        versioneApp: String,
+        now: Long,
+        notifiche: NotificheBackup? = null
+    ): String {
         val pacchetto = Pacchetto(
             versione = VERSIONE_FORMATO,
             creatoIl = now,
             versioneApp = versioneApp,
-            dati = repo
+            dati = repo,
+            notifiche = notifiche
         )
         return jsonBackup.encodeToString(Pacchetto.serializer(), pacchetto)
     }
