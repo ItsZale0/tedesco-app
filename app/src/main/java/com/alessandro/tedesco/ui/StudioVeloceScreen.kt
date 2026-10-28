@@ -289,59 +289,72 @@ fun StudioVeloceScreen(
                 }
             }
 
-            // ---- Modalità Immersione: visibile solo se attiva nel profilo ----
+            // ---- Percorso grammaticale: solo se non c'è già una lezione aperta ----
+            // Prima le due cose comparivano insieme e la home sembrava un elenco
+            // di doppioni: ora la lezione aperta è il contenuto, il percorso è
+            // il "continua da qui" quando non c'è altro.
+            if (lezioneAperta == null) {
+                item {
+                    PercorsoGrammaticaCard(
+                        prossima = prossimaGram,
+                        completate = completateGram,
+                        totale = percorsoGram.size,
+                        onApri = onVaiAPercorsoGrammatica
+                    )
+                }
+            }
+
+            // ---- Modalità Immersione: riga discreta, visibile solo se attiva ----
             if (immersioneAttiva) {
                 item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onVaiAImmersione() },
+                    Surface(
+                        onClick = onVaiAImmersione,
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(Spaziature.md),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Filled.Waves,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(Modifier.width(Spaziature.md))
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.Waves,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     "Modalità Immersione",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "Storia, vocabolario in frasi, shadowing, ascolto",
+                                    "Sessione guidata di 20 minuti: storia, raccolta, voce",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
-            }
-
-            // ---- Percorso grammaticale: il prossimo passo ----
-            item {
-                PercorsoGrammaticaCard(
-                    prossima = prossimaGram,
-                    completate = completateGram,
-                    totale = percorsoGram.size,
-                    onApri = onVaiAPercorsoGrammatica
-                )
             }
 
             // ---- Test di ingresso (una volta sola, finché non viene fatto) ----
@@ -699,37 +712,39 @@ private fun PercorsoGrammaticaCard(
         StatoUnita.BLOCCATA -> "Unità bloccata"
         null -> "Percorso grammaticale"
     }
-    val azione = when (prossima?.stato) {
-        StatoUnita.DA_RIPASSARE -> "Ripassa ora"
-        StatoUnita.DISPONIBILE -> "Continua il percorso"
-        StatoUnita.COMPLETATA -> "Ripassa il percorso"
-        StatoUnita.BLOCCATA -> "Apri il percorso"
-        null -> "Apri il percorso"
-    }
+    // Card compatta: niente secondo bottone a tutta larghezza. Tutta la
+    // superficie è il bottone, così la home resta corta e leggibile.
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(
+                onClickLabel = "Apri il percorso grammaticale",
+                role = Role.Button,
+                onClick = onApri
+            ),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
-        Column(Modifier.fillMaxWidth().padding(Spaziature.md)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Filled.Translate,
                             contentDescription = null,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
-                Spacer(Modifier.width(Spaziature.sm))
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         "PERCORSO GRAMMATICALE",
@@ -740,36 +755,38 @@ private fun PercorsoGrammaticaCard(
                     )
                     Text(
                         prossima?.unita?.titolo ?: "Tutto il percorso",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
+                )
             }
-            Spacer(Modifier.height(Spaziature.sm))
-            Text(
-                if (prossima != null) {
-                    "${etichetta} · ${prossima.unita.livello} · ${prossima.unita.minuti} min"
-                } else {
-                    "Teoria, esempi ed esercizi in ordine"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-            )
-            Spacer(Modifier.height(Spaziature.sm))
+            Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "$completate / $totale unità",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    if (prossima != null) {
+                        "$etichetta · ${prossima.unita.livello} · ${prossima.unita.minuti} min"
+                    } else {
+                        "Teoria, esempi ed esercizi in ordine"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(Modifier.weight(1f))
                 Text(
-                    "A0 → B2",
+                    "$completate/$totale",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
             Spacer(Modifier.height(6.dp))
@@ -777,27 +794,11 @@ private fun PercorsoGrammaticaCard(
                 progress = { progresso },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(7.dp)
+                    .height(5.dp)
                     .clip(MaterialTheme.shapes.extraSmall),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.15f)
             )
-            Spacer(Modifier.height(Spaziature.md))
-            Button(
-                onClick = onApri,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(AltezzaBottonePrincipale()),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Text(azione)
-                Spacer(Modifier.width(Spaziature.sm))
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
         }
     }
 }

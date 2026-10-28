@@ -91,7 +91,11 @@ fun AppNav(
                 )
             }
             composable("immersione") {
-                DidatticaScreen(vm = vm, onIndietro = { nav.popBackStack() })
+                DidatticaScreen(
+                    vm = vm,
+                    onIndietro = { nav.popBackStack() },
+                    onVaiAProduzione = { nav.navigate("produzione") }
+                )
             }
             composable("esercizi") {
                 EserciziScreen(

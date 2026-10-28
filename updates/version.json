@@ -1,7 +1,7 @@
 {
-  "versionCode": 209,
-  "versionName": "1.43.6",
-  "changelog": "Sistema di notifiche: promemoria ripasso a ora fissa e ascolto passivo serale (pre-sonno); rifiniture alla Modalità Immersione (storia più fluida, avviso se la voce tedesca non è disponibile, 80/20 esplicito)",
+  "versionCode": 210,
+  "versionName": "1.43.7",
+  "changelog": "Modalità Immersione ridisegnata: sessione guidata a 5 tappe, episodi multipli per livello, parole pre-insegnate, recupero attivo con feedback, shadowing guidato e player con timer serale. Home riordinata: card grammatica compatta e niente doppioni.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.6/Tedesco-v1.43.6.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.7/Tedesco-v1.43.7.apk"
 }

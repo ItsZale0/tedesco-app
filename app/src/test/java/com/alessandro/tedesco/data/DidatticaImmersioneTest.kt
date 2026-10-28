@@ -163,4 +163,68 @@ class DidatticaImmersioneTest {
             }
         }
     }
+
+    @Test
+    fun `ogni livello ha almeno due episodi con tre parole pre-insegnate`() {
+        perLivelli { livello ->
+            val episodi = DidatticaImmersione.storie(livello)
+            assertTrue(
+                "Livello $livello: servono almeno due episodi (narrow reading)",
+                episodi.size >= 2
+            )
+            episodi.forEach { storia ->
+                assertEquals("Storia ${storia.titolo}: livello", livello, storia.livello)
+                assertEquals(
+                    "Storia ${storia.titolo}: tre parole chiave",
+                    3,
+                    storia.paroleChiave.size
+                )
+                assertTrue(
+                    "Storia ${storia.titolo}: copertura ${storia.copertura}% fuori scala",
+                    storia.copertura in 90..100
+                )
+                assertTrue(
+                    "Storia ${storia.titolo}: minuti non positivi",
+                    storia.minuti > 0
+                )
+                storia.paroleChiave.forEach { g ->
+                    assertTrue("Glossa senza parola", g.parola.isNotBlank())
+                    assertTrue("Glossa senza significato", g.significato.isNotBlank())
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `la parola evidenziata esiste davvero nella frase`() {
+        perLivelli { livello ->
+            DidatticaImmersione.frasiNuove(livello, 0).forEach { frase ->
+                assertTrue(
+                    "Frase '${frase.tedesco}': parola chiave vuota",
+                    frase.parolaChiave.isNotBlank()
+                )
+                assertTrue(
+                    "Frase '${frase.tedesco}': '${frase.parolaChiave}' non è nel testo",
+                    frase.tedesco.contains(frase.parolaChiave, ignoreCase = true)
+                )
+                assertTrue(
+                    "Frase '${frase.tedesco}': significato mancante",
+                    frase.significatoChiave.isNotBlank()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `la rotazione della raccolta resta di cinque frasi`() {
+        perLivelli { livello ->
+            (0..8).forEach { giro ->
+                assertEquals(
+                    "Livello $livello, giro $giro: la raccolta deve restare di 5 frasi",
+                    5,
+                    DidatticaImmersione.frasiNuove(livello, giro).size
+                )
+            }
+        }
+    }
 }

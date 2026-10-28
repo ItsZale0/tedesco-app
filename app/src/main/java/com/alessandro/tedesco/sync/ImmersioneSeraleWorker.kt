@@ -45,9 +45,9 @@ class ImmersioneSeraleWorker(
         val livello = profilo.stato.progresso.livelloCorrente.codiceBreve()
         val frase = DidatticaImmersione.frasiPassive(livello).randomOrNull()
         val messaggio = if (frase != null) {
-            "15 minuti di ascolto passivo prima di dormire. Es: «$frase»"
+            "15 minuti di ascolto da sveglio, poi dormi: il sonno consolida. Es: «$frase»"
         } else {
-            "15 minuti di ascolto passivo prima di dormire. Apri la Modalità Immersione."
+            "15 minuti di ascolto da sveglio, poi dormi: il sonno consolida. Apri la Modalità Immersione."
         }
 
         sendNotification(
