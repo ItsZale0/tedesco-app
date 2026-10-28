@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.BackupEsecutore
+import com.alessandro.tedesco.data.BackupSettings
 import com.alessandro.tedesco.ui.theme.TedescoTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +33,12 @@ class MainActivity : ComponentActivity() {
         // puo' killare il processo prima che il salvataggio finisca (dati persi).
         runBlocking(Dispatchers.IO) {
             runCatching { TedescoApp.get(this@MainActivity).profileManagerInstance.flush() }
+            runCatching {
+                val app = TedescoApp.get(this@MainActivity)
+                if (BackupSettings(app).autoAbilitato()) {
+                    BackupEsecutore.esegui(app, com.alessandro.tedesco.BuildConfig.VERSION_NAME, forza = false)
+                }
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 {
-  "versionCode": 224,
-  "versionName": "1.45.7",
-  "changelog": "Popup aggiornamenti: colore Material 3 (surfaceContainerHigh) al posto del giallo. Testo onSurface/onSurfaceVariant. Nessun cambio funzionale.",
+  "versionCode": 225,
+  "versionName": "1.45.8",
+  "changelog": "Backup ottimizzato: ogni minuto in-app (hash-dedup, mutex anti-concorrenza, solo in foreground), ogni 15 min in background (WorkManager). Salvataggio finale alla chiusura. Auto-toggle rispettato.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.7/Tedesco-v1.45.7.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.8/Tedesco-v1.45.8.apk"
 }

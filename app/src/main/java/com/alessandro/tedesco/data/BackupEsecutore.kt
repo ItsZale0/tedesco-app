@@ -5,6 +5,8 @@ import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.BackupGitHubClient
 import com.alessandro.tedesco.sync.NotificheSettings
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 
 /**
@@ -12,6 +14,9 @@ import java.security.MessageDigest
  * backup automatico periodico, cosi' la logica non diverge.
  */
 object BackupEsecutore {
+
+    /** Mutex per evitare esecuzioni concorrenti (timer in-app + worker + manuale). */
+    private val mutex = Mutex()
 
     /** Esito dell'operazione. */
     sealed interface Esito {
@@ -33,7 +38,7 @@ object BackupEsecutore {
         context: Context,
         versioneApp: String,
         forza: Boolean
-    ): Esito {
+    ): Esito = mutex.withLock {
         val app = context.applicationContext as TedescoApp
         val settings = BackupSettings(app)
 

@@ -4,6 +4,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import com.alessandro.tedesco.BuildConfig
+import com.alessandro.tedesco.TedescoApp
+import com.alessandro.tedesco.data.BackupEsecutore
+import com.alessandro.tedesco.data.BackupSettings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,7 +23,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.remote.BackupViewModel
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
 
@@ -51,6 +56,19 @@ fun AppNav(
         }
         lifecycleOwner.lifecycle.addObserver(osservatore)
         onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
+    }
+
+    // Backup automatico in-app: ogni 60s se abilitato (hash-dedup evita upload inutili).
+    // In background il BackupWorker (WorkManager) gestisce il 15-min.
+    val appContext = LocalContext.current.applicationContext as TedescoApp
+    val backupSettings = remember { BackupSettings(appContext) }
+    val autoBackup by backupSettings.autoFlow.collectAsStateWithLifecycle(false)
+    LaunchedEffect(autoBackup) {
+        if (!autoBackup) return@LaunchedEffect
+        while (isActive) {
+            BackupEsecutore.esegui(appContext, BuildConfig.VERSION_NAME, forza = false)
+            delay(60_000)
+        }
     }
 
     val nav = rememberNavController()
