@@ -277,7 +277,19 @@ class ProfileManager(
 
     fun getGuidaDocId(): String? = profiloAttivo()?.config?.guidaDocId
 
-    fun getFeedUrl(): String = profiloAttivo()?.config?.feedUrl ?: ProfiliPreset.FEED_URL
+    /**
+     * Feed del profilo attivo.
+     *
+     * Se il profilo salvato non ha un URL (installazioni vecchie, campi
+     * ripristinati vuoti) si torna al default DEL TIPO: Emma non deve mai
+     * trovarsi, per assenza di URL, il vocabolario di Alessandro.
+     */
+    fun getFeedUrl(): String {
+        val profilo = profiloAttivo()
+        val url = profilo?.config?.feedUrl?.trim().orEmpty()
+        if (url.isNotEmpty()) return url
+        return profilo?.let { ProfiliPreset.feedPredefinito(it.config.tipo) } ?: ProfiliPreset.FEED_URL
+    }
 
     /** Livello CEFR iniziale del profilo attivo. */
     fun getLivelloIniziale(): LivelloIniziale = profiloAttivo()?.config?.livelloIniziale ?: LivelloIniziale.A0

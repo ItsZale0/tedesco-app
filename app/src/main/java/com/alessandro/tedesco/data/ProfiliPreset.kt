@@ -29,6 +29,18 @@ object ProfiliPreset {
     const val NTFY_TOPIC_EMMA = "tedesco-emma-vocab-c7f3a91b"
 
     /**
+     * Feed predefinito per tipo di profilo.
+     *
+     * Emma NON usa il vocabolario base: ha il suo, separate, ospitato sul
+     * GitHub di Alessandro (tedesco-vocab-emma). Il default val "sempre":
+     * è il punto di ritorno di migrazioni e bottone di ripristino.
+     */
+    fun feedPredefinito(tipo: TipoProfilo): String = when (tipo) {
+        TipoProfilo.EMMA -> FEED_URL_EMMA
+        else -> FEED_URL
+    }
+
+    /**
      * Chiave Groq di default per il tutor AI.
      * Sostituire con una chiave reale prima di pubblicare l'app.
      * L'utente può sovrascriverla in Profilo → Tutor AI.
@@ -94,10 +106,33 @@ object ProfiliPreset {
     fun riconcilia(letto: ProfiliRepository): ProfiliRepository {
         val migrato = migraAlessandroCustom(letto)
         val aggiornato = abilitaParoleCustom(migrato)
-        val mancanti = mancanti(aggiornato.profili.keys)
-        if (mancanti.isEmpty()) return aggiornato
+        val allineato = allineaFeedEmma(aggiornato)
+        val mancanti = mancanti(allineato.profili.keys)
+        if (mancanti.isEmpty()) return allineato
         val aggiunte = crea().filterKeys { it in mancanti }
-        return aggiornato.copy(profili = aggiornato.profili + aggiunte)
+        return allineato.copy(profili = allineato.profili + aggiunte)
+    }
+
+    /**
+     * Allinea il feed di Emma al vocabolario separato.
+     *
+     * I profili creati prima del vocabolario separato portavano il feed
+     * condiviso o niente: qui li si riporta a [FEED_URL_EMMA], che è il
+     * default per Emma e viene riapplicato a ogni avvio.
+     * Un URL scelto apposta (diverso dai default) viene rispettato:
+     * potrebbe puntare a un vocabolario alternativo voluto.
+     */
+    private fun allineaFeedEmma(letto: ProfiliRepository): ProfiliRepository {
+        val profili = letto.profili.mapValues { (id, profilo) ->
+            if (id != TipoProfilo.EMMA.id) return@mapValues profilo
+            val corrente = profilo.config.feedUrl.trim()
+            if (corrente.isEmpty() || corrente == FEED_URL) {
+                profilo.copy(config = profilo.config.copy(feedUrl = FEED_URL_EMMA))
+            } else {
+                profilo
+            }
+        }
+        return if (profili == letto.profili) letto else letto.copy(profili = profili)
     }
 
     /** Elimina il vecchio profilo custom e ne assorbe le parole in Alessandro. */

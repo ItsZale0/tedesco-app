@@ -72,8 +72,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alessandro.tedesco.data.ProfiliPreset
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdateSettings
 import com.alessandro.tedesco.data.remote.UpdateWorker
@@ -86,8 +88,6 @@ import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.launch
 
-private const val URL_VOCAB_DEFAULT =
-    "https://raw.githubusercontent.com/ItsZale0/tedesco-vocab/main/vokabeln.json"
 private const val GUIDA_DOC_DEFAULT = "12yKY4Bpp6IqX7q8tgNYkFXIoAQsZR8yVd4mZhcD5I7g"
 
 /** Forma card Material 3. */
@@ -277,7 +277,12 @@ fun ImpostazioniScreen(
     var confermaReset by remember { mutableStateOf(false) }
     var aggiungiParola by remember { mutableStateOf(false) }
 
-    var feedUrl by rememberSaveable { mutableStateOf(profilo?.config?.feedUrl ?: "") }
+    var feedUrl by rememberSaveable {
+    mutableStateOf(
+        profilo?.config?.feedUrl?.takeIf { it.isNotBlank() }
+            ?: ProfiliPreset.feedPredefinito(profilo?.config?.tipo ?: TipoProfilo.ALESSANDRO)
+    )
+}
     var guidaDocId by rememberSaveable { mutableStateOf(profilo?.config?.guidaDocId ?: "") }
     var chiaveTutor by rememberSaveable { mutableStateOf(profilo?.config?.tutorApiKey ?: "") }
 
@@ -490,8 +495,16 @@ fun ImpostazioniScreen(
                             )
                         )
                         Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = { feedUrl = URL_VOCAB_DEFAULT }) {
-                            Text("Usa il vocabolario di Alessandro")
+                        OutlinedButton(onClick = {
+                            feedUrl = profilo?.config?.tipo?.let { ProfiliPreset.feedPredefinito(it) }
+                                ?: ProfiliPreset.FEED_URL
+                        }) {
+                            Text(
+                                if (profilo?.config?.tipo == TipoProfilo.EMMA)
+                                    "Usa il vocabolario di Emma"
+                                else
+                                    "Usa il vocabolario di Alessandro"
+                            )
                         }
                         GlassExpandableSection(
                             title = "Info",

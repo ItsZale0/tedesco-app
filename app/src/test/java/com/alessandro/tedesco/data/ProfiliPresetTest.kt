@@ -9,6 +9,7 @@ import com.alessandro.tedesco.data.local.WordSource
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -188,5 +189,53 @@ class ProfiliPresetTest {
         assertTrue(alessandro.stato.reviews.containsKey("w-custom"))
         assertTrue(alessandro.config.enableCustomWords)
         assertEquals(TipoProfilo.ALESSANDRO.id, risultato.profiloAttivoId)
+    }
+
+    @Test
+    fun `Emma ha il suo vocabolario separato sul GitHub di Alessandro`() {
+        val feedEmma = ProfiliPreset.feedPredefinito(TipoProfilo.EMMA)
+        val feedAle = ProfiliPreset.feedPredefinito(TipoProfilo.ALESSANDRO)
+        assertTrue(feedEmma.contains("tedesco-vocab-emma", ignoreCase = true))
+        assertNotEquals(feedAle, feedEmma)
+    }
+
+    @Test
+    fun `riconciliazione allinea il feed condiviso di Emma`() {
+        val base = ProfiliPreset.crea(now = 1L)
+        val emmaCondiviso = base[TipoProfilo.EMMA.id]!!.copy(
+            config = base[TipoProfilo.EMMA.id]!!.config.copy(feedUrl = ProfiliPreset.FEED_URL)
+        )
+        val repo = ProfiliRepository(
+            profili = base + (TipoProfilo.EMMA.id to emmaCondiviso)
+        )
+        val risultato = ProfiliPreset.riconcilia(repo)
+        assertEquals(ProfiliPreset.FEED_URL_EMMA, risultato.profili[TipoProfilo.EMMA.id]?.config?.feedUrl)
+    }
+
+    @Test
+    fun `riconciliazione allinea il feed vuoto di Emma`() {
+        val base = ProfiliPreset.crea(now = 1L)
+        val emmaVuoto = base[TipoProfilo.EMMA.id]!!.copy(
+            config = base[TipoProfilo.EMMA.id]!!.config.copy(feedUrl = "")
+        )
+        val repo = ProfiliRepository(
+            profili = base + (TipoProfilo.EMMA.id to emmaVuoto)
+        )
+        val risultato = ProfiliPreset.riconcilia(repo)
+        assertEquals(ProfiliPreset.FEED_URL_EMMA, risultato.profili[TipoProfilo.EMMA.id]?.config?.feedUrl)
+    }
+
+    @Test
+    fun `riconciliazione rispetta un URL custom di Emma`() {
+        val base = ProfiliPreset.crea(now = 1L)
+        val custom = "https://raw.githubusercontent.com/ItsZale0/custom/main/vokabeln.json"
+        val emmaCustom = base[TipoProfilo.EMMA.id]!!.copy(
+            config = base[TipoProfilo.EMMA.id]!!.config.copy(feedUrl = custom)
+        )
+        val repo = ProfiliRepository(
+            profili = base + (TipoProfilo.EMMA.id to emmaCustom)
+        )
+        val risultato = ProfiliPreset.riconcilia(repo)
+        assertEquals(custom, risultato.profili[TipoProfilo.EMMA.id]?.config?.feedUrl)
     }
 }

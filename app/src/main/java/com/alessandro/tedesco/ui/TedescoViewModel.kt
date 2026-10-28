@@ -27,6 +27,7 @@ import com.alessandro.tedesco.data.local.ProfiloStato
 import com.alessandro.tedesco.data.local.LivelloIniziale
 import com.alessandro.tedesco.data.CalcoloCompetenze
 import com.alessandro.tedesco.data.local.LivelloCEFR
+import com.alessandro.tedesco.data.ProfiliPreset
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
@@ -462,8 +463,9 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
 
     val feedUrl: StateFlow<String> = profileManager.repositoryFlow
         .map { r ->
-            val id = r.profiloAttivoId
-            id?.let { r.profili[it]?.config?.feedUrl } ?: ""
+            val p = r.profiloAttivoId?.let { r.profili[it] }
+            val url = p?.config?.feedUrl?.trim().orEmpty()
+            if (url.isNotEmpty()) url else p?.let { ProfiliPreset.feedPredefinito(it.config.tipo) } ?: ProfiliPreset.FEED_URL
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
