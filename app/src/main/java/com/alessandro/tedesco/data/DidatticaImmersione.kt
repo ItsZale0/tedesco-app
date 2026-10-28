@@ -328,7 +328,7 @@ object DidatticaImmersione {
         ),
         frasi = listOf(
             frase("Am Freitag fährt Lena nach Köln.", "Il venerdì Lena va a Colonia."),
-            frase("Sie steht früh am Bahnhof.", "È presto alla stazione."),
+            frase("Sie ist früh am Bahnhof.", "È presto alla stazione."),
             frase("Der Zug hat zehn Minuten Verspätung.", "Il treno ha dieci minuti di ritardo."),
             frase("Lena kauft eine Fahrkarte am Automaten.", "Lena compra un biglietto alla macchinetta."),
             frase("Der Automat nimmt keine Karte.", "La macchinetta non accetta la carta."),

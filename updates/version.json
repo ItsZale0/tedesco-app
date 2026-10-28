@@ -1,7 +1,7 @@
 {
-  "versionCode": 210,
-  "versionName": "1.43.7",
-  "changelog": "Modalità Immersione ridisegnata: sessione guidata a 5 tappe, episodi multipli per livello, parole pre-insegnate, recupero attivo con feedback, shadowing guidato e player con timer serale. Home riordinata: card grammatica compatta e niente doppioni.",
+  "versionCode": 211,
+  "versionName": "1.43.8",
+  "changelog": "Rifiniture di layout della Modalità Immersione: composti lunghi su più righe, glosse che non escono dallo schermo, testo più naturale nell'episodio di Lena.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.7/Tedesco-v1.43.7.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.8/Tedesco-v1.43.8.apk"
 }

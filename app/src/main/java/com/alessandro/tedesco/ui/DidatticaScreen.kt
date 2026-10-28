@@ -831,11 +831,11 @@ private fun PassoInput(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    "  =  ${g.significato}",
+                    " = ${g.significato}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(Modifier.weight(1f))
                 IconButton(onClick = { onAscoltaFrase(g.parola) }) {
                     Icon(
                         Icons.AutoMirrored.Filled.VolumeUp,
@@ -1299,21 +1299,25 @@ private fun SchedaComposto(c: Composto) {
                         )
                     }
                 }
-                Spacer(Modifier.width(2.dp))
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
+                Spacer(Modifier.width(6.dp))
                 Text(
                     c.italiano,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
                 c.parti.zip(c.significati).joinToString(" + ") { it.second },
                 style = MaterialTheme.typography.bodySmall,
