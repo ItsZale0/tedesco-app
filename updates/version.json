@@ -1,7 +1,7 @@
 {
-  "versionCode": 225,
-  "versionName": "1.45.8",
-  "changelog": "Backup ottimizzato: ogni minuto in-app (hash-dedup, mutex anti-concorrenza, solo in foreground), ogni 15 min in background (WorkManager). Salvataggio finale alla chiusura. Auto-toggle rispettato.",
+  "versionCode": 226,
+  "versionName": "1.45.9",
+  "changelog": "Nuova sezione Podcast & Video: 30 contenuti verificati per livello (A1-B2) da YouTube, Spotify, Deutsche Welle, Deutschlandfunk e ARD. Filtri per tipo e piattaforma, contenuto consigliato per livello, consigli di ascolto e accesso dalla home. Link reali, apertura nell'app esterna, nessun download.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.8/Tedesco-v1.45.8.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.9/Tedesco-v1.45.9.apk"
 }

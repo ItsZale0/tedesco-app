@@ -98,6 +98,7 @@ import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Headphones
 
 /**
  * V2 - schermata unica: lezione + parole + esercizi, in un flusso lineare.
@@ -398,6 +399,9 @@ fun StudioVeloceScreen(
                 }
                 VocePannello(Icons.Filled.Waves, "Modalità Immersione", "Storie, shadowing, ascolto") {
                     mostraMenu = false; onVaiAImmersione()
+                }
+                VocePannello(Icons.Filled.Headphones, "Podcast & Video", "Ascolto autentico per livello") {
+                    mostraMenu = false; onNaviga("podcast")
                 }
                 VocePannello(Icons.Filled.EmojiEvents, "Progresso", "Livello, competenze, numeri") {
                     mostraMenu = false; onVaiAProgresso()

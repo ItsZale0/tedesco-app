@@ -51,6 +51,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import com.alessandro.tedesco.data.Dialoghi
+import com.alessandro.tedesco.data.PodcastData
 import com.alessandro.tedesco.data.Sudtirol
 import com.alessandro.tedesco.data.WortlisteB1
 
@@ -202,7 +203,9 @@ private val TipiEsercizio = listOf(
     TipoEsercizio("wortliste", "wortliste", "Wortliste A1-B1",
         "${WortlisteB1.tutte.size} parole curate da portare nel lessico", Icons.AutoMirrored.Filled.MenuBook),
     TipoEsercizio("sudtirol", "sudtirol", "Südtirol / Austria",
-        "Varianti locali e lessico sanitario", Icons.Filled.Place)
+        "Varianti locali e lessico sanitario", Icons.Filled.Place),
+    TipoEsercizio("podcast", "podcast", "Podcast & Video",
+        "Ascolto autentico per livello: YouTube, Spotify, DW", Icons.Filled.Headphones)
 )
 
 private fun statPerTipo(
@@ -227,6 +230,7 @@ private fun statPerTipo(
         "pronuncia" -> "Ascolta e registrati"
         "wortliste" -> "${WortlisteB1.tutte.size} parole A1-B1"
         "sudtirol" -> "${Sudtirol.varianti.size} varianti + lessico"
+        "podcast" -> "${PodcastData.episodi.size} contenuti per livello"
         else -> ""
     }
 }
