@@ -1,7 +1,7 @@
 {
-  "versionCode": 223,
-  "versionName": "1.45.6",
-  "changelog": "Ottimizzazione performance: memoizzazione di groupBy/sortedBy in PercorsoGrammatica e QuadernoErrori, rimossi StateFlow inutilizzati, salvataggio livello immediato. Ridotta allocazione memoria e lag UI.",
+  "versionCode": 224,
+  "versionName": "1.45.7",
+  "changelog": "Popup aggiornamenti: colore Material 3 (surfaceContainerHigh) al posto del giallo. Testo onSurface/onSurfaceVariant. Nessun cambio funzionale.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.6/Tedesco-v1.45.6.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.7/Tedesco-v1.45.7.apk"
 }

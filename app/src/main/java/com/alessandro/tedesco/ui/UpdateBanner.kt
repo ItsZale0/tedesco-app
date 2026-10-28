@@ -62,7 +62,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                 .fillMaxWidth(0.92f)
                 .padding(Spaziature.md),
             shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Column(Modifier.padding(Spaziature.md)) {
@@ -77,7 +77,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                                 Icons.Filled.SystemUpdate,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -94,7 +94,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                         },
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                     if (st is UpdateState.Available || st is UpdateState.Error) {
@@ -102,7 +102,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                             Icon(
                                 Icons.Filled.Close,
                                 contentDescription = "Ignora",
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -123,7 +123,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                         Text(
                             "Versione ${v.versionName} (${v.versionCode})",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                             modifier = Modifier.padding(top = 4.dp)
                         )
                         Button(
@@ -154,7 +154,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                             Text(
                                 "$p% scaricato",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                             )
                         }
                     }
@@ -163,7 +163,7 @@ fun UpdateOverlay(updater: UpdaterViewModel) {
                         Text(
                             "APK scaricato: ${f.name}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                             modifier = Modifier.padding(top = 4.dp)
                         )
                         Button(
