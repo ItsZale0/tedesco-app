@@ -1,7 +1,7 @@
 {
-  "versionCode": 211,
-  "versionName": "1.43.8",
-  "changelog": "Rifiniture di layout della Modalità Immersione: composti lunghi su più righe, glosse che non escono dallo schermo, testo più naturale nell'episodio di Lena.",
+  "versionCode": 212,
+  "versionName": "1.43.9",
+  "changelog": "Modalità Immersione: ogni episodio ora mostra la grammatica che contiene, con un tocco si apre l'unità del percorso (teoria ed esercizi). Collegamento presente anche nel riepilogo finale.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.8/Tedesco-v1.43.8.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.9/Tedesco-v1.43.9.apk"
 }

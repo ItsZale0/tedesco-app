@@ -94,7 +94,8 @@ fun AppNav(
                 DidatticaScreen(
                     vm = vm,
                     onIndietro = { nav.popBackStack() },
-                    onVaiAProduzione = { nav.navigate("produzione") }
+                    onVaiAProduzione = { nav.navigate("produzione") },
+                    onVaiAUnitaGrammatica = { id -> nav.navigate("unita_grammatica/$id") }
                 )
             }
             composable("esercizi") {

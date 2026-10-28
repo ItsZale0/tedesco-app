@@ -58,7 +58,15 @@ data class StoriaImmersione(
     val minuti: Int,
     val paroleChiave: List<Glossa>,
     val frasi: List<FraseImmersione>,
-    val domande: List<DomandaComprensione>
+    val domande: List<DomandaComprensione>,
+    /**
+     * Unità del percorso grammaticale che spiegano le strutture della storia.
+     *
+     * L'immersione mostra la struttura, non la spiega: il collegamento porta
+     * alla regola esplicita, così l'incontro con il testo ha un "dove
+     * guardare" e la regola ha subito un esempio vero.
+     */
+    val regoleCollegate: List<String> = emptyList()
 )
 
 /** Domanda di comprensione: verifica leggera, nessuna tabella di grammatica. */
@@ -138,6 +146,16 @@ object DidatticaImmersione {
     }
 
     /**
+     * Unità grammaticali che spiegano le strutture della storia.
+     *
+     * Restituisce le unità reali del percorso (non gli id): la UI mostra il
+     * titolo e apre la regola con un tocco. Gli id sconosciuti vengono
+     * ignorati invece di rompere la sessione.
+     */
+    fun regoleDellaStoria(storia: StoriaImmersione): List<UnitaGrammatica> =
+        storia.regoleCollegate.mapNotNull { GrammaticaSyllabus.perId(it) }
+
+    /**
      * Cinque frasi da annotare, diverse a ogni giro.
      *
      * La rotazione avanza di due posizioni per volta: con sei frasi i tre
@@ -179,6 +197,7 @@ object DidatticaImmersione {
         serie = "Moritz",
         episodio = 1,
         titolo = "Ein Tag mit Moritz",
+        regoleCollegate = listOf("a1-separabili", "a0-frase"),
         contesto = "Una frase alla volta, mai due regole insieme. Il tedesco non è caos: sono scaglioni che si ripetono.",
         copertura = 96,
         minuti = 3,
@@ -225,6 +244,7 @@ object DidatticaImmersione {
         serie = "Moritz",
         episodio = 2,
         titolo = "Das Paket für Moritz",
+        regoleCollegate = listOf("a1-imperativo"),
         contesto = "Stessi personaggi, stessa casa: cambia solo una cosa (un pacco). Il resto del vocabolario si ripete, e capire diventa facile.",
         copertura = 95,
         minuti = 3,
@@ -272,6 +292,7 @@ object DidatticaImmersione {
         serie = "Lena",
         episodio = 1,
         titolo = "Einkauf am Markt",
+        regoleCollegate = listOf("a1-akkusativ", "a2-subordinate"),
         contesto = "Le stesse strutture in una scena reale: 1000 parole usuali coprono l'85% della conversazione quotidiana.",
         copertura = 96,
         minuti = 3,
@@ -318,6 +339,7 @@ object DidatticaImmersione {
         serie = "Lena",
         episodio = 2,
         titolo = "Lena am Bahnhof",
+        regoleCollegate = listOf("a1-preposizioni-luogo"),
         contesto = "La stessa Lena, un altro posto: la stazione. Le parole del viaggio tornano utili subito.",
         copertura = 95,
         minuti = 3,
@@ -365,6 +387,7 @@ object DidatticaImmersione {
         serie = "Marco",
         episodio = 1,
         titolo = "Beim Hautarzt",
+        regoleCollegate = listOf("a2-perfekt"),
         contesto = "Perfekt in una scena reale: le azioni finite raccontate con le parole di tutti i giorni.",
         copertura = 95,
         minuti = 3,
@@ -411,6 +434,7 @@ object DidatticaImmersione {
         serie = "Marco",
         episodio = 2,
         titolo = "Marco in der Apotheke",
+        regoleCollegate = listOf("a1-modali"),
         contesto = "Dopo la visita: la ricetta, la farmacia e le istruzioni. Il tedesco che serve davvero quando si è pazienti.",
         copertura = 95,
         minuti = 3,
@@ -458,6 +482,7 @@ object DidatticaImmersione {
         serie = "Frau Bachmann",
         episodio = 1,
         titolo = "Der Anruf, der alles änderte",
+        regoleCollegate = listOf("a2-subordinate", "a2-relative"),
         contesto = "Proposizioni con verbo in fondo: la regola, vista dentro una frase vera, non in una tabella.",
         copertura = 94,
         minuti = 4,
@@ -504,6 +529,7 @@ object DidatticaImmersione {
         serie = "Frau Bachmann",
         episodio = 2,
         titolo = "Der erste Tag im neuen Büro",
+        regoleCollegate = listOf("b1-konnektoren"),
         contesto = "La stessa donna, un capitolo nuovo: il lavoro. Congiunzioni e verbo in fondo tornano nella stessa forma, così si riconoscono senza tradurre.",
         copertura = 94,
         minuti = 4,
@@ -550,6 +576,7 @@ object DidatticaImmersione {
         serie = "Das Amt",
         episodio = 1,
         titolo = "Der Brief aus dem Rathaus",
+        regoleCollegate = listOf("b2-passiv-modal", "b2-konjunktiv2-vergangenheit"),
         contesto = "Passivo con modali e Konjunktiv: le forme della burocrazia reale, riconosciute nel testo prima che spiegate.",
         copertura = 93,
         minuti = 4,
@@ -596,6 +623,7 @@ object DidatticaImmersione {
         serie = "Das Amt",
         episodio = 2,
         titolo = "Das Gespräch mit der Sachbearbeiterin",
+        regoleCollegate = listOf("b2-passiv-modal", "b1-nominalisierung"),
         contesto = "La stessa pratica, un passo avanti: il colloquio allo sportello. Passivo, Konjunktiv e connettivi in una scena che si ripete nella vita vera.",
         copertura = 93,
         minuti = 4,

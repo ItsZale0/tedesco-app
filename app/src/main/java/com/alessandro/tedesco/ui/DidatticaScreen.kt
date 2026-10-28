@@ -97,6 +97,7 @@ import com.alessandro.tedesco.data.DomandaComprensione
 import com.alessandro.tedesco.data.FraseImmersione
 import com.alessandro.tedesco.data.FraseShadowing
 import com.alessandro.tedesco.data.StoriaImmersione
+import com.alessandro.tedesco.data.UnitaGrammatica
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
 import kotlinx.coroutines.delay
 
@@ -119,7 +120,8 @@ import kotlinx.coroutines.delay
 fun DidatticaScreen(
     vm: TedescoViewModel,
     onIndietro: () -> Unit = {},
-    onVaiAProduzione: () -> Unit = {}
+    onVaiAProduzione: () -> Unit = {},
+    onVaiAUnitaGrammatica: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val tts = rememberTtsHelper(context)
@@ -130,6 +132,7 @@ fun DidatticaScreen(
     var giro by rememberSaveable(livello) { mutableIntStateOf(0) }
 
     val storia = remember(livello, giro) { DidatticaImmersione.storiaAttiva(livello, giro) }
+    val regole = remember(storia) { DidatticaImmersione.regoleDellaStoria(storia) }
     val miniera = remember(livello, giro) { DidatticaImmersione.frasiNuove(livello, giro) }
     val composti = remember(livello) { DidatticaImmersione.composti(livello) }
     val shadowing = remember(livello) { DidatticaImmersione.shadowing(livello) }
@@ -312,6 +315,8 @@ fun DidatticaScreen(
                         )
                         1 -> PassoInput(
                             storia = storia,
+                            regole = regole,
+                            onApriRegola = onVaiAUnitaGrammatica,
                             traduzioniVisibili = traduzioniVisibili,
                             onToggleTraduzioni = { traduzioniVisibili = !traduzioniVisibili },
                             letturaAttiva = letturaAttiva,
@@ -371,6 +376,8 @@ fun DidatticaScreen(
                         )
                         else -> PassoRiepilogo(
                             storia = storia,
+                            regole = regole,
+                            onApriRegola = onVaiAUnitaGrammatica,
                             frasiRaccolte = miniera.size,
                             frasiShadowing = shadowing.size,
                             frasiAscolto = playlist.size,
@@ -720,6 +727,8 @@ private fun RigaTappa(
 @Composable
 private fun PassoInput(
     storia: StoriaImmersione,
+    regole: List<UnitaGrammatica>,
+    onApriRegola: (String) -> Unit,
     traduzioniVisibili: Boolean,
     onToggleTraduzioni: () -> Unit,
     letturaAttiva: Boolean,
@@ -782,6 +791,12 @@ private fun PassoInput(
                         }
                     }
                 }
+            }
+        }
+
+        if (regole.isNotEmpty()) {
+            item {
+                RegoleCollegate(regole = regole, onApri = onApriRegola)
             }
         }
 
@@ -912,6 +927,81 @@ private fun PassoInput(
                 onScegli = { opzione -> onRispondi(indice, opzione) }
             )
         }
+    }
+}
+
+/**
+ * Le regole grammaticali dietro il testo appena letto.
+ *
+ * L'immersione non spiega la grammatica: la mostra. Questo blocco dà il
+ * "dove guardare" e apre l'unità che la spiega, con teoria ed esercizi.
+ */
+@Composable
+private fun RegoleCollegate(
+    regole: List<UnitaGrammatica>,
+    onApri: (String) -> Unit
+) {
+    if (regole.isEmpty()) return
+    Column(Modifier.fillMaxWidth()) {
+        Text(
+            "LA GRAMMATICA DIETRO IL TESTO",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(6.dp))
+        regole.forEach { unita ->
+            Surface(
+                onClick = { onApri(unita.id) },
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(19.dp)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            unita.titolo,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        Text(
+                            "${unita.livello} · ${unita.minuti} min · regola ed esercizi",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(
+            "L'immersione fa riconoscere la struttura; la regola spiega perché funziona. Usale insieme: prima la regola, poi il testo.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -1764,6 +1854,8 @@ private fun PassoAscolto(
 @Composable
 private fun PassoRiepilogo(
     storia: StoriaImmersione,
+    regole: List<UnitaGrammatica>,
+    onApriRegola: (String) -> Unit,
     frasiRaccolte: Int,
     frasiShadowing: Int,
     frasiAscolto: Int,
@@ -1838,6 +1930,12 @@ private fun PassoRiepilogo(
                         RigaRiepilogo("Da rivedere", "$daRivedere")
                     }
                 }
+            }
+        }
+
+        if (regole.isNotEmpty()) {
+            item {
+                RegoleCollegate(regole = regole, onApri = onApriRegola)
             }
         }
 

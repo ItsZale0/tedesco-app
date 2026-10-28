@@ -227,4 +227,46 @@ class DidatticaImmersioneTest {
             }
         }
     }
+
+    @Test
+    fun `ogni episodio rimanda a regole grammaticali esistenti`() {
+        val scala = listOf("A0", "A1", "A2", "B1", "B2")
+        perLivelli { livello ->
+            DidatticaImmersione.storie(livello).forEach { storia ->
+                assertTrue(
+                    "Storia ${storia.titolo}: nessuna regola collegata",
+                    storia.regoleCollegate.isNotEmpty()
+                )
+                storia.regoleCollegate.forEach { id ->
+                    val unita = GrammaticaSyllabus.perId(id)
+                    assertTrue(
+                        "Storia ${storia.titolo}: l'unità '$id' non esiste nel percorso",
+                        unita != null
+                    )
+                    val distanza = scala.indexOf(unita!!.livello) - scala.indexOf(storia.livello)
+                    assertTrue(
+                        "Storia ${storia.titolo} (${storia.livello}) rimanda a ${unita.livello}: troppo lontano",
+                        distanza in -1..1
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `le regole della storia si risolvono in unita reali`() {
+        perLivelli { livello ->
+            val storia = DidatticaImmersione.storiaAttiva(livello)
+            val regole = DidatticaImmersione.regoleDellaStoria(storia)
+            assertEquals(
+                "Storia ${storia.titolo}: id non risolti",
+                storia.regoleCollegate.size,
+                regole.size
+            )
+            regole.forEach { unita ->
+                assertTrue("Unità senza titolo", unita.titolo.isNotBlank())
+                assertTrue("Unità senza esercizi", unita.esercizi.isNotEmpty())
+            }
+        }
+    }
 }
