@@ -12,6 +12,16 @@ import org.junit.Test
 /** Test del backup cloud: serializzazione, validazione, riepilogo. */
 class BackupCloudTest {
 
+    @Test
+    fun `il file di backup e' separato per profilo`() {
+        assertEquals("tedesco-backup.json", BackupCloud.nomeFilePerProfilo("alessandro"))
+        assertEquals("tedesco-backup.json", BackupCloud.nomeFilePerProfilo(null))
+        assertEquals("tedesco-backup.json", BackupCloud.nomeFilePerProfilo(""))
+        assertEquals("tedesco-backup.json", BackupCloud.nomeFilePerProfilo(" "))
+        assertEquals("tedesco-backup-emma.json", BackupCloud.nomeFilePerProfilo("emma"))
+        assertEquals("tedesco-backup-ale.json", BackupCloud.nomeFilePerProfilo("ale"))
+    }
+
     private val NOW = 1_700_000_000_000L
 
     private fun repo(): ProfiliRepository {

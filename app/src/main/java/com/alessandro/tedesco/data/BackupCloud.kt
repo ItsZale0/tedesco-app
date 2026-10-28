@@ -23,6 +23,20 @@ object BackupCloud {
     const val NOME_FILE = "tedesco-backup.json"
 
     /**
+     * Nome file per profilo: il backup è separato per utente, così due telefoni
+     * (Alessandro ed Emma) non si sovrascrivono sullo stesso repo.
+     *
+     * Alessandro resta sul nome storico (retrocompatibilità con i backup già
+     * esistenti); ogni altro profilo (es. Emma) ha il proprio file.
+     * Nessun setup richiesto: il nome deriva dal profilo attivo.
+     */
+    fun nomeFilePerProfilo(profiloId: String?): String {
+        val id = profiloId?.trim().orEmpty()
+        if (id.isBlank() || id == "alessandro") return NOME_FILE
+        return "tedesco-backup-$id.json"
+    }
+
+    /**
      * Repo di backup di default (privato). DEVE includere l'owner:
      * l'API e' /repos/{owner}/{repo}, quindi "tedesco-backup" da solo darebbe 404.
      */

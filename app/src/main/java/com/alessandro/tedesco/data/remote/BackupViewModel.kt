@@ -10,6 +10,7 @@ import com.alessandro.tedesco.data.BackupSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -43,6 +44,11 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
     val ultimoBackup: StateFlow<Long> = settings.ultimoBackupFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+
+    /** Nome del file di backup usato per il profilo attivo (separato per utente). */
+    val nomeFileBackup: StateFlow<String> = app.profileManagerInstance.repositoryFlow
+        .map { r -> BackupCloud.nomeFilePerProfilo(r.profiloAttivoId) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, BackupCloud.NOME_FILE)
 
     private val _stato = MutableStateFlow<BackupStato>(BackupStato.Idle)
     val stato: StateFlow<BackupStato> = _stato
@@ -80,11 +86,11 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     fun salvaRepo(r: String) { viewModelScope.launch { settings.salvaRepo(r) } }
     fun pulisciStato() { _stato.value = BackupStato.Idle }
 
-    private fun client(repoNormalizzato: String? = null): BackupGitHubClient? {
+    private fun client(repoNormalizzato: String? = null, nomeFile: String = BackupCloud.NOME_FILE): BackupGitHubClient? {
         val t = token.value.trim()
         if (t.isBlank()) return null
         val r = repoNormalizzato ?: repo.value.trim().ifBlank { BackupCloud.REPO_DEFAULT }
-        return BackupGitHubClient(t, r)
+        return BackupGitHubClient(t, r, nomeFile)
     }
 
     /**
@@ -143,7 +149,8 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         _stato.value = BackupStato.InCorso
         viewModelScope.launch {
             try {
-                val c = client(repoNormalizzato()) ?: return@launch
+                val nomeFile = BackupCloud.nomeFilePerProfilo(app.profileManagerInstance.profiloAttivoId())
+                val c = client(repoNormalizzato(), nomeFile) ?: return@launch
                 val json = c.scarica()
                 if (json == null) {
                     _stato.value = BackupStato.Errore("Nessun backup trovato su GitHub")

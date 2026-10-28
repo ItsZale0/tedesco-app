@@ -40,6 +40,9 @@ object BackupEsecutore {
         if (token.isBlank()) return Esito.NonConfigurato("Token GitHub mancante")
         val repo = settings.repoFlow.first().trim().ifBlank { BackupCloud.REPO_DEFAULT }
 
+        val profiloAttivoId = app.profileManagerInstance.profiloAttivoId()
+        val nomeFile = BackupCloud.nomeFilePerProfilo(profiloAttivoId)
+
         val repository = app.profileManagerInstance.repositoryFlow.first()
         if (repository.profili.isEmpty()) return Esito.NonConfigurato("Nessun profilo da salvare")
 
@@ -52,7 +55,7 @@ object BackupEsecutore {
         }
 
         return try {
-            val client = BackupGitHubClient(token, repo)
+            val client = BackupGitHubClient(token, repo, nomeFile)
             client.carica(json, "Backup automatico Tedesco App")
             settings.salvaHash(hash)
             settings.registraBackup(System.currentTimeMillis())

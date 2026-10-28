@@ -118,6 +118,12 @@ fun BackupScreen(vm: BackupViewModel, onIndietro: () -> Unit) {
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "File usato per il profilo attivo: ${vm.nomeFileBackup.collectAsStateWithLifecycle(BackupCloud.NOME_FILE).value}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         value = tokenInput,

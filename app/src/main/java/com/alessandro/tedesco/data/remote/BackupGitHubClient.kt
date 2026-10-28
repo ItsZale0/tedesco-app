@@ -27,14 +27,15 @@ import java.util.concurrent.TimeUnit
  */
 class BackupGitHubClient(
     private val token: String,
-    private val repo: String
+    private val repo: String,
+    private val nomeFile: String = BackupCloud.NOME_FILE
 ) {
     private val client = HttpCondiviso.client
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val mediaJson = "application/json".toMediaType()
 
-    private fun base() = "https://api.github.com/repos/$repo/contents/${BackupCloud.NOME_FILE}"
+    private fun base() = "https://api.github.com/repos/$repo/contents/$nomeFile"
 
     private fun req(url: String) = Request.Builder()
         .url(url)

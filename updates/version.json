@@ -1,7 +1,7 @@
 {
-  "versionCode": 213,
-  "versionName": "1.44.0",
-  "changelog": "Emma ha il suo vocabolario separato sul GitHub di Alessandro: default sempre ripristinato, migrazione dei profili esistenti, pulsante di ripristino profilo-aware, fallback per profilo vuoto. Le impostazioni mostrano il feed del profilo attivo.",
+  "versionCode": 214,
+  "versionName": "1.44.1",
+  "changelog": "Backup cloud separato per profilo: Emma ha il suo file (tedesco-backup-emma.json) nello stesso repo, nessun setup richiesto. Il nome del file viene mostrato nelle Impostazioni. Due telefoni non si sovrascrivono più.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.44.0/Tedesco-v1.44.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.44.1/Tedesco-v1.44.1.apk"
 }
