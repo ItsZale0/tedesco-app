@@ -115,7 +115,8 @@ fun QuadernoErroriScreen(
                 }
             }
 
-            aperti.sortedBy { it.prossimaRipasso }.forEach { errore ->
+            val apertiOrdinati = remember(aperti) { aperti.sortedBy { it.prossimaRipasso } }
+            apertiOrdinati.forEach { errore ->
                 val inScadenza = ErroriSRS.daRipassare(errore)
                 var mostraRisposta by remember(errore.id) { mutableStateOf(false) }
                 Card(

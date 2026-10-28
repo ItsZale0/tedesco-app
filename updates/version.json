@@ -1,7 +1,7 @@
 {
-  "versionCode": 222,
-  "versionName": "1.45.5",
-  "changelog": "Auto-update come popup sovraimposto (non più banner nella lista): resta sopra ogni schermata, non scorre col contenuto. Aggiunto tasto 'Salta questo aggiornamento' (persistente: non ripropone la stessa versione). Affidabilità migliorata: doppia fonte versione, fallback URL, verifica APK.",
+  "versionCode": 223,
+  "versionName": "1.45.6",
+  "changelog": "Ottimizzazione performance: memoizzazione di groupBy/sortedBy in PercorsoGrammatica e QuadernoErrori, rimossi StateFlow inutilizzati, salvataggio livello immediato. Ridotta allocazione memoria e lag UI.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.5/Tedesco-v1.45.5.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.6/Tedesco-v1.45.6.apk"
 }

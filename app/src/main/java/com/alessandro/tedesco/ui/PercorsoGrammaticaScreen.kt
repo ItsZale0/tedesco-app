@@ -71,7 +71,7 @@ fun PercorsoGrammaticaScreen(
     }
     val completate = percorso.count { it.padronanza?.completata == true }
     val progresso = if (percorso.isEmpty()) 0f else completate.toFloat() / percorso.size
-    val perLivello = percorso.groupBy { it.unita.livello }
+    val perLivello = remember(percorso) { percorso.groupBy { it.unita.livello } }
 
     ScreenScaffold(title = "Percorso grammaticale", onBack = onIndietro) {
         // ---- Intro: obiettivo e avanzamento ----
