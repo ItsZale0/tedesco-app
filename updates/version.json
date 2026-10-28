@@ -1,7 +1,7 @@
 {
-  "versionCode": 217,
-  "versionName": "1.45.0",
-  "changelog": "Percorso grammaticale ampliato: 16 nuove unità (Fragewörter, declinazione aggettivo A2, Konjunktiv II base, verbi con preposizione, indefiniti, domande indirette, Plusquamperfekt, n-Deklination, preposizioni con genitivo, aggettivi come nomi, avverbiali preposizionali, frasi comparative, passivo sostitutivo, passivo stativo, particelle modali, referenzwörter) per coprire i gap vs i percorsi ufficiali Goethe/Klett.",
+  "versionCode": 218,
+  "versionName": "1.45.1",
+  "changelog": "Il selettore del livello aggiorna subito e in modo persistente tutte le risorse (immersione, piano giornaliero, esercizi, tutor, competenze). Il cambio livello viene salvato immediatamente, non più in modo differito.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.0/Tedesco-v1.45.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.1/Tedesco-v1.45.1.apk"
 }

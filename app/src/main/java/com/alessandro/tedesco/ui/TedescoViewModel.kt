@@ -837,7 +837,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             val nuovoStato = profilo.stato.copy(
                 progresso = profilo.stato.progresso.copy(livelloCorrente = nuovoLivello)
             )
-            profileManager.aggiornaStatoAttivo(nuovoStato)
+            profileManager.aggiornaStatoAttivo(nuovoStato, immediato = true)
             _messaggio.value = "Livello aggiornato a ${nuovoLivello.label}"
         }
     }
@@ -870,7 +870,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             if (stimato.ordine <= p.livelloCorrente.ordine) return@launch
 
             val nuovoStato = profilo.stato.copy(progresso = p.copy(livelloCorrente = stimato))
-            profileManager.aggiornaStatoAttivo(nuovoStato)
+            profileManager.aggiornaStatoAttivo(nuovoStato, immediato = true)
             _messaggio.value = if (stimato.ordine > p.livelloCorrente.ordine)
                 "Complimenti! I tuoi progressi ti portano a ${stimato.label}!"
             else
@@ -1588,7 +1588,8 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 profilo.stato.copy(
                     progresso = profilo.stato.progresso.copy(livelloCorrente = livello),
                     placementFatto = true
-                )
+                ),
+                immediato = true
             )
             _messaggio.value = "Livello impostato: ${livello.label}"
         }
