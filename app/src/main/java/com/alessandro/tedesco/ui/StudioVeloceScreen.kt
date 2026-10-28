@@ -86,6 +86,7 @@ import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.LezioneAperta
 import com.alessandro.tedesco.data.LezionePercorso
 import com.alessandro.tedesco.data.PercorsoLezioni
+import com.alessandro.tedesco.data.PodcastData
 import com.alessandro.tedesco.data.StatoUnita
 import com.alessandro.tedesco.data.TipoEsercizioGrammatica
 import com.alessandro.tedesco.data.UnitaConStato
@@ -350,6 +351,57 @@ fun StudioVeloceScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
+                    }
+                }
+            }
+
+            // ---- Podcast & Video: ascolto autentico per livello ----
+            item {
+                Surface(
+                    onClick = { onNaviga("podcast") },
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.Headphones,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "Podcast & Video",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "${PodcastData.episodi.size} contenuti autentici per il tuo livello",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
             }

@@ -8,7 +8,7 @@ package com.alessandro.tedesco.data
  * L'app apre il link nell'app/browser esterno: niente download, niente
  * hosting, nessun peso sull'APK.
  *
- * Questa sezione e' l'unica che richiede rete: il resto dell'app resta
+ * Questa sezione è l'unica che richiede rete: il resto dell'app resta
  * offline-first.
  */
 object PodcastData {
@@ -29,7 +29,7 @@ object PodcastData {
     enum class Velocita(val etichetta: String, val spiegazione: String) {
         LENTA("Lenta", "parlato rallentato e scandito"),
         MEDIA("Media", "parlato chiaro, quasi naturale"),
-        NATURALE("Naturale", "velocita' dei madrelingua")
+        NATURALE("Naturale", "velocità dei madrelingua")
     }
 
     data class Episodio(
@@ -61,28 +61,28 @@ object PodcastData {
             titolo = "Primo ascolto",
             obiettivo = "Frasi brevi, vita quotidiana, parlato lento e scandito.",
             consiglio = "Ascolta 10 minuti al giorno con i sottotitoli. Non tradurre tutto: " +
-                "cerca le parole che gia' conosci e lascia scorrere il resto."
+                "cerca le parole che già conosci e lascia scorrere il resto."
         ),
         Livello(
             codice = "A2",
             titolo = "Storie e dialoghi",
             obiettivo = "Racconti guidati, interviste semplici, conversazioni di tutti i giorni.",
             consiglio = "Riascolta lo stesso episodio due volte: la prima con i sottotitoli, " +
-                "la seconda senza. La seconda volta capirai molto di piu'."
+                "la seconda senza. La seconda volta capirai molto di più."
         ),
         Livello(
             codice = "B1",
             titolo = "Notizie e podcast",
-            obiettivo = "Attualita', cultura, opinioni: il tedesco che si usa davvero.",
+            obiettivo = "Attualità, cultura, opinioni: il tedesco che si usa davvero.",
             consiglio = "Scegli 3 parole nuove per episodio e usale in una frase scritta. " +
                 "Ascoltare senza riutilizzare lascia poco."
         ),
         Livello(
             codice = "B2",
             titolo = "Tedesco autentico",
-            obiettivo = "Talk show, approfondimenti, velocita' naturale e registro colloquiale.",
+            obiettivo = "Talk show, approfondimenti, velocità naturale e registro colloquiale.",
             consiglio = "Ascolta senza testo, poi riassumi in 5 frasi. Se ci riesci, " +
-                "hai capito davvero: e' la prova che serve per il B2."
+                "hai capito davvero: è la prova che serve per il B2."
         )
     )
 
@@ -170,7 +170,7 @@ object PodcastData {
             titolo = "Learn German with Stories",
             canale = "German Stories",
             descrizione = "Storie progressive in tedesco semplice: la trama aiuta a capire " +
-                "senza tradurre. Ottimo per allenare l'orecchio con continuita'.",
+                "senza tradurre. Ottimo per allenare l'orecchio con continuità.",
             piattaforma = Piattaforma.SPOTIFY,
             tipo = Tipo.PODCAST,
             url = "https://open.spotify.com/show/3LJ4M70EO7ngyF0fiFA2AW",
@@ -185,7 +185,7 @@ object PodcastData {
             titolo = "Deutsch für Euch",
             canale = "Deutsch für Euch",
             descrizione = "Pronuncia, alfabeto e primi dialoghi spiegati in modo diretto. " +
-                "Video corti da rivedere piu' volte.",
+                "Video corti da rivedere più volte.",
             piattaforma = Piattaforma.YOUTUBE,
             tipo = Tipo.VIDEO,
             url = "https://www.youtube.com/@DeutschFuerEuch",
@@ -201,7 +201,7 @@ object PodcastData {
             livello = "A2",
             titolo = "Nicos Weg - A2",
             canale = "Deutsche Welle",
-            descrizione = "La seconda parte del corso DW: dialoghi piu' lunghi, vita in " +
+            descrizione = "La seconda parte del corso DW: dialoghi più lunghi, vita in " +
                 "Germania e esercizi mirati. Il ponte naturale tra A1 e B1.",
             piattaforma = Piattaforma.DW,
             tipo = Tipo.CORSO,
@@ -232,7 +232,7 @@ object PodcastData {
             livello = "A2",
             titolo = "14 Minuten",
             canale = "14 Minuten",
-            descrizione = "Video di circa un quarto d'ora su storia, cultura e curiosita' " +
+            descrizione = "Video di circa un quarto d'ora su storia, cultura e curiosità " +
                 "tedesche, con linguaggio chiaro e immagini di supporto.",
             piattaforma = Piattaforma.YOUTUBE,
             tipo = Tipo.VIDEO,
@@ -277,7 +277,7 @@ object PodcastData {
             livello = "A2",
             titolo = "Learn German with Stories - A2",
             canale = "German Stories",
-            descrizione = "Le storie crescono con te: frasi piu' lunghe e tempi verbali " +
+            descrizione = "Le storie crescono con te: frasi più lunghe e tempi verbali " +
                 "nuovi, sempre dentro una trama comprensibile.",
             piattaforma = Piattaforma.SPOTIFY,
             tipo = Tipo.PODCAST,
@@ -309,15 +309,15 @@ object PodcastData {
             livello = "B1",
             titolo = "Easy German Podcast",
             canale = "Easy German",
-            descrizione = "Coco e Manuel parlano di Germania, lingua e attualita' con " +
-                "linguaggio chiaro. Il podcast didattico piu' completo per il B1.",
+            descrizione = "Coco e Manuel parlano di Germania, lingua e attualità con " +
+                "linguaggio chiaro. Il podcast didattico più completo per il B1.",
             piattaforma = Piattaforma.SPOTIFY,
             tipo = Tipo.PODCAST,
             url = "https://open.spotify.com/show/2rnCPyV8A9J80QtmGj2pAx",
             durata = "25-40 min",
             velocita = Velocita.MEDIA,
             supporto = "Trascrizione sul sito Easy German",
-            tema = "Attualita' e cultura",
+            tema = "Attualità e cultura",
             consigliato = true
         ),
         Episodio(
@@ -340,7 +340,7 @@ object PodcastData {
             livello = "B1",
             titolo = "Top-Thema mit Vokabeln",
             canale = "Deutsche Welle",
-            descrizione = "Un tema di attualita' a settimana con glossario ed esercizi. " +
+            descrizione = "Un tema di attualità a settimana con glossario ed esercizi. " +
                 "Ottimo per il lessico che serve davvero a un esame B1.",
             piattaforma = Piattaforma.DW,
             tipo = Tipo.PODCAST,
@@ -348,7 +348,7 @@ object PodcastData {
             durata = "5-10 min",
             velocita = Velocita.MEDIA,
             supporto = "Testo + glossario + esercizi",
-            tema = "Notizie e attualita'"
+            tema = "Notizie e attualità"
         ),
         Episodio(
             id = "b1-auf-deutsch-gesagt",
@@ -385,7 +385,7 @@ object PodcastData {
             livello = "B1",
             titolo = "Get Germanized",
             canale = "Get Germanized",
-            descrizione = "Cultura, abitudini e curiosita' tedesche raccontate con ironia. " +
+            descrizione = "Cultura, abitudini e curiosità tedesche raccontate con ironia. " +
                 "Utile per capire i riferimenti culturali che restano fuori dai libri.",
             piattaforma = Piattaforma.YOUTUBE,
             tipo = Tipo.VIDEO,
@@ -393,14 +393,14 @@ object PodcastData {
             durata = "8-15 min",
             velocita = Velocita.MEDIA,
             supporto = "Sottotitoli EN",
-            tema = "Cultura e societa'"
+            tema = "Cultura e società"
         ),
         Episodio(
             id = "b1-slow-german",
             livello = "B1",
             titolo = "Slow German - B1",
             canale = "Annik Rubens",
-            descrizione = "Temi di cultura e societa' a velocita' ridotta, con trascrizione. " +
+            descrizione = "Temi di cultura e società a velocità ridotta, con trascrizione. " +
                 "Il passaggio ideale verso i podcast per madrelingua.",
             piattaforma = Piattaforma.SPOTIFY,
             tipo = Tipo.PODCAST,
@@ -432,7 +432,7 @@ object PodcastData {
             livello = "B2",
             titolo = "Easy German - B2",
             canale = "Easy Languages",
-            descrizione = "Interviste su politica, societa' e filosofia, con sottotitoli. " +
+            descrizione = "Interviste su politica, società e filosofia, con sottotitoli. " +
                 "Il tedesco autentico senza rinunciare a un appiglio scritto.",
             piattaforma = Piattaforma.YOUTUBE,
             tipo = Tipo.VIDEO,
@@ -440,7 +440,7 @@ object PodcastData {
             durata = "10-20 min",
             velocita = Velocita.NATURALE,
             supporto = "Sottotitoli DE/EN",
-            tema = "Societa' e politica",
+            tema = "Società e politica",
             consigliato = true
         ),
         Episodio(
@@ -471,7 +471,7 @@ object PodcastData {
             durata = "20-30 min",
             velocita = Velocita.NATURALE,
             supporto = "Trascrizione e articolo",
-            tema = "Attualita' e politica"
+            tema = "Attualità e politica"
         ),
         Episodio(
             id = "b2-das-war-der-tag",
@@ -509,7 +509,7 @@ object PodcastData {
             titolo = "DW - Temi e notizie",
             canale = "Deutsche Welle",
             descrizione = "Video e reportage sulle notizie dal mondo, in tedesco standard. " +
-                "Utile per collegare il lessico dell'attualita' alla comprensione orale.",
+                "Utile per collegare il lessico dell'attualità alla comprensione orale.",
             piattaforma = Piattaforma.DW,
             tipo = Tipo.VIDEO,
             url = "https://www.dw.com/de/themen/s-9077",
@@ -524,7 +524,7 @@ object PodcastData {
             titolo = "Deutsch mit Benjamin - B2",
             canale = "Benjamin",
             descrizione = "Sfumature di significato, registro e costruzioni avanzate. " +
-                "Per scrivere e parlare in modo piu' preciso, non solo corretto.",
+                "Per scrivere e parlare in modo più preciso, non solo corretto.",
             piattaforma = Piattaforma.YOUTUBE,
             tipo = Tipo.VIDEO,
             url = "https://www.youtube.com/@DeutschmitBenjamin",

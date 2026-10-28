@@ -72,7 +72,7 @@ import com.alessandro.tedesco.ui.theme.Spaziature
  *
  * Tutti i contenuti sono curati e verificati: si aprono nell'app esterna
  * (YouTube, Spotify, browser). Nessun download, nessun hosting, nessun peso
- * sull'APK. La schermata e' organizzata per livello e filtrabile per tipo e
+ * sull'APK. La schermata è organizzata per livello e filtrabile per tipo e
  * piattaforma, con un contenuto "scelto per te" per ogni livello.
  */
 @Composable
@@ -86,7 +86,7 @@ fun PodcastScreen(
         PodcastData.normalizza(profilo?.stato?.progresso?.livelloCorrente?.codiceBreve())
     }
     var livelloScelto by rememberSaveable { mutableStateOf<String?>(null) }
-    // Finche' l'utente non sceglie, segue il livello del profilo (che arriva
+    // Finchè l'utente non sceglie, segue il livello del profilo (che arriva
     // da DataStore in modo asincrono): niente selezione bloccata su "A1".
     val livelloSelezionato = livelloScelto ?: livelloProfilo
     var tipoFiltro by rememberSaveable { mutableStateOf<String?>(null) }
@@ -805,8 +805,8 @@ private fun ComeAscoltare() {
                 )
             }
             Spacer(Modifier.height(Spaziature.sm))
-            PuntoAscolto("1", "Scegli un contenuto solo e portalo a termine: la costanza vale piu' della quantita'.")
-            PuntoAscolto("2", "Prima ascolta con il supporto scritto, poi riascolta senza: il secondo passaggio e' quello che fa crescere.")
+            PuntoAscolto("1", "Scegli un contenuto solo e portalo a termine: la costanza vale più della quantità.")
+            PuntoAscolto("2", "Prima ascolta con il supporto scritto, poi riascolta senza: il secondo passaggio è quello che fa crescere.")
             PuntoAscolto("3", "Chiudi con 3 parole nuove e una frase tua: l'ascolto diventa lessico attivo.")
             Spacer(Modifier.height(Spaziature.sm))
             Text(
