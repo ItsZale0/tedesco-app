@@ -197,6 +197,8 @@ private val TipiEsercizio = listOf(
         "Conversazioni a due voci con domande", Icons.Filled.Headphones),
     TipoEsercizio("pronuncia", "pronuncia", "Pronuncia",
         "Coppie minime, registro e confronto", Icons.Filled.RecordVoiceOver),
+    TipoEsercizio("sprechuebungen", "sprechuebungen", "Sprechübungen",
+        "Parla su un tema e confrontati con il modello", Icons.Filled.RecordVoiceOver),
     TipoEsercizio("wortliste", "wortliste", "Wortliste A1-B1",
         "${WortlisteB1.tutte.size} parole curate da portare nel lessico", Icons.AutoMirrored.Filled.MenuBook),
     TipoEsercizio("sudtirol", "sudtirol", "Südtirol / Austria",

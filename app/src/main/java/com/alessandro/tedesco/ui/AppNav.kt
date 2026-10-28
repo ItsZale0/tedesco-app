@@ -153,6 +153,9 @@ fun AppNav(
             composable("pronuncia") {
                 PronunciaScreen(onIndietro = { nav.popBackStack() })
             }
+            composable("sprechuebungen") {
+                SprechuebungenScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
             composable("sudtirol") {
                 SudtirolScreen(onIndietro = { nav.popBackStack() })
             }
