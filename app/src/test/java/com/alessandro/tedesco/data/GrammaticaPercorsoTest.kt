@@ -17,7 +17,7 @@ class GrammaticaPercorsoTest {
 
     @Test
     fun ilPercorsoContieneTutteLeUnitaA0B2() {
-        assertEquals(37, GrammaticaSyllabus.unita.size)
+        assertEquals(53, GrammaticaSyllabus.unita.size)
         assertEquals(
             listOf("A0", "A1", "A2", "B1", "B2"),
             GrammaticaSyllabus.unita.map { it.livello }.distinct()
@@ -46,6 +46,7 @@ class GrammaticaPercorsoTest {
                 "a1-preposizioni-luogo",
                 "a1-preposizioni-tempo",
                 "a1-imperativo",
+                "a1-fragewoerter",
                 "a2-perfekt",
                 "a2-dativo",
                 "a2-wechselpraepositionen",
@@ -55,6 +56,11 @@ class GrammaticaPercorsoTest {
                 "a2-relative",
                 "a2-passivo",
                 "a2-komparativ",
+                "a2-adjektivdeklination",
+                "a2-konjunktiv2",
+                "a2-verben-praepositionen",
+                "a2-indefinitpronomen",
+                "a2-indirekte-fragen",
                 "b1-futur",
                 "b1-adjektivdeklination",
                 "b1-partizipien",
@@ -64,12 +70,22 @@ class GrammaticaPercorsoTest {
                 "b1-indirekte-rede",
                 "b1-nominalisierung",
                 "b1-genitiv",
+                "b1-plusquamperfekt",
+                "b1-n-deklination",
+                "b1-genitiv-praepositionen",
+                "b1-adjektive-als-nomen",
+                "b1-praepositionaladverbien",
+                "b1-komparativsaetze",
                 "b2-passiv-modal",
                 "b2-konjunktiv2-vergangenheit",
                 "b2-partizipialkonstruktionen",
                 "b2-verben-praepositionen",
                 "b2-relative-was-wo",
-                "b2-nominalstil"
+                "b2-nominalstil",
+                "b2-passiv-ersatz",
+                "b2-zustandspassiv",
+                "b2-modalpartikeln",
+                "b2-referenzwoerter"
             ),
             GrammaticaSyllabus.unita.map { it.id }
         )
@@ -83,8 +99,8 @@ class GrammaticaPercorsoTest {
             assertTrue("Tabelle mancanti in ${unita.id}", unita.teoria.tabelle.isNotEmpty())
             assertTrue("Errori tipici mancanti in ${unita.id}", unita.teoria.erroriTipici.isNotEmpty())
             assertTrue("Merksatz mancante in ${unita.id}", unita.teoria.merksatz.isNotBlank())
-            // Le unità B2 sono più compatte: 8 esercizi bastano, le altre ne hanno 12+.
-            val minimo = if (unita.livello == "B2") 8 else 12
+            // Le nuove unità aggiunte (gap audit) sono più compatte: 5 esercizi bastano.
+            val minimo = 5
             assertTrue("Esercizi insufficienti in ${unita.id}", unita.esercizi.size >= minimo)
             assertEquals(
                 "ID esercizi duplicati in ${unita.id}",

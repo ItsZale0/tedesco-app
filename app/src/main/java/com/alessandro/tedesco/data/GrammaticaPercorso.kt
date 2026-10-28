@@ -142,6 +142,7 @@ object GrammaticaSyllabus {
         unitaA1PreposizioniLuogo(),
         unitaA1PreposizioniTempo(),
         unitaA1Imperativo(),
+        unitaA1Fragewoerter(),
         unitaPerfekt(),
         unitaA2Dativo(),
         unitaA2Wechselpraepositionen(),
@@ -151,6 +152,12 @@ object GrammaticaSyllabus {
         unitaA2Relative(),
         unitaA2Passivo(),
         unitaA2Komparativ(),
+        // ---- A2 aggiunte (gap audit) ----
+        unitaA2Adjektivdeklination(),
+        unitaA2Konjunktiv2Basis(),
+        unitaA2VerbenPraepositionen(),
+        unitaA2Indefinitpronomen(),
+        unitaA2IndirekteFragen(),
         unitaB1Futur(),
         unitaB1Adjektivdeklination(),
         unitaB1Partizipien(),
@@ -160,13 +167,25 @@ object GrammaticaSyllabus {
         unitaB1IndirekteRede(),
         unitaB1Nominalisierung(),
         unitaB1Genitiv(),
+        // ---- B1 aggiunte (gap audit) ----
+        unitaB1Plusquamperfekt(),
+        unitaB1NDeklination(),
+        unitaB1GenitivPraepositionen(),
+        unitaB1AdjektiveAlsNomen(),
+        unitaB1Praepositionaladverbien(),
+        unitaB1Komparativsaetze(),
         // ---- B2 ----
         unitaB2PassivModal(),
         unitaB2Konjunktiv2Vergangenheit(),
         unitaB2Partizipialkonstruktionen(),
         unitaB2VerbenPraepositionen(),
         unitaB2RelativeWasWo(),
-        unitaB2Nominalstil()
+        unitaB2Nominalstil(),
+        // ---- B2 aggiunte (gap audit) ----
+        unitaB2PassivErsatz(),
+        unitaB2Zustandspassiv(),
+        unitaB2Modalpartikeln(),
+        unitaB2Referenzwoerter()
     )
 
     val ordineLivelli = listOf("A0", "A1", "A2", "B1", "B2")

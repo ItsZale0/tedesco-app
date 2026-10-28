@@ -1,7 +1,7 @@
 {
-  "versionCode": 216,
-  "versionName": "1.44.3",
-  "changelog": "Backup completo: oltre ai profili (vocabolario, ripassi, grammatica, guida, piano, errori, badge, streak, sessioni, conversazioni) ora salva anche le preferenze delle notifiche. Formato backup v2, retrocompatibile con i backup v1.",
+  "versionCode": 217,
+  "versionName": "1.45.0",
+  "changelog": "Percorso grammaticale ampliato: 16 nuove unità (Fragewörter, declinazione aggettivo A2, Konjunktiv II base, verbi con preposizione, indefiniti, domande indirette, Plusquamperfekt, n-Deklination, preposizioni con genitivo, aggettivi come nomi, avverbiali preposizionali, frasi comparative, passivo sostitutivo, passivo stativo, particelle modali, referenzwörter) per coprire i gap vs i percorsi ufficiali Goethe/Klett.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.44.3/Tedesco-v1.44.3.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.45.0/Tedesco-v1.45.0.apk"
 }
