@@ -71,6 +71,7 @@ fun AppNav(
                     onVaiABackup = { nav.navigate("backup") },
                     onVaiAPercorsoGrammatica = { nav.navigate("percorso_grammatica") },
                     onVaiANuoveParole = { nav.navigate("nuove_parole") },
+                    onVaiAImmersione = { nav.navigate("immersione") },
                     onNaviga = { route -> nav.navigate(route) }
                 )
             }
@@ -88,6 +89,9 @@ fun AppNav(
                     onIndietro = { nav.popBackStack() },
                     onCompletata = { nav.popBackStack() }
                 )
+            }
+            composable("immersione") {
+                DidatticaScreen(vm = vm, onIndietro = { nav.popBackStack() })
             }
             composable("esercizi") {
                 EserciziScreen(

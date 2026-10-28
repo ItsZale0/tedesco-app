@@ -302,7 +302,9 @@ data class ProfiloConfig(
     val palette: String = "uber",
     val stileDesign: String = "pixel",
     val livelloIniziale: LivelloIniziale = LivelloIniziale.A0,
-    val mostraContestoMedico: Boolean = false
+    val mostraContestoMedico: Boolean = false,
+    /** Modalità Immersione: percorso didattico separato (input comprensibile, shadowing, ascolto passivo). */
+    val didatticaImmersione: Boolean = false
 )
 
 /** Stato persistente per profilo — dati completamente separati per utente */

@@ -254,6 +254,7 @@ fun ImpostazioniScreen(
     val profili by vm.profiliDisponibili.collectAsStateWithLifecycle(emptyList())
     val customWords by vm.enableCustomWords.collectAsStateWithLifecycle(false)
     val googleSheets by vm.enableGoogleSheets.collectAsStateWithLifecycle(false)
+    val immersione by vm.didatticaImmersione.collectAsStateWithLifecycle(false)
     val ultimoSync by vm.ultimoSync.collectAsStateWithLifecycle(null)
     val updateState by updater.state.collectAsStateWithLifecycle(UpdateState.Idle)
     val ultimoControllo by updater.ultimoControllo.collectAsStateWithLifecycle("")
@@ -328,6 +329,31 @@ fun ImpostazioniScreen(
                         selected = profilo?.stato?.progresso?.livelloCorrente,
                         onSelect = { vm.cambiaLivello(it) }
                     )
+                }
+                Spacer(Modifier.height(12.dp))
+
+                // --- MODALITÀ IMMERSIONE ---
+                SettingsExpandableSection(
+                    title = "Modalità Immersione",
+                    description = "Percorso didattico separato: storie comprensibili, vocabolario in frasi, shadowing e ascolto passivo."
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Attiva la modalità", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Cambia lo studio: niente tabelle, si impara leggendo e ascoltando",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = immersione,
+                            onCheckedChange = { attivo -> vm.setDidatticaImmersione(attivo) }
+                        )
+                    }
                 }
                 Spacer(Modifier.height(12.dp))
 

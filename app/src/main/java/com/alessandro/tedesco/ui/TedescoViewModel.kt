@@ -467,6 +467,18 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    /** Modalità Immersione attiva per il profilo corrente (percorso didattico separato). */
+    val didatticaImmersione: StateFlow<Boolean> = profileManager.repositoryFlow
+        .map { r ->
+            val id = r.profiloAttivoId
+            id != null && r.profili[id]?.config?.didatticaImmersione == true
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setDidatticaImmersione(attiva: Boolean) {
+        viewModelScope.launch { profileManager.cambiaDidatticaImmersione(attiva) }
+    }
+
     private val _sessione = MutableStateFlow(SessionState())
     val sessione: StateFlow<SessionState> = _sessione.asStateFlow()
 

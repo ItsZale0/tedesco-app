@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AssistChip
@@ -116,6 +117,7 @@ fun StudioVeloceScreen(
     onVaiABackup: () -> Unit = {},
     onVaiAPercorsoGrammatica: () -> Unit = {},
     onVaiANuoveParole: () -> Unit = {},
+    onVaiAImmersione: () -> Unit = {},
     onNaviga: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -142,6 +144,7 @@ fun StudioVeloceScreen(
     var mostraSelettore by remember { mutableStateOf(false) }
     var mostraMenu by remember { mutableStateOf(false) }
     val paroleCustomAbilitate by vm.enableCustomWords.collectAsStateWithLifecycle(false)
+    val immersioneAttiva by vm.didatticaImmersione.collectAsStateWithLifecycle(false)
 
     // Test di ingresso: mostrato finché non viene completato o saltato.
     val placementFatto by vm.placementFatto.collectAsStateWithLifecycle(false)
@@ -286,6 +289,51 @@ fun StudioVeloceScreen(
                 }
             }
 
+            // ---- Modalità Immersione: visibile solo se attiva nel profilo ----
+            if (immersioneAttiva) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onVaiAImmersione() },
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(Spaziature.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Filled.Waves,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(Modifier.width(Spaziature.md))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Modalità Immersione",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    "Storia, vocabolario in frasi, shadowing, ascolto",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             // ---- Percorso grammaticale: il prossimo passo ----
             item {
                 PercorsoGrammaticaCard(
@@ -338,6 +386,9 @@ fun StudioVeloceScreen(
                     VocePannello(Icons.Filled.Add, "Aggiungi parola", "Nuove parole nel ripasso") {
                         mostraMenu = false; onVaiANuoveParole()
                     }
+                }
+                VocePannello(Icons.Filled.Waves, "Modalità Immersione", "Storie, shadowing, ascolto") {
+                    mostraMenu = false; onVaiAImmersione()
                 }
                 VocePannello(Icons.Filled.EmojiEvents, "Progresso", "Livello, competenze, numeri") {
                     mostraMenu = false; onVaiAProgresso()
