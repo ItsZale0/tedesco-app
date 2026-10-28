@@ -177,6 +177,9 @@ fun AppNav(
             composable("sudtirol") {
                 SudtirolScreen(onIndietro = { nav.popBackStack() })
             }
+            composable("podcast") {
+                PodcastScreen(vm = vm, onIndietro = { nav.popBackStack() })
+            }
             composable("wortliste") {
                 WortlisteScreen(vm = vm, onIndietro = { nav.popBackStack() })
             }
