@@ -599,16 +599,38 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     // ---- Sessione di ripasso ----
 
     /**
-     * Carica la sessione di ripasso dalla fonte unica: la stessa lista del contatore,
-     * gia' calcolata dal flow `paroleDaRipassare`. Prima usava solo `dueReviews()`:
-     * per questo una sezione che mostrava "niente da ripassare" poteva lasciare
-     * il contatore su "2 da ripassare".
+     * Carica la sessione di ripasso dalle STESSE sorgenti del contatore
+     * ("N da ripassare" in home).
+     *
+     * Prima leggeva `paroleDaRipassare.value`: un flusso pigro parte da una
+     * lista VUOTA e si riempie solo mentre una schermata lo osserva — senza
+     * osservatori attivi la sessione risultava sempre vuota (regressione 1.43.3:
+     * "Nessuna parola da ripassare ora" anche con scadenze in ritardo).
+     * Ora le carte vengono calcolate subito, fuori dal main, con la stessa
+     * formula di [com.alessandro.tedesco.data.VerificaLessico.paroleDaRipassare]:
+     * fragili (sbagliate in verifica) + scadute (ripetizione spaziata).
      */
     fun caricaSessione() {
-        val cards = paroleDaRipassare.value
-        _sessione.value = SessionState(cards = cards)
-        _messaggio.value = if (cards.isEmpty()) "Niente da ripassare. Torna domani."
-        else "Ripasso di ${cards.size} parole"
+        _caricamento.value = true
+        viewModelScope.launch(Dispatchers.Default) {
+            val cards = try {
+                val log = repo.ripassiLogFlow.first()
+                VerificaLessico.paroleDaRipassare(
+                    parole = repo.observeWords().first(),
+                    log = log,
+                    verifiche = VerificaLessico.verificheDaLog(log),
+                    reviews = repo.reviewsFlow.first(),
+                    now = System.currentTimeMillis()
+                )
+            } catch (e: Throwable) {
+                // Un errore di calcolo non deve lasciare la schermata bloccata.
+                emptyList()
+            }
+            _caricamento.value = false
+            _sessione.value = SessionState(cards = cards)
+            _messaggio.value = if (cards.isEmpty()) "Niente da ripassare. Torna domani."
+            else "Ripasso di ${cards.size} parole"
+        }
     }
 
     fun rivela() {

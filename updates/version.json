@@ -1,7 +1,7 @@
 {
-  "versionCode": 206,
-  "versionName": "1.43.3",
-  "changelog": "Lezioni come percorso A0-B2, selettore ridisegnato, Ascolto offline, progressi salvati, parole personalizzate per Emma e Alessandro, meno lag e batteria",
+  "versionCode": 207,
+  "versionName": "1.43.4",
+  "changelog": "Corretto il ripasso: ora parte sempre anche se le carte venivano caricate in background",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.3/Tedesco-v1.43.3.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.4/Tedesco-v1.43.4.apk"
 }
