@@ -1,7 +1,7 @@
 {
-  "versionCode": 208,
-  "versionName": "1.43.5",
-  "changelog": "Nuova Modalità Immersione attivabile per profilo nelle Impostazioni: storie comprensibili, vocabolario in frasi, composti, shadowing con TTS e ascolto passivo",
+  "versionCode": 209,
+  "versionName": "1.43.6",
+  "changelog": "Sistema di notifiche: promemoria ripasso a ora fissa e ascolto passivo serale (pre-sonno); rifiniture alla Modalità Immersione (storia più fluida, avviso se la voce tedesca non è disponibile, 80/20 esplicito)",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.5/Tedesco-v1.43.5.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.43.6/Tedesco-v1.43.6.apk"
 }

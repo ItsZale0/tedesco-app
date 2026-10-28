@@ -12,6 +12,7 @@ import com.alessandro.tedesco.data.remote.UpdateWorker
 import com.alessandro.tedesco.data.remote.VocabPublishService
 import com.alessandro.tedesco.di.AppModule
 import com.alessandro.tedesco.sync.ReminderWorker
+import com.alessandro.tedesco.sync.ImmersioneSeraleWorker
 import com.alessandro.tedesco.data.BackupSettings
 import kotlinx.coroutines.launch
 import com.alessandro.tedesco.sync.BackupWorker
@@ -63,7 +64,23 @@ class TedescoApp : Application(), Configuration.Provider {
         super.onCreate()
         installaCrashReporter()
         SyncWorker.schedule(this)
-        ReminderWorker.schedule(this)
+        // Sistema di notifiche: due promemoria locali decisi dalle impostazioni
+        // (ripanno 15-20' e ascolto passivo serale). WorkManager dimentica i job
+        // in alcuni casi (aggiornamento/reinstallazione), quindi qui si
+        // riprogramma idempotentemente (KEEP/UPDATE sul nome univoco).
+        appScope.launch {
+            val notifiche = com.alessandro.tedesco.sync.NotificheSettings(this@TedescoApp)
+            if (notifiche.ripassoAttivo()) {
+                ReminderWorker.schedule(this@TedescoApp, notifiche.ripassoOra())
+            } else {
+                ReminderWorker.cancel(this@TedescoApp)
+            }
+            if (notifiche.immersioneSeraleAttiva()) {
+                ImmersioneSeraleWorker.schedule(this@TedescoApp, notifiche.immersioneSeraleOra())
+            } else {
+                ImmersioneSeraleWorker.cancel(this@TedescoApp)
+            }
+        }
         // Auto-update reale: controllo periodico (24h) anche ad app chiusa + uno
         // immediato all'avvio. Se l'utente ha attivato il download automatico,
         // il worker scarica l'APK e manda la notifica "pronto da installare".

@@ -27,12 +27,15 @@ import java.util.Locale
 object TtsCondiviso {
 
     private var motore: TextToSpeech? = null
-    private var pronto = false
     private var linguaCorrente: Locale = Locale.GERMAN
     private var inCoda: String? = null
 
     /** Stato osservabile: true mentre il motore sta parlando. */
     var parlando by mutableStateOf(false)
+        private set
+
+    /** Stato osservabile: true se il motore ha i dati per la lingua richiesta. */
+    var linguaPronta by mutableStateOf(false)
         private set
 
     /** Riproduce [testo]; crea il motore se non esiste ancora. */
@@ -46,14 +49,14 @@ object TtsCondiviso {
     ) {
         if (testo.isBlank()) return
         val attuale = motore
-        if (attuale != null && pronto) {
+        if (attuale != null && linguaPronta) {
             if (locale != linguaCorrente) {
                 val esito = attuale.setLanguage(locale)
-                pronto = esito != TextToSpeech.LANG_MISSING_DATA &&
+                linguaPronta = esito != TextToSpeech.LANG_MISSING_DATA &&
                     esito != TextToSpeech.LANG_NOT_SUPPORTED
                 linguaCorrente = locale
             }
-            if (pronto) {
+            if (linguaPronta) {
                 impostaParametri(attuale, velocita, pitch, voce)
                 riproduci(attuale, testo)
                 return
@@ -97,7 +100,7 @@ object TtsCondiviso {
         motore?.stop()
         motore?.shutdown()
         motore = null
-        pronto = false
+        linguaPronta = false
         inCoda = null
         parlando = false
     }
@@ -117,7 +120,7 @@ object TtsCondiviso {
         motore = TextToSpeech(context.applicationContext) { stato ->
             if (stato == TextToSpeech.SUCCESS) {
                 val esito = motore?.setLanguage(locale)
-                pronto = esito != TextToSpeech.LANG_MISSING_DATA &&
+                linguaPronta = esito != TextToSpeech.LANG_MISSING_DATA &&
                     esito != TextToSpeech.LANG_NOT_SUPPORTED
                 motore?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) { parlando = true }
@@ -129,12 +132,12 @@ object TtsCondiviso {
                 // pronto, la richiesta e' rimasta in coda: la eseguiamo ora.
                 val daDire = inCoda
                 inCoda = null
-                if (pronto && daDire != null) {
+                if (linguaPronta && daDire != null) {
                     impostaParametri(motore!!, velocita, pitch, voce)
                     riproduci(motore!!, daDire)
                 }
             } else {
-                pronto = false
+                linguaPronta = false
                 inCoda = null
             }
         }

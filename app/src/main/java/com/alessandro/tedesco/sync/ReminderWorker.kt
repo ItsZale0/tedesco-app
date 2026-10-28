@@ -39,6 +39,12 @@ class ReminderWorker(
             return Result.success()
         }
 
+        // L'utente ha disattivato il promemoria: non notificare (il worker
+        // resta programmato ma silenzioso, e viene rimosso alla prossima
+        // programmazione).
+        val notifiche = com.alessandro.tedesco.sync.NotificheSettings(applicationContext)
+        if (!notifiche.ripassoAttivo()) return Result.success()
+
         val dueCount = repo.observeDueCount().first()
         val paroleTotali = repo.observeWords().first().size
 
@@ -110,9 +116,14 @@ class ReminderWorker(
         private const val NOTIFICATION_ID = 1001
         private const val WORK_NAME = "reminder_giornaliero"
 
-        fun schedule(context: Context) {
+        fun schedule(context: Context, ora: Int = 20) {
+            // Periodica ogni 24 ore, con ritardo iniziale fino all'ora scelta:
+            // il promemoria arriva a orario stabile, non "un minuto dopo l'avvio".
             val request = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
-                .setInitialDelay(1, TimeUnit.MINUTES)
+                .setInitialDelay(
+                    NotificheSettings.ritardoFinoAlle(ora),
+                    TimeUnit.MILLISECONDS
+                )
                 .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(

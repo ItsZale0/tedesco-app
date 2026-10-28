@@ -306,7 +306,7 @@ object DidatticaImmersione {
             Composto("Schwarzbrot", listOf("Schwarz", "brot"), listOf("nero", "pane"), "pane nero")
         )
         "A2" -> listOf(
-            Composto("Schwitzbad", listOf("Schwitz", "bad"), listOf("sudore", "bagno"), "bagnodoccia caldo"),
+            Composto("Schwitzbad", listOf("Schwitz", "bad"), listOf("sudore", "bagno"), "sudatorio (bagno turco)"),
             Composto("Arztbesuch", listOf("Arzt", "besuch"), listOf("medico", "visita"), "visita medica"),
             Composto("Schmerzmittel", listOf("Schmerz", "mittel"), listOf("dolore", "medio"), "antidolorifico")
         )
@@ -327,5 +327,6 @@ object DidatticaImmersione {
     // --------------------------------------------------------------
 
     fun frasiPassive(livello: String?): List<String> =
-        storiaAttiva(livello).frasi.map { it.tedesco } + shadowing(livello).map { it.tedesco }.distinct()
+        (storiaAttiva(livello).frasi.map { it.tedesco } + shadowing(livello).map { it.tedesco })
+            .distinct()
 }

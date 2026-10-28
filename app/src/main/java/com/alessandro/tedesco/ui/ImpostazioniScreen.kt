@@ -57,6 +57,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -77,6 +78,9 @@ import com.alessandro.tedesco.data.remote.UpdateState
 import com.alessandro.tedesco.data.remote.UpdateSettings
 import com.alessandro.tedesco.data.remote.UpdateWorker
 import com.alessandro.tedesco.data.remote.UpdaterViewModel
+import com.alessandro.tedesco.sync.ReminderWorker
+import com.alessandro.tedesco.sync.ImmersioneSeraleWorker
+import com.alessandro.tedesco.sync.NotificheSettings
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
 import com.alessandro.tedesco.ui.theme.spaziaturaSchermo
@@ -277,6 +281,20 @@ fun ImpostazioniScreen(
     var guidaDocId by rememberSaveable { mutableStateOf(profilo?.config?.guidaDocId ?: "") }
     var chiaveTutor by rememberSaveable { mutableStateOf(profilo?.config?.tutorApiKey ?: "") }
 
+    // --- Sistema di notifiche (promemoria locali) ---
+    var notRipassoAttivo by remember { mutableStateOf(true) }
+    var notRipassoOra by remember { mutableIntStateOf(20) }
+    var notImmAttiva by remember { mutableStateOf(false) }
+    var notImmOra by remember { mutableIntStateOf(21) }
+    val notificheImpostazioni = remember(contestoUpdate) { NotificheSettings(contestoUpdate) }
+    LaunchedEffect(Unit) {
+        notRipassoAttivo = notificheImpostazioni.ripassoAttivo()
+        notRipassoOra = notificheImpostazioni.ripassoOra()
+        notImmAttiva = notificheImpostazioni.immersioneSeraleAttiva()
+        notImmOra = notificheImpostazioni.immersioneSeraleOra()
+    }
+    val oreDisponibili = (12..23).map { it to "%02d:00".format(it) }
+
     Scaffold(topBar = { CompactTopBar("Impostazioni", onBack = onIndietro) }, contentWindowInsets = WindowInsets(0)) { inner ->
         Column(
             modifier = Modifier
@@ -352,6 +370,93 @@ fun ImpostazioniScreen(
                         Switch(
                             checked = immersione,
                             onCheckedChange = { attivo -> vm.setDidatticaImmersione(attivo) }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+
+                // --- NOTIFICHE (promemoria locali) ---
+                SettingsExpandableSection(
+                    title = "Notifiche",
+                    description = "Due promemoria giornalieri, locali e senza rete. Chiedi il permesso quando li attivi."
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Promemoria ripasso", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Parole da ripassare, a un'ora stabile ogni giorno",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = notRipassoAttivo,
+                            onCheckedChange = { attivo ->
+                                notRipassoAttivo = attivo
+                                scopeUpdate.launch {
+                                    notificheImpostazioni.setRipasso(attivo)
+                                    if (attivo) ReminderWorker.schedule(contestoUpdate, notRipassoOra)
+                                    else ReminderWorker.cancel(contestoUpdate)
+                                }
+                            }
+                        )
+                    }
+                    if (notRipassoAttivo) {
+                        Spacer(Modifier.height(4.dp))
+                        DropdownSelector(
+                            label = "Ora del promemoria",
+                            options = oreDisponibili,
+                            selected = notRipassoOra,
+                            onSelect = { ora ->
+                                notRipassoOra = ora
+                                scopeUpdate.launch {
+                                    notificheImpostazioni.setRipasso(true, ora)
+                                    ReminderWorker.schedule(contestoUpdate, ora)
+                                }
+                            }
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Ascolto passivo serale", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Il bonus pre-sonno della Modalità Immersione (solo se attiva)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = notImmAttiva,
+                            onCheckedChange = { attivo ->
+                                notImmAttiva = attivo
+                                scopeUpdate.launch {
+                                    notificheImpostazioni.setImmersioneSerale(attiva = attivo)
+                                    if (attivo) ImmersioneSeraleWorker.schedule(contestoUpdate, notImmOra)
+                                    else ImmersioneSeraleWorker.cancel(contestoUpdate)
+                                }
+                            }
+                        )
+                    }
+                    if (notImmAttiva) {
+                        Spacer(Modifier.height(4.dp))
+                        DropdownSelector(
+                            label = "Ora dell'ascolto serale",
+                            options = oreDisponibili,
+                            selected = notImmOra,
+                            onSelect = { ora ->
+                                notImmOra = ora
+                                scopeUpdate.launch {
+                                    notificheImpostazioni.setImmersioneSerale(attiva = true, ora = ora)
+                                    ImmersioneSeraleWorker.schedule(contestoUpdate, ora)
+                                }
+                            }
                         )
                     }
                 }

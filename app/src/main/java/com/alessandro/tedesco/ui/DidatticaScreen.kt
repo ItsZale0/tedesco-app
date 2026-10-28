@@ -82,6 +82,23 @@ fun DidatticaScreen(
 
     var ascoltoAttivo by remember { mutableStateOf(false) }
     var indiceAscolto by remember { mutableIntStateOf(0) }
+    /** true da quando l'utente ha chiesto per la prima volta un audio. */
+    var haToccatoAudio by remember { mutableStateOf(false) }
+    /** true se, dopo il primo audio richiesto, la voce tedesca non è mai partita. */
+    var avvisoVoce by remember { mutableStateOf(false) }
+
+    // Il motore è condiviso e nasce pigro: dopo il primo tocco si dà 3 secondi
+    // per crearsi; se dopo non è pronto, avvisiamo invece del silenzio.
+    LaunchedEffect(haToccatoAudio) {
+        if (!haToccatoAudio) return@LaunchedEffect
+        delay(3_000)
+        avvisoVoce = !TtsCondiviso.linguaPronta
+    }
+
+    fun ascoltaTesto(testo: String, velocita: Float = 1f) {
+        haToccatoAudio = true
+        tts.speak(testo, velocita)
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -142,10 +159,11 @@ fun DidatticaScreen(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "1. Il tedesco non è caos: è logico, lo si capisce.\n" +
-                            "2. Tanto input: leggi e ascolta, producete dopo.\n" +
+                            "2. Tanto input: leggi e ascolta, produci dopo.\n" +
                             "3. Parole sempre in FRASI + composti a pezzi.\n" +
                             "4. Shadowing: ripeti in tempo reale con la voce.\n" +
-                            "5. Ogni giorno: storia, ripasso, ascolto passivo.",
+                            "5. Ogni giorno: storia, ripasso, ascolto passivo.\n" +
+                            "80% input qui, 20% produzione: quando hai finito, va su Produzione o Verifica.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -155,6 +173,14 @@ fun DidatticaScreen(
             // ---------- Passo 2: la storia ----------
             item {
                 GlassCard {
+                    if (avvisoVoce) {
+                        Text(
+                            "La voce tedesca non sembra disponibile: il telefono non ha un motore di sintesi con l'audio in tedesco (controlla le impostazioni di sistema → Sintesi vocale).",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
                     Text(
                         "Immersione · ${storia.titolo}",
                         style = MaterialTheme.typography.titleSmall,
@@ -185,7 +211,7 @@ fun DidatticaScreen(
                                     )
                                 }
                             }
-                            IconButton(onClick = { tts.speak(frase.tedesco) }) {
+                            IconButton(onClick = { ascoltaTesto(frase.tedesco) }) {
                                 Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ascolta la frase")
                             }
                             IconButton(
@@ -245,7 +271,7 @@ fun DidatticaScreen(
                         Spacer(Modifier.height(10.dp))
                     }
                     Button(onClick = { giocoNuovo() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Nuovi input, nuovo giro")
+                        Text("Fatto: ho capito la storia, avanza")
                     }
                 }
             }
@@ -278,7 +304,7 @@ fun DidatticaScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = { tts.speak(frase.tedesco) }) {
+                            IconButton(onClick = { ascoltaTesto(frase.tedesco) }) {
                                 Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ascolta")
                             }
                         }
@@ -287,7 +313,7 @@ fun DidatticaScreen(
                     OutlinedButton(
                         onClick = { giocoNuovo() },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text("Prossimo giro") }
+                    ) { Text("Annotato tutto: avanza") }
                 }
             }
 
@@ -321,7 +347,7 @@ fun DidatticaScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = { tts.speak(p.frase) }) {
+                            IconButton(onClick = { ascoltaTesto(p.frase) }) {
                                 Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ascolta la frase")
                             }
                         }
@@ -386,10 +412,10 @@ fun DidatticaScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Row {
-                                IconButton(onClick = { tts.speak(s.tedesco, 0.65f) }) {
+                                IconButton(onClick = { ascoltaTesto(s.tedesco, 0.65f) }) {
                                     Icon(Icons.AutoMirrored.Filled.VolumeUp, "Ascolta lentamente")
                                 }
-                                IconButton(onClick = { tts.speak(s.tedesco) }) {
+                                IconButton(onClick = { ascoltaTesto(s.tedesco) }) {
                                     Icon(Icons.Filled.PlayArrow, "Ascolta a velocità piena")
                                 }
                             }
