@@ -46,6 +46,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.alessandro.tedesco.data.Pronuncia
 import com.alessandro.tedesco.ui.theme.Spaziature
 import java.io.File
@@ -181,6 +184,21 @@ fun PronunciaScreen(
 
     DisposableEffect(Unit) {
         onDispose { registratore.rilascia(); tts.stop() }
+    }
+
+    // Come in Sprechuebungen: niente microfono attivo quando l'app perde il
+    // primo piano (Android ucciderebbe il processo e sembrerebbe un crash).
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val osservatore = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_STOP && registratore.inRegistrazione) {
+                registratore.ferma()
+                registrando = false
+                messaggio = "Registrazione interrotta: riascoltala e confrontala con il modello."
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(osservatore)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
     }
 
     ScreenScaffold("Pronuncia", onBack = onIndietro) {

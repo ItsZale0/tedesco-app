@@ -238,8 +238,13 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(Modifier.height(8.dp))
+                        // Alcuni esercizi generati dall'IA non hanno una frase
+                        // dedicata: in quel caso si legge la domanda, altrimenti
+                        // il bottone parlerebbe una stringa vuota (nessun suono).
+                        val testoAudio = esercizio.fraseTedesca.ifBlank { esercizio.domanda }
                         Button(
-                            onClick = { ttsHelper.speak(esercizio.fraseTedesca) },
+                            onClick = { ttsHelper.speak(testoAudio) },
+                            enabled = testoAudio.isNotBlank(),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(

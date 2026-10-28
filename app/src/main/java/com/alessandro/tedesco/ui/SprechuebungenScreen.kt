@@ -20,6 +20,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.Sprechuebungen
 import com.alessandro.tedesco.ui.theme.Spaziature
@@ -90,6 +93,23 @@ fun SprechuebungenScreen(
 
     DisposableEffect(Unit) {
         onDispose { registratore.rilascia(); tts.stop() }
+    }
+
+    // Se l'app perde il primo piano mentre registri (chiamata, switch app,
+    // riempimento della batteria col microfono attivo), ferma subito la
+    // registrazione: MediaRecorder attivo in background fa killare il processo
+    // da Android e all'utente appare come una chiusura/crash improvvisa.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val osservatore = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_STOP && registratore.inRegistrazione) {
+                registratore.ferma()
+                registrando = false
+                messaggio = "Registrazione interrotta: riascoltala e confronta con il modello."
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(osservatore)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
     }
 
     val prompt = prompts.getOrNull(indice)

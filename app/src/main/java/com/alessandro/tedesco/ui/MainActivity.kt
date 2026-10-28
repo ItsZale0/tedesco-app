@@ -5,7 +5,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.activity.compose.setContent
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.TedescoApp
 import com.alessandro.tedesco.data.BackupEsecutore
+import com.alessandro.tedesco.BuildConfig
 import com.alessandro.tedesco.data.BackupSettings
 import com.alessandro.tedesco.ui.theme.TedescoTheme
 
@@ -29,14 +33,21 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         TtsCondiviso.chiudi()
-        // Salva SUBITO e in modo sincrono: se aspettiamo una coroutine, Android
-        // puo' killare il processo prima che il salvataggio finisca (dati persi).
+        // Solo il flush LOCALE resta sincrono: e' veloce e garantisce i dati
+        // anche se il processo viene killato subito dopo.
         runBlocking(Dispatchers.IO) {
             runCatching { TedescoApp.get(this@MainActivity).profileManagerInstance.flush() }
+        }
+        // Il backup su rete (MB via OkHttp) NON deve bloccare il main thread:
+        // onStop arriva anche alla ROTAZIONE, e il runBlocking di prima
+        // congelava lo schermo (ANR: "schermata nera" alla rotazione).
+        // Il mutex di BackupEsecutore evita sovrapposizioni col timer
+        // in-app e col worker di sistema.
+        val app = applicationContext
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             runCatching {
-                val app = TedescoApp.get(this@MainActivity)
                 if (BackupSettings(app).autoAbilitato()) {
-                    BackupEsecutore.esegui(app, com.alessandro.tedesco.BuildConfig.VERSION_NAME, forza = false)
+                    BackupEsecutore.esegui(app, BuildConfig.VERSION_NAME, forza = false)
                 }
             }
         }
