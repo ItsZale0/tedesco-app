@@ -1,7 +1,7 @@
 {
-  "versionCode": 231,
-  "versionName": "1.47.2",
-  "changelog": "Risolto il problema serio per cui i progressi si perdevano al riavvio: una scrittura automatica ai primissimi istanti dell'avvio poteva cancellare i dati salvati (vocabolario, ripassi, guida, piano, grammatica). Il backup automatico non sovrascrive piu' i dati con profili vuoti. Dalla prossima installazione i progressi restano stabili.",
+  "versionCode": 232,
+  "versionName": "1.47.3",
+  "changelog": "Sprechuebungen disponibile anche per il livello A0: 5 nuovi esercizi di primo contatto (salutare, dire il nome, sillabare, numeri/telefono, dire che non si sta bene). I livelli senza contenuti dedicati mostrano ora gli esercizi del livello piu' semplice invece di una schermata vuota.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.2/Tedesco-v1.47.2.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.3/Tedesco-v1.47.3.apk"
 }

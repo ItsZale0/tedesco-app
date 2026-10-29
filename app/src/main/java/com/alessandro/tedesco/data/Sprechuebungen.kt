@@ -20,6 +20,12 @@ object Sprechuebungen {
     )
 
     val prompts: List<Prompt> = listOf(
+        // ---- A0 (primo contatto: salute, alfabeto, numeri, presentazioni minime) ----
+        Prompt("sp-a0-01", "A0", "Salutare", "Saluta qualcuno e chiedi come sta.", listOf("Hallo", "Guten Tag", "Wie geht es Ihnen?", "mir geht es gut"), "Hallo! Guten Tag. Wie geht es Ihnen? — Mir geht es gut, danke."),
+        Prompt("sp-a0-02", "A0", "Dire il proprio nome", "Dì come ti chiami e di dove sei.", listOf("Ich heiße...", "Ich bin aus...", "Und du?"), "Hallo, ich heiße Alessandro. Ich bin aus Italien. Und du? Wie heißt du?"),
+        Prompt("sp-a0-03", "A0", "Sillabare il nome", "Sillaba il tuo nome alla reception, lettera per lettera.", listOf("Mein Name ist...", "der Buchstabe", "Bitte buchstabieren Sie"), "Entschuldigung, bitte buchstabieren Sie Ihren Namen. — Mein Name ist Alessandro: A-L-E-S-S-A-N-D-R-O."),
+        Prompt("sp-a0-04", "A0", "Numeri e telefono", "Dì i numeri da 1 a 12 e lascia il tuo numero di telefono.", listOf("eins, zwei, drei", "Meine Nummer ist...", "null, sieben"), "Eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn, elf, zwölf. Meine Telefonnummer ist null-drei-vier-sieben-zwei..."),
+        Prompt("sp-a0-05", "A0", "Non stare bene", "Dì che non ti senti bene e ringrazia un fisioterapista.", listOf("Ich bin krank", "Es tut weh", "Danke schön", "Tschüss"), "Ich bin krank. Der Rücken tut weh. Danke schön für Ihre Hilfe. Tschüss!"),
         // ---- A1 ----
         Prompt("sp-a1-01", "A1", "Presentazione", "Presentati: nome, età, dove vivi, cosa fai.", listOf("heißen", "wohnen", "arbeiten", "lernen"), "Ich heiße Anna. Ich wohne in Bozen. Ich bin Studentin. Ich lerne Deutsch."),
         Prompt("sp-a1-02", "A1", "Al supermercato", "Chiedi dove si trova il pane e compra 2 pagnotte.", listOf("Wo ist...?", "Ich möchte...", "zwei", "Brot"), "Entschuldigung, wo ist das Brot? Ich möchte zwei Brote, bitte."),
@@ -48,7 +54,11 @@ object Sprechuebungen {
 
     fun perLivello(livello: String?): List<Prompt> {
         val codice = livello?.uppercase()?.substringBefore(" ")?.trim() ?: "A1"
-        return prompts.filter { it.livello == codice }
+        val esatti = prompts.filter { it.livello == codice }
+        if (esatti.isNotEmpty()) return esatti
+        // Livello senza contenuto dedicato (es. A0 prima dei suoi prompt, C1, C2):
+        // si mostra quello del livello precedente invece di una schermata vuota.
+        return prompts.filter { it.livello == "A1" }
     }
 
     fun perCodice(codice: String): Prompt? = prompts.firstOrNull { it.id == codice }
