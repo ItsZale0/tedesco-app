@@ -1,7 +1,7 @@
 {
-  "versionCode": 230,
-  "versionName": "1.47.1",
-  "changelog": "Risolto il crash all'apertura di Sprechübungen (scroll doppio in Compose). Risolto anche il crash a volte all'avvio dell'app (inizializzazione profilo). Stesso fix preventivo in Ascolto.",
+  "versionCode": 231,
+  "versionName": "1.47.2",
+  "changelog": "Risolto il problema serio per cui i progressi si perdevano al riavvio: una scrittura automatica ai primissimi istanti dell'avvio poteva cancellare i dati salvati (vocabolario, ripassi, guida, piano, grammatica). Il backup automatico non sovrascrive piu' i dati con profili vuoti. Dalla prossima installazione i progressi restano stabili.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.1/Tedesco-v1.47.1.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.2/Tedesco-v1.47.2.apk"
 }

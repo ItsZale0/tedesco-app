@@ -90,6 +90,7 @@ class ProfileManager(
     val prontoFlow: Flow<Boolean> = _pronto
 
     private val mutex = Mutex()
+    @Volatile
     private var inizializzato = false
 
     /**
@@ -147,8 +148,19 @@ class ProfileManager(
     init {
         scope.launch {
             daScrivere.collectLatest {
-                delay(SALVATAGGIO_ATTESA_MS)
-                scriviSuDataStore(_repository.value)
+                // BUG CRITICO (persita dati ad ogni avvio): il flow StateFlow
+                // emette subito il valore iniziale (0), e la vecchia versione
+                // partiva comunque con delay+scrittura: 400 ms dopo la
+                // costruzione sovrascriveva il DataStore con _repository.value,
+                // che prima di inizializza() e' VUOTO. Se la lettura/decodifica
+                // dei ~MB di JSON impiega piu' di 400 ms, i dati salvati venivano
+                // distrutti: ogni riavvio ricreava i profili da zero.
+                // Ora si scrive SOLO dopo un'aggiunta vera (it > 0) e solo dopo
+                // che i dati sono stati effettivamente caricati.
+                if (it > 0L && inizializzato) {
+                    delay(SALVATAGGIO_ATTESA_MS)
+                    if (inizializzato) scriviSuDataStore(_repository.value)
+                }
             }
         }
     }
@@ -168,8 +180,16 @@ class ProfileManager(
     /**
      * Scrive SUBITO, senza attendere la coalescenza: da chiamare quando l'app va
      * in background, cosi' non si perde l'ultima modifica.
+     *
+     * Se i dati non sono ancora stati caricati (inizializza() in corso oppure
+     * non ancora partita), NON toccare il DataStore: il repository in memoria e'
+     * vuoto e la sovrascrittura cancellerebbe i dati salvati — questo, con
+     * onStop che arriva prima del caricamento, era l'altra via di perdita dati.
      */
-    suspend fun flush() = scriviSuDataStore(_repository.value)
+    suspend fun flush() {
+        if (!inizializzato) return
+        scriviSuDataStore(_repository.value)
+    }
 
     /** Tutti i profili disponibili, nell'ordine dei preset. */
     fun profiliDisponibili(): List<ProfiloUtente> {

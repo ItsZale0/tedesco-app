@@ -193,6 +193,51 @@ class ProfileManagerIntegrationTest {
             profilo.config.tutorApiKey
         )
     }
+
+    @Test
+    fun `flush prima del caricamento non cancella i dati salvati`() = runBlocking {
+        // REGRESSIONE ("continua la app a non salvare nulla"): se onStop arriva
+        // mentre inizializza() non ha ancora finito, il flush () scriveva il
+        // repository VUOTO di memoria sul DataStore, cancellando i dati reali.
+        val manager = nuovoManager()
+        manager.inizializza()
+        manager.selezionaProfilo(TipoProfilo.EMMA.id)
+        manager.aggiornaStatoAttivo(manager.statoAttivo().copy(etag = "DATI-VETRI"), immediato = true)
+        manager.flush() // persiste subito: il DataStore ora contiene "DATI-VETRI"
+
+        // Nuovo processo: il flush parte PRIMA del caricamento (es. onStop)
+        val manager2 = nuovoManager()
+        manager2.flush() // senza guardia sovrascriverebbe con il repo vuoto
+
+        val manager3 = nuovoManager()
+        manager3.inizializza()
+        assertEquals(TipoProfilo.EMMA.id, manager3.profiloAttivoId())
+        assertEquals("I dati salvati devono sopravvivere", "DATI-VETRI", manager3.statoAttivo().etag)
+    }
+
+    @Test
+    fun `il writer coalescente non cancella i dati durante il caricamento`() = runBlocking {
+        // Il bug di produzione: a ~400 ms dall'avvio la coroutine del writer
+        // emetteva il valore iniziale (0) e scriveva _repository.value, che
+        // prima di inizializza() e' il repository VUOTO: ogni avvio con
+        // dati grossi (>400 ms di lettura) ripartiva da zero.
+        // Dati "grandi": mettiamo una parola sul profilo Emma nel DataStore
+        val manager0 = nuovoManager()
+        manager0.inizializza()
+        manager0.selezionaProfilo(TipoProfilo.EMMA.id)
+        manager0.aggiornaStatoAttivo(manager0.statoAttivo().copy(etag = "LUNGA-LETTURA"), immediato = true)
+        manager0.flush()
+
+        // Nuovo manager che NON inizializza subito: simula inizializza() lento
+        val managerLento = nuovoManager()
+        // attende oltre SALVATAGGIO_ATTESA_MS: il vecchio codice a questo punto
+        // aveva gia' sovrascritto il DataStore con il repo vuoto
+        kotlinx.coroutines.delay(700)
+        // i dati devono essere ancora nel DataStore
+        val manager3 = nuovoManager()
+        manager3.inizializza()
+        assertEquals("I dati devono sopravvivere al caricamento lento", "LUNGA-LETTURA", manager3.statoAttivo().etag)
+    }
 }
 
 private suspend fun <T> kotlinx.coroutines.flow.Flow<T>.firstValue(): T = first()

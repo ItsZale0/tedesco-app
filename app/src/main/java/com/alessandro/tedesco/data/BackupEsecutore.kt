@@ -52,6 +52,22 @@ object BackupEsecutore {
         val repository = app.profileManagerInstance.repositoryFlow.first()
         if (repository.profili.isEmpty()) return Esito.NonConfigurato("Nessun profilo da salvare")
 
+        // Se NESSUN profilo ha dati reali (parole, log, guida, piano, sessioni,
+        // lastSync > 0) siamo davanti a repo fresco di ricreazione (avvio in
+        // corso o — nei casi peggiori — stato ricreato da preset). Caricarlo in
+        // automatico SOVRASCRIVE il backup buono con profili vuoti: vietato.
+        // Il pulsante manuale segue la stessa regola: un salvataggio esplicito
+        // di uno stato non ancora caricato distruggerebbe comunque i dati.
+        val datiUtili = repository.profili.values.any { p ->
+            val s = p.stato
+            s.lastSync > 0L || s.parole.isNotEmpty() || s.feedLog.isNotEmpty() ||
+                s.ripassiLog.isNotEmpty() || s.errori.isNotEmpty() ||
+                s.risposte.isNotEmpty() || s.sessioni.isNotEmpty() ||
+                s.conversazioni.isNotEmpty() || s.guida != null || s.piano != null ||
+                s.lezioniGenerate.isNotEmpty()
+        }
+        if (!datiUtili) return Esito.NonConfigurato("Stato dati non ancora caricato: backup evitato")
+
         val notifiche = NotificheSettings(app).leggi()
         val json = BackupCloud.serializza(repository, versioneApp, System.currentTimeMillis(), notifiche)
         val hash = sha256(json)
