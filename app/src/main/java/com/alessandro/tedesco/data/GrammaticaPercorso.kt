@@ -128,7 +128,7 @@ object GrammaticaSyllabus {
      * poi i casi, i tempi del passato, le strutture B1 e infine il B2.
      * Gli ID sono stabili perché sono le chiavi della padronanza salvata.
      */
-    val unita: List<UnitaGrammatica> = listOf(
+    private val unitaBase: List<UnitaGrammatica> = listOf(
         unitaA0Alfabeto(),
         unitaA0PronomiSein(),
         unitaA0Articoli(),
@@ -192,6 +192,19 @@ object GrammaticaSyllabus {
         unitaB2Modalpartikeln(),
         unitaB2Referenzwoerter()
     )
+
+    /**
+     * L'unità del percorso più il suo banco extra di esercizi (fonte:
+     * [EserciziExtra], syllabus rifinito sul repertorio Grammatik Aktiv):
+     * più materia per lo stesso argomento, per chi vuole continuare
+     * ad esercitare. Gli id degli esercizi extra usano il suffisso "-x"
+     * per non toccare le chiavi di padronanza già salvate.
+     */
+    val unita: List<UnitaGrammatica> = unitaBase.map { u ->
+        val extra = EserciziExtra[u.id].orEmpty()
+        if (extra.isEmpty()) u
+        else u.copy(esercizi = u.esercizi + extra)
+    }
 
     val ordineLivelli = listOf("A0", "A1", "A2", "B1", "B2")
 

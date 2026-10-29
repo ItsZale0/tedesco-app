@@ -1,7 +1,7 @@
 {
-  "versionCode": 233,
-  "versionName": "1.48.0",
-  "changelog": "Molti piu' esercizi per ogni sezione: Sprechuebungen passa da 5-6 esercizi per livello a 8-10 (15 nuovi, con A0 ben coperto), Dialoghi da 5 a 12 conversazioni (primo giorno di corso, farmacia, supermercato, medico, dentista, prima giornata lavorativa, colloquio), Pronuncia con piu' coppie minime, scioglilingua frasi cliniche. Ogni giorno l'ordine esercizi ruota: la stessa lista si ripresenta fresca, senza bisogno di salvar nulla.",
+  "versionCode": 234,
+  "versionName": "1.48.1",
+  "changelog": "Banchi di esercizi extra per 26 unita' di grammatica (da A0 pronomi/articoli/plurali fino a B1 konjunktiv II, genitivo, plusquamperfekt, connettori e discorso indiretto): ogni argomento ha ora 5-6 esercizi ulteriori oltre a quelli della lezione, spunti e spiegazioni in italiano, risposta accetta anche ae/oe/ue/ss. Rispetto dei dati: nessuna chiave di progresso cambia.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.0/Tedesco-v1.48.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.1/Tedesco-v1.48.1.apk"
 }
