@@ -1,7 +1,7 @@
 {
-  "versionCode": 229,
-  "versionName": "1.47.0",
-  "changelog": "Correzioni importanti: bottone «Ascolta» degli esercizi d'ascolto generati dall'IA ora funziona anche senza frase dedicata (legge la domanda); la rotazione del telefono non provoca più schermata nera né blocca l'app; Sprechübungen e Pronuncia non si chiudono più in modo improvviso quando l'app va in background durante una registrazione: questa viene interrotta in sicurezza.",
+  "versionCode": 230,
+  "versionName": "1.47.1",
+  "changelog": "Risolto il crash all'apertura di Sprechübungen (scroll doppio in Compose). Risolto anche il crash a volte all'avvio dell'app (inizializzazione profilo). Stesso fix preventivo in Ascolto.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.0/Tedesco-v1.47.0.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.1/Tedesco-v1.47.1.apk"
 }

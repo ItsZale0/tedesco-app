@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
@@ -151,11 +149,12 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
         title = "Ascolto (Hörverstehen)",
         scrollable = true
     ) {
+        // Nessun verticalScroll qui: ScreenScaffold avvolge gia' il contenuto in
+        // uno scroll verticale (due scroll annidati fanno crashare Compose).
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(Spaziature.md)
         ) {
             // Selettore livello: stabile, costruito dai livelli realmente disponibili.

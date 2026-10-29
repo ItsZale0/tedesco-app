@@ -1,8 +1,6 @@
 package com.alessandro.tedesco.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
@@ -119,10 +117,11 @@ fun SprechuebungenScreen(
             Text("Nessun esercizio per questo livello.")
             return@ScreenScaffold
         }
+        // Nessun verticalScroll qui: ScreenScaffold avvolge gia' il contenuto
+        // in uno scroll verticale. Due scroll annidati fanno crashare Compose
+        // (IllegalStateException: infinite max height constraints, v1.47.0).
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spaziature.sm)
         ) {
             Text(

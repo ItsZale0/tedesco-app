@@ -488,10 +488,17 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     private var syncAvviato = false
 
     init {
-        viewModelScope.launch { profileManager.inizializza() }
+        // Dispatchers.Main (NON Main.immediate, il default di viewModelScope):
+        // con .immediate il collect esegue la prima emissione SINCRONAMENTE
+        // durante l'init; se il profilo e' gia' in memoria, resetStatoProfilo()
+        // tocca gli StateFlow dichiarati DOPO questo blocco (ancora a null) e
+        // l'app crashava appena partita (NullPointerException su setValue).
+        // Con Main la principale richiede una passata di handler extra e il
+        // body gira a init completata, quando tutte le proprieta' esistono.
+        viewModelScope.launch(Dispatchers.Main) { profileManager.inizializza() }
         // Al cambio di profilo attivo ricarica gli esercizi generati dal nuovo profilo
         // (evita che restino visibili quelli del profilo precedente).
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
             var ultimoProfilo: String? = "__init__"
             profileManager.repositoryFlow.collect { repo ->
                 val id = repo.profiloAttivoId
