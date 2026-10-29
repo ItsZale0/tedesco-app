@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.AscoltoData
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.data.EsercizioAscolto
 import com.alessandro.tedesco.data.local.ProfiloUtente
 
@@ -101,7 +102,11 @@ fun AscoltoScreen(vm: TedescoViewModel, profilo: ProfiloUtente? = null, onFatto:
     }
 
     val esercizi = remember(eserciziLocali, eserciziAi) {
-        (eserciziAi + eserciziLocali).distinctBy { it.id }
+        // Prima per id, poi per contenuto: l'AI può riproporre la stessa
+        // domanda sulla stessa frase con un id nuovo.
+        DeduplicaEsercizi.distinti(
+            (eserciziAi + eserciziLocali).distinctBy { it.id }
+        ) { DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca) }
     }
 
     // Reset quando cambia livello o serie: niente punteggi "ereditati".

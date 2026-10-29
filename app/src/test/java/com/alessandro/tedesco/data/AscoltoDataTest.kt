@@ -137,4 +137,51 @@ class AscoltoDataTest {
             )
         }
     }
+
+    // --- Lista realmente usata dall'app (A0 profile-aware + A1/A2/B1) ---
+
+    @Test
+    fun `lista runtime ha id unici`() {
+        val tutti = getTuttiEserciziAscolto(null)
+        assertEquals(
+            "La lista runtime contiene id duplicati (le statistiche si confondono)",
+            tutti.size,
+            tutti.map { it.id }.toSet().size
+        )
+    }
+
+    @Test
+    fun `lista runtime ha sempre 4 opzioni`() {
+        getTuttiEserciziAscolto(null).forEach { esercizio ->
+            assertEquals(
+                "Esercizio ${esercizio.id} deve avere 4 opzioni",
+                4,
+                esercizio.opzioni.size
+            )
+        }
+    }
+
+    @Test
+    fun `ogni livello della lista runtime ha almeno 5 esercizi`() {
+        listOf("A0", "A1", "A2", "B1").forEach { livello ->
+            val esercizi = AscoltoData.eserciziPerLivello(livello)
+            assertTrue(
+                "Livello $livello ha solo ${esercizi.size} esercizi",
+                esercizi.size >= 5
+            )
+        }
+    }
+
+    @Test
+    fun `nessuna frase ripetuta nello stesso livello`() {
+        AscoltoData.livelliDisponibili().forEach { livello ->
+            val frasi = AscoltoData.eserciziPerLivello(livello)
+                .map { DeduplicaEsercizi.normalizza(it.fraseTedesca) }
+            assertEquals(
+                "Frasi duplicate nel livello $livello",
+                frasi.size,
+                frasi.toSet().size
+            )
+        }
+    }
 }

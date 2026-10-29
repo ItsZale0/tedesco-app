@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.TextButton
 import com.alessandro.tedesco.data.remote.TipoEsercizio
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.data.local.DomandaTest
 import com.alessandro.tedesco.data.local.LivelloCEFR
 import com.alessandro.tedesco.data.local.TipoDomanda
@@ -93,8 +94,13 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        elenco = if (freschi.isNotEmpty()) {
-            freschi.map {
+        // Deduplica per contenuto: il modello può ripetere la stessa domanda
+        // più volte nello stesso batch (id diversi, testo uguale).
+        val freschiUnici = DeduplicaEsercizi.distinti(freschi) {
+            DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+        }
+        elenco = if (freschiUnici.isNotEmpty()) {
+            freschiUnici.map {
                 DomandaTest(
                     id = it.id,
                     tipo = TipoDomanda.GRAMMATICA,
@@ -109,7 +115,9 @@ fun ComprensioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                 )
             }
         } else {
-            eserciziGen.filterNot { it.completato }.map {
+            DeduplicaEsercizi.distinti(eserciziGen.filterNot { it.completato }) {
+                DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+            }.map {
                 DomandaTest(
                     id = it.id,
                     tipo = TipoDomanda.GRAMMATICA,

@@ -9,6 +9,7 @@ import com.alessandro.tedesco.data.limita
 import com.alessandro.tedesco.data.AdaptiveSessionEngine
 import com.alessandro.tedesco.data.AdaptiveTestEngine
 import com.alessandro.tedesco.data.CalcoloProgresso
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.data.ParserValutazione
 import com.alessandro.tedesco.data.CalcoloProduzione
 import com.alessandro.tedesco.data.ParolaTedesca
@@ -1259,7 +1260,15 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     private fun copiaStatoConNuovi(tipo: TipoEsercizio, stato: ProfiloStato, nuovi: List<EsercizioGenEntity>): ProfiloStato {
         // Cap a 80: la lista serve solo come memoria "gia visto" per evitare ripetizioni,
         // non deve crescere all'infinito (gonfierebbe il DataStore).
-        fun cap(l: List<EsercizioGenEntity>) = (l + nuovi).takeLast(80)
+        // Inoltre si deduplica per CONTENUTO: il modello può restituire la stessa
+        // domanda più volte (id diversi), e senza questo la memoria si riempirebbe
+        // di copie identiche finendo per proporre sempre gli stessi 4-5 esercizi.
+        fun chiaveDi(e: EsercizioGenEntity): String = DeduplicaEsercizi.chiave(
+            e.domanda,
+            if (tipo == TipoEsercizio.ASCOLTO) e.fraseTedesca else null
+        )
+        fun cap(l: List<EsercizioGenEntity>) =
+            DeduplicaEsercizi.unisciTenendoUltimi(l, nuovi, 80, ::chiaveDi)
         return when (tipo) {
             TipoEsercizio.COMPRENSIONE -> stato.copy(eserciziGeneratiComprensione = cap(stato.eserciziGeneratiComprensione))
             TipoEsercizio.PRODUZIONE -> stato.copy(eserciziGeneratiProduzione = cap(stato.eserciziGeneratiProduzione))
@@ -1292,9 +1301,23 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         val livelloUtente = profiloAttivo.value?.stato?.progresso?.livelloCorrente ?: LivelloCEFR.A0
         val livello = livelloUtente.label
         val medico = profiloAttivo.value?.config?.mostraContestoMedico == true
-        // evita duplicati: passa le domande già generate
+        // evita duplicati: passa le domande già generate (forma leggibile per il
+        // modello) E le chiavi normalizzate (filtro reale dopo la generazione)
         val esistenti = statoGenerati(tipo, profileManager.profiloAttivo()?.stato ?: ProfiloStato())
-        val evita = esistenti.mapNotNull { it.domanda }
+        fun chiaveEntita(e: EsercizioGenEntity): String = DeduplicaEsercizi.chiave(
+            e.domanda,
+            if (tipo == TipoEsercizio.ASCOLTO) e.fraseTedesca else null
+        )
+        fun chiaveGenerata(e: EsercizioGenerato): String = DeduplicaEsercizi.chiave(
+            e.domanda,
+            if (tipo == TipoEsercizio.ASCOLTO) e.fraseTedesca else null
+        )
+        val evita = esistenti.map { e ->
+            if (tipo == TipoEsercizio.ASCOLTO && !e.fraseTedesca.isNullOrBlank())
+                "${e.domanda} [${e.fraseTedesca}]"
+            else e.domanda
+        }
+        val evitaChiavi = esistenti.map(::chiaveEntita)
         val risultato = app.generatoreEserciziInstance.genera(
             apiKey = chiave, tipo = tipo, livello = livello,
             quanti = quanti, contestoMedico = medico, evita = evita, modello = modello
@@ -1303,7 +1326,15 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
         // SOGLIA DI LIVELLO: un esercizio piu' alto del profilo non viene mai
         // proposto (il modello a volte supera il livello richiesto). Si filtra qui,
         // in un solo punto, cosi' TUTTE le sezioni restano calibrate al livello.
-        val ammessi = risultato.filter { LivelloCEFR.daTesto(it.livello).ordine <= livelloUtente.ordine }
+        // DEDUPLICA: oltre al filtro nel generatore, si scarta qualunque contenuto
+        // già visto (difesa in profondità: vale anche per batch vecchi in cache).
+        val nelLivello = risultato.filter { LivelloCEFR.daTesto(it.livello).ordine <= livelloUtente.ordine }
+        val filtrati = DeduplicaEsercizi.senzaGiaVisti(nelLivello, evitaChiavi, ::chiaveGenerata)
+        // Se il modello ha riproposto SOLO domande già viste, meglio ripresentarle
+        // (sempre deduplicate) che mostrare "nessun esercizio": lo studente può
+        // comunque esercitarsi e la schermata non va in errore.
+        val ammessi = if (filtrati.isNotEmpty()) filtrati
+            else DeduplicaEsercizi.distinti(nelLivello, ::chiaveGenerata)
         val nuovi = ammessi.map { e ->
             EsercizioGenEntity(
                 id = e.id, tipo = tipo.jsonTipo, domanda = e.domanda,
@@ -1320,7 +1351,7 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             profileManager.aggiornaStatoAttivo(nuovoStato)
             setGenFlow(tipo, statoGenerati(tipo, nuovoStato))
         }
-        return risultato
+        return ammessi
     }
 
     // ---- Memoria esercizi fatti + pre-generazione passiva in background ----

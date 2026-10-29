@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.ProfiloUtente
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.remote.TipoEsercizio
@@ -115,7 +116,9 @@ fun ProduzioneScrittaScreen(
             suggerimenti = task.punti
         )
     }
-    val eserciziGeneratiConvenieti = eserciziGen.map { gen ->
+    val eserciziGeneratiConvenieti = DeduplicaEsercizi.distinti(eserciziGen) {
+        DeduplicaEsercizi.chiave(it.domanda)
+    }.map { gen ->
         EsercizioScrittura(
             id = gen.id,
             titolo = "Generato dall'AI",

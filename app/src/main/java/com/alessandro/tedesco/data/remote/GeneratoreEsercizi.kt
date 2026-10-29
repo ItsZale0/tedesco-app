@@ -7,6 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.di.HttpCondiviso
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -105,8 +106,9 @@ class GeneratoreEsercizi {
      * @param contestoMedico true = usa vocabolario medico/ospedaliero
      * @param evita lista di testi già mostrati, per non ripetere le domande
      * @param modello modello opzionale (null = cascata dei free)
-     * @return lista di esercizi validati (può essere più corta di [quanti]
-     *         se il modello ne produce di scadenti: quelli invalidi sono scartati)
+     * @return lista di esercizi validati, senza duplicati di contenuto e
+     *         al massimo [quanti] elementi (può essere più corta se il modello
+     *         produce esercizi ripetuti o scadenti)
      */
     suspend fun genera(
         apiKey: String,
@@ -136,7 +138,7 @@ class GeneratoreEsercizi {
             for (m in modelli) {
                 try {
                     val risposta = chiamaModello(apiKey, m, messaggi)
-                    val esercizi = parseEsercizi(risposta, tipo, livello)
+                    val esercizi = parseEsercizi(risposta, tipo, livello, quanti)
                     if (esercizi.isNotEmpty()) return@withContext esercizi
                     ultimoErrore = "Risposta non valida dal modello $m"
                 } catch (e: IOException) {
@@ -345,10 +347,11 @@ class GeneratoreEsercizi {
     /** true se il testo contiene caratteri di alfabeti non latini (arabo, cirillico, CJK...). */
     private fun contieneNonLatino(testo: String): Boolean = regexNonLatino.containsMatchIn(testo)
 
-    private fun parseEsercizi(
+    internal fun parseEsercizi(
         risposta: String,
         tipo: TipoEsercizio,
-        livelloDefault: String
+        livelloDefault: String,
+        quanti: Int = Int.MAX_VALUE
     ): List<EsercizioGenerato> {
         val jsonPulito = estraiJson(risposta) ?: return emptyList()
         val parsed = runCatching {
@@ -379,7 +382,7 @@ class GeneratoreEsercizi {
                 .toList()
         } else emptyList()
 
-        return parsed.esercizi.mapIndexedNotNull { index, e ->
+        val validi = parsed.esercizi.mapIndexedNotNull { index, e ->
             val domanda = e.domanda?.trim().orEmpty()
             val opzioni = e.opzioni?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty()
             val rispostaCorretta = e.rispostaCorretta ?: return@mapIndexedNotNull null
@@ -416,6 +419,19 @@ class GeneratoreEsercizi {
                 glossario = glossarioCondiviso
             )
         }
+
+        // Deduplica per CONTENUTO: il modello può ripetere la stessa domanda
+        // più volte nel batch (id diversi, testo uguale). Per l'ascolto la
+        // frase fa parte della chiave, così due audio diversi con la stessa
+        // domanda generica restano due esercizi distinti.
+        fun chiaveDi(e: EsercizioGenerato): String =
+            DeduplicaEsercizi.chiave(
+                e.domanda,
+                if (tipo == TipoEsercizio.ASCOLTO) e.fraseTedesca else null
+            )
+
+        return DeduplicaEsercizi.distinti(validi, ::chiaveDi)
+            .take(quanti)
     }
 
     /** Trova il primo blocco JSON bilanciato nella risposta. */

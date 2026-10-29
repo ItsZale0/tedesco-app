@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.local.DomandaTest
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.data.remote.EsercizioGenerato
 import com.alessandro.tedesco.ui.theme.Spaziature
 import com.alessandro.tedesco.ui.theme.dimensioneContenuto
@@ -84,8 +85,14 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        elenco = if (freschi.isNotEmpty()) {
-            freschi.map {
+        // Deduplica per contenuto: l'AI può restituire la stessa domanda più
+        // volte (id nuovi, testo identico). Senza questo la schermata mostrava
+        // 18 domande che in realtà erano 5 ripetute.
+        val freschiUnici = DeduplicaEsercizi.distinti(freschi) {
+            DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+        }
+        elenco = if (freschiUnici.isNotEmpty()) {
+            freschiUnici.map {
                 DomandaTest(
                     id = it.id,
                     tipo = TipoDomanda.GRAMMATICA,
@@ -98,7 +105,9 @@ fun ProduzioneScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                 )
             }
         } else {
-            eserciziGen.filterNot { it.completato }.map { it.toDomandaTest() }
+            DeduplicaEsercizi.distinti(eserciziGen.filterNot { it.completato }) {
+                DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+            }.map { it.toDomandaTest() }
         }
         indice = 0
         rispostaSelezionata = null

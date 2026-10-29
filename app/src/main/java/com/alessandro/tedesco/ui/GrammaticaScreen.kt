@@ -25,6 +25,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.IOException
 import java.net.URLEncoder
 import com.alessandro.tedesco.data.GrammaticaB1
+import com.alessandro.tedesco.data.DeduplicaEsercizi
 import com.alessandro.tedesco.data.EsercizioGrammatica
 import com.alessandro.tedesco.data.toEsercizioGrammatica
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,8 +81,13 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
             erroreGen = e.localizedMessage ?: "Errore di rete"
             emptyList()
         }
-        esercizi = if (freschi.isNotEmpty()) {
-            freschi.map {
+        // Deduplica per contenuto: stessa domanda ripetuta nel batch = un solo
+        // esercizio (gli id generati sono sempre nuovi, quindi non bastano).
+        val freschiUnici = DeduplicaEsercizi.distinti(freschi) {
+            DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+        }
+        esercizi = if (freschiUnici.isNotEmpty()) {
+            freschiUnici.map {
                 EsercizioGrammatica(
                     id = it.id,
                     categoria = CategoriaGrammatica.perLivello(livello).firstOrNull() ?: CategoriaGrammatica.VERBI_TEMPI,
@@ -94,8 +100,9 @@ fun GrammaticaScreen(vm: TedescoViewModel, onFatto: () -> Unit = {}) {
                 )
             }
         } else {
-            eserciziGen.filterNot { it.completato }
-                .map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
+            DeduplicaEsercizi.distinti(eserciziGen.filterNot { it.completato }) {
+                DeduplicaEsercizi.chiave(it.domanda, it.fraseTedesca)
+            }.map { it.toEsercizioGrammatica(lezioneCorrente, livello) }
         }
         indice = 0
         caricato = true

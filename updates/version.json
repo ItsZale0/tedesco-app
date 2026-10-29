@@ -1,7 +1,7 @@
 {
-  "versionCode": 234,
-  "versionName": "1.48.1",
-  "changelog": "Banchi di esercizi extra per 26 unita' di grammatica (da A0 pronomi/articoli/plurali fino a B1 konjunktiv II, genitivo, plusquamperfekt, connettori e discorso indiretto): ogni argomento ha ora 5-6 esercizi ulteriori oltre a quelli della lezione, spunti e spiegazioni in italiano, risposta accetta anche ae/oe/ue/ss. Rispetto dei dati: nessuna chiave di progresso cambia.",
+  "versionCode": 235,
+  "versionName": "1.48.2",
+  "changelog": "Corretto il bug delle ripetizioni: nella Produzione (e in Comprensione, Grammatica, Ascolto, Produzione scritta) l'AI poteva restituire la stessa domanda piu' volte con id diversi, cosi' 18 esercizi erano in realta' 5 ripetuti. Ora gli esercizi sono deduplicati per contenuto (maiuscole, umlaut, punteggiatura e spazi ignorati) sia nel batch appena generato sia nella memoria 'gia visto', che viene anche ripulita dalle copie gia' salvate. Per l'ascolto la frase tedesca fa parte del confronto, quindi la stessa domanda su audio diversi resta valida. Corretto anche l'ascolto A2/B1: prima tornavano sempre le stesse 5 domande A1, ora c'e' la banca completa per ogni livello. Aggiunti test di regressione sui duplicati. Rispetto dei dati: nessuna chiave di progresso cambia.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.1/Tedesco-v1.48.1.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.2/Tedesco-v1.48.2.apk"
 }

@@ -296,9 +296,9 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
                 "Mi chiamo Emma.",
             domanda = "Come si chiama il parlante?",
             opzioni = if (profilo?.config?.mostraContestoMedico == true)
-                listOf("Alessandro", "Marco", "Luca")
+                listOf("Alessandro", "Marco", "Luca", "Paolo")
             else
-                listOf("Emma", "Anna", "Julia"),
+                listOf("Emma", "Anna", "Julia", "Sofia"),
             rispostaCorretta = 0,
             spiegazione = if (profilo?.config?.mostraContestoMedico == true)
                 "Il parlante dice 'Ich heiße Alessandro' (Mi chiamo Alessandro)"
@@ -311,7 +311,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Ich komme aus Italien.",
             traduzioneItaliana = "Vengo dall'Italia.",
             domanda = "Da dove viene il parlante?",
-            opzioni = listOf("Germania", "Italia", "Austria"),
+            opzioni = listOf("Germania", "Italia", "Austria", "Svizzera"),
             rispostaCorretta = 1,
             spiegazione = "Il parlante dice 'Ich komme aus Italien' (Vengo dall'Italia)",
             livello = "A0"
@@ -328,9 +328,9 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
                 "Sono studentessa.",
             domanda = "Qual è il lavoro/studio del parlante?",
             opzioni = if (profilo?.config?.mostraContestoMedico == true)
-                listOf("Medico", "Insegnante", "Fisioterapeuta")
+                listOf("Medico", "Insegnante", "Fisioterapeuta", "Infermiere")
             else
-                listOf("Studentessa", "Insegnante", "Medica"),
+                listOf("Studentessa", "Insegnante", "Medica", "Avvocata"),
             rispostaCorretta = if (profilo?.config?.mostraContestoMedico == true) 2 else 0,
             spiegazione = if (profilo?.config?.mostraContestoMedico == true)
                 "Il parlante dice 'Ich bin Physiotherapeut' (Sono fisioterapeuta)"
@@ -343,7 +343,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Eins, zwei, drei, vier, fünf.",
             traduzioneItaliana = "Uno, due, tre, quattro, cinque.",
             domanda = "Quanti numeri sono stati detti?",
-            opzioni = listOf("3", "5", "7"),
+            opzioni = listOf("3", "5", "7", "9"),
             rispostaCorretta = 1,
             spiegazione = "Sono stati detti 5 numeri: eins, zwei, drei, vier, fünf",
             livello = "A0"
@@ -353,7 +353,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Das ist meine Mutter.",
             traduzioneItaliana = "Questa è mia madre.",
             domanda = "Chi è 'die Mutter'?",
-            opzioni = listOf("la madre", "il padre", "la sorella"),
+            opzioni = listOf("la madre", "il padre", "la sorella", "il fratello"),
             rispostaCorretta = 0,
             spiegazione = "'Die Mutter' significa 'la madre'",
             livello = "A0"
@@ -370,9 +370,9 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
                 "Vivo a Berlino.",
             domanda = "Dove vive il parlante?",
             opzioni = if (profilo?.config?.mostraContestoMedico == true)
-                listOf("Milano", "Bozen", "Roma")
+                listOf("Milano", "Bozen", "Roma", "Venezia")
             else
-                listOf("Monaco", "Berlino", "Amburgo"),
+                listOf("Monaco", "Berlino", "Amburgo", "Vienna"),
             rispostaCorretta = if (profilo?.config?.mostraContestoMedico == true) 1 else 1,
             spiegazione = if (profilo?.config?.mostraContestoMedico == true)
                 "Il parlante dice 'Ich wohne in Bozen' (Vivo a Bolzano)"
@@ -385,7 +385,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Ich hätte gern ein Wasser, bitte.",
             traduzioneItaliana = "Vorrei un'acqua, per favore.",
             domanda = "Cosa vuole il parlante?",
-            opzioni = listOf("caffè", "vino", "acqua"),
+            opzioni = listOf("caffè", "vino", "acqua", "succo"),
             rispostaCorretta = 2,
             spiegazione = "Il parlante dice 'ein Wasser' (un'acqua)",
             livello = "A0"
@@ -395,7 +395,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Guten Morgen!",
             traduzioneItaliana = "Buongiorno!",
             domanda = "Cosa dice il parlante?",
-            opzioni = listOf("Buonanotte", "Buongiorno", "Arrivederci"),
+            opzioni = listOf("Buonanotte", "Buongiorno", "Arrivederci", "Buonasera"),
             rispostaCorretta = 1,
             spiegazione = "'Guten Morgen' significa 'Buongiorno'",
             livello = "A0"
@@ -405,7 +405,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Danke schön!",
             traduzioneItaliana = "Grazie mille!",
             domanda = "Cosa dice il parlante?",
-            opzioni = listOf("Prego", "Grazie", "Scusa"),
+            opzioni = listOf("Prego", "Grazie", "Scusa", "Per favore"),
             rispostaCorretta = 1,
             spiegazione = "'Danke schön' significa 'Grazie mille'",
             livello = "A0"
@@ -415,7 +415,7 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
             fraseTedesca = "Ich lerne Deutsch.",
             traduzioneItaliana = "Imparo tedesco.",
             domanda = "Cosa fa il parlante?",
-            opzioni = listOf("lavora", "impara tedesco", "dorme"),
+            opzioni = listOf("lavora", "impara tedesco", "dorme", "mangia"),
             rispostaCorretta = 1,
             spiegazione = "Il parlante dice 'Ich lerne Deutsch' (Imparo tedesco)",
             livello = "A0"
@@ -426,29 +426,9 @@ fun getEserciziA0(profilo: ProfiloUtente?): List<EsercizioAscolto> {
 
 // Aggiungi esercizi A0 alla lista principale (profile-aware)
 fun getTuttiEserciziAscolto(profilo: ProfiloUtente?): List<EsercizioAscolto> {
-    return getEserciziA0(profilo) + listOf(
-        EsercizioAscolto("a1_1", "Ich habe zwei Brüder und eine Schwester.", "Ho due fratelli e una sorella.", "Quanti fratelli ha il parlante?", listOf("1", "2", "3"), 1, "Il parlante dice 'zwei Brüder' (due fratelli)", "A1"),
-        EsercizioAscolto("a1_2", "Ich arbeite in einem Krankenhaus.", "Lavoro in un ospedale.", "Dove lavora il parlante?", listOf("scuola", "ospedale", "ufficio"), 1, "Il parlante dice 'in einem Krankenhaus' (in un ospedale)", "A1"),
-        EsercizioAscolto("a1_3", if (profilo?.config?.mostraContestoMedico == true)
-            "Ich wohne seit zwei Jahren in Bozen."
-        else
-            "Ich wohne seit zwei Jahren in Berlin.",
-            if (profilo?.config?.mostraContestoMedico == true)
-                "Vivo a Bolzano da due anni."
-            else
-                "Vivo a Berlino da due anni.",
-            "Da quanto tempo vive lì?",
-            if (profilo?.config?.mostraContestoMedico == true)
-                listOf("1 anno", "2 anni", "3 anni")
-            else
-                listOf("1 anno", "2 anni", "3 anni"),
-            1,
-            if (profilo?.config?.mostraContestoMedico == true)
-                "Il parlante dice 'seit zwei Jahren' (da due anni)"
-            else
-                "Il parlante dice 'seit zwei Jahren' (da due anni)",
-            "A1"),
-        EsercizioAscolto("a1_4", "Ich habe gestern einen Test gemacht.", "Ieri ho fatto un test.", "Quando ha fatto il test?", listOf("oggi", "ieri", "domani"), 1, "Il parlante dice 'gestern' (ieri)", "A1"),
-        EsercizioAscolto("a1_5", "Ich werde nächste Woche nach Italien fahren.", "La prossima settimana andrò in Italia.", "Quando andrà in Italia?", listOf("questa settimana", "la prossima settimana", "il mese prossimo"), 1, "Il parlante dice 'nächste Woche' (la prossima settimana)", "A1")
-    )
+    // A0 dipende dal profilo (contesto medico); A1/A2/B1 sono la banca ricca
+    // di AscoltoData. Prima qui c'era una seconda lista A1 ridotta (5 esercizi
+    // con gli stessi id a1_1..a1_5 della banca vera): A2 e B1 non esistevano e
+    // per tutti gli studenti restavano sempre le stesse 5 domande.
+    return getEserciziA0(profilo) + AscoltoData.esercizi
 }
