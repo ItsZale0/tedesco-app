@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.Dialoghi
 import com.alessandro.tedesco.data.Dialoghi.DialogoAscolto
+import com.alessandro.tedesco.data.RotoreEsercizi
 import com.alessandro.tedesco.ui.theme.Spaziature
 import java.util.Locale
 
@@ -70,7 +71,8 @@ fun DialoghiScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Dialoghi.dialoghi.forEach { d ->
+                RotoreEsercizi.ordine("dialoghi", Dialoghi.dialoghi.size)
+                    .map { Dialoghi.dialoghi[it] }.forEach { d ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

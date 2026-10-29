@@ -2,6 +2,7 @@ package com.alessandro.tedesco.ui
 
 import android.Manifest
 import android.content.Context
+import com.alessandro.tedesco.data.RotoreEsercizi
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -239,7 +240,8 @@ fun PronunciaScreen(
 
             when (sezione) {
                 SezionePronuncia.COPPIE -> {
-                    Pronuncia.coppie.forEach { coppia ->
+                    RotoreEsercizi.ordine("pronuncia-coppie", Pronuncia.coppie.size)
+                        .map { Pronuncia.coppie[it] }.forEach { coppia ->
                         val id = "${coppia.a}-${coppia.b}"
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -299,8 +301,10 @@ fun PronunciaScreen(
 
                 SezionePronuncia.FRASI -> {
                     val frasi = Pronuncia.scioglilingua + Pronuncia.frasiCliniche
-                    frasi.forEachIndexed { i, frase ->
-                        val id = "frase_$i"
+                    val idFrasi = remember { RotoreEsercizi.ordine("pronuncia-frasi", frasi.size) }
+                    idFrasi.forEachIndexed { i, f ->
+                        val frase = frasi[f]
+                        val id = "frase_$f"
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)

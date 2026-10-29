@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import com.alessandro.tedesco.data.RotoreEsercizi
 import com.alessandro.tedesco.data.Sprechuebungen
 import com.alessandro.tedesco.ui.theme.Spaziature
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +46,11 @@ fun SprechuebungenScreen(
     val profilo by vm.profiloAttivo.collectAsStateWithLifecycle(null)
     val livello = profilo?.stato?.progresso?.livelloCorrente?.codiceBreve() ?: "A1"
     val prompts = remember(livello) { Sprechuebungen.perLivello(livello) }
+    // Ogni giorno si riparte da un esercizio diverso del banco: la stessa
+    // lista "gira" senza bisogno di salvare nulla.
+    val indiciGiorno = remember(livello, prompts) {
+        RotoreEsercizi.ordine("sprech-$livello", prompts.size)
+    }
     var indice by remember(livello) { mutableIntStateOf(0) }
     var registrando by remember { mutableStateOf(false) }
     var messaggio by remember { mutableStateOf<String?>(null) }
@@ -110,7 +116,7 @@ fun SprechuebungenScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(osservatore) }
     }
 
-    val prompt = prompts.getOrNull(indice)
+    val prompt = prompts.getOrNull(indiciGiorno.getOrNull(indice) ?: indice)
 
     ScreenScaffold("Sprechübungen", onBack = onIndietro) {
         if (prompt == null) {

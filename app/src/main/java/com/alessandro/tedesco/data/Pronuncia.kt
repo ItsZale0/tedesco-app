@@ -33,7 +33,13 @@ object Pronuncia {
         CoppiaMinima("Stadt", "Staat", "a corta vs a lunga", "città", "stato"),
         CoppiaMinima("Kirche", "Kirsche", "ch dolce vs sch", "chiesa", "ciliegia"),
         CoppiaMinima("wissen", "weißen", "ss vs ß + ei", "sapere", "bianco (verbo)"),
-        CoppiaMinima("reisen", "reißen", "s vs ß", "viaggiare", "strappare")
+        CoppiaMinima("reisen", "reißen", "s vs ß", "viaggiare", "strappare"),
+        CoppiaMinima("Kahn", "Kann", "a lunga vs a corta", "barca", "posso"),
+        CoppiaMinima("Bruder", "Brüder", "u vs ü", "fratello", "fratelli"),
+        CoppiaMinima("Vetter", "Wetter", "v si legge 'f' vs w", "cugino", "tempo"),
+        CoppiaMinima("weisen", "wissen", "ei vs i", "indicare/biancare", "sapere"),
+        CoppiaMinima("Hund", "Hand", "au vs a", "cane", "mano"),
+        CoppiaMinima("Beeren", "Bären", "e lunga vs ä lunga", "bacche", "orsi")
     )
 
     val consigli: List<Consiglio> = listOf(
@@ -53,7 +59,11 @@ object Pronuncia {
         "Brautkleid bleibt Brautkleid und Blaukraut bleibt Blaukraut.",
         "Zehn zahme Ziegen zogen zehn Zentner Zucker zum Zoo.",
         "Schnecken erschrecken, wenn Schnecken an Schnecken schlecken.",
-        "Der Whiskymixer mixt Whisky, wenn der Whiskymixer Whisky mixt."
+        "Der Whiskymixer mixt Whisky, wenn der Whiskymixer Whisky mixt.",
+        "In Ulm, um Ulm und um Ulm herum.",
+        "Zwischen zwei Zwetschgenzweigen sitzen zwei zwitschernde Schwalben.",
+        "Esel essen Nesseln nicht, Nesseln essen Esel nicht.",
+        "Der Cottbuser Postkutscher putzt den Cottbuser Postkutscherkasten."
     )
 
     val frasiCliniche: List<String> = listOf(
@@ -64,6 +74,14 @@ object Pronuncia {
         "Bitte entspannen Sie die Schulter.",
         "Ich zeige Ihnen die Übung, dann machen Sie sie nach.",
         "Bitte bringen Sie den Befund mit.",
-        "Haben Sie noch Fragen?"
+        "Haben Sie noch Fragen?",
+        "Bitte drehen Sie sich auf den Bauch.",
+        "Bitte heben Sie die Schulter an und lassen Sie sie langsam sinken.",
+        "Wie fühlen Sie sich heute?",
+        "Bitte stehen Sie langsam auf: erst seitwärts, dann aufrecht.",
+        "Machen Sie dreimal zehn Wiederholungen mit einer Pause dazwischen.",
+        "Strecken und beugen Sie das Knie, ohne es ganz durchzudrücken.",
+        "Der Schmerz ist nachmittags schlimmer oder morgens?",
+        "Heute war die Sitzung gut: Sie haben viel geschafft."
     )
 }

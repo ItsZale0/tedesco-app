@@ -1,7 +1,7 @@
 {
-  "versionCode": 232,
-  "versionName": "1.47.3",
-  "changelog": "Sprechuebungen disponibile anche per il livello A0: 5 nuovi esercizi di primo contatto (salutare, dire il nome, sillabare, numeri/telefono, dire che non si sta bene). I livelli senza contenuti dedicati mostrano ora gli esercizi del livello piu' semplice invece di una schermata vuota.",
+  "versionCode": 233,
+  "versionName": "1.48.0",
+  "changelog": "Molti piu' esercizi per ogni sezione: Sprechuebungen passa da 5-6 esercizi per livello a 8-10 (15 nuovi, con A0 ben coperto), Dialoghi da 5 a 12 conversazioni (primo giorno di corso, farmacia, supermercato, medico, dentista, prima giornata lavorativa, colloquio), Pronuncia con piu' coppie minime, scioglilingua frasi cliniche. Ogni giorno l'ordine esercizi ruota: la stessa lista si ripresenta fresca, senza bisogno di salvar nulla.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.47.3/Tedesco-v1.47.3.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.0/Tedesco-v1.48.0.apk"
 }
