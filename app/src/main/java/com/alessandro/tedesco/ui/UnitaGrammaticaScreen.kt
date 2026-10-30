@@ -38,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.EsempioGrammatica
 import com.alessandro.tedesco.data.EsercizioUnita
 import com.alessandro.tedesco.data.GrammaticaSyllabus
+import com.alessandro.tedesco.data.local.RotazioneUnita
 import com.alessandro.tedesco.data.SessioneLezione
 import com.alessandro.tedesco.data.TabellaGrammatica
 import com.alessandro.tedesco.data.TipoEsercizioGrammatica
@@ -101,9 +103,37 @@ fun UnitaGrammaticaScreen(
     var tentativi by rememberSaveable(unitaId) { mutableStateOf(0) }
     var errori by rememberSaveable(unitaId) { mutableStateOf(listOf<ErroreRisposta>()) }
 
-    val eserciziSessione = remember(unita.id, seme, tentativi) {
-        SessioneLezione.esercizi(unita, (seme + tentativi * 7919L).toInt())
+    // Banco della lezione: esercizi scritti + quelli generati dall'AI.
+    val rotazioni by vm.rotazioniEsercizi.collectAsStateWithLifecycle()
+    val eserciziAi by vm.eserciziUnitaAi.collectAsStateWithLifecycle()
+    val banco = remember(unita.id, eserciziAi[unita.id]) {
+        SessioneLezione.banco(unita, eserciziAi[unita.id].orEmpty())
     }
+    // Sessione: quella salvata (ripresa identica se si riapre la lezione),
+    // altrimenti una nuova che NON contiene gli esercizi del tentativo prima.
+    val sessioneSalvata = rotazioni[unita.id]?.sessione
+    val chiaveRotazione = if (tentativi == 0) sessioneSalvata else null
+    val sessione = remember(unita.id, tentativi, chiaveRotazione) {
+        val rotazione = rotazioni[unita.id] ?: RotazioneUnita()
+        if (tentativi == 0) {
+            SessioneLezione.sessione(banco, rotazione, seme.toInt())
+        } else {
+            SessioneLezione.nuovaSessione(banco, rotazione, seme.toInt())
+        }
+    }
+    val eserciziSessione = sessione.esercizi
+
+    // Salva la sessione in corso: così riaprendo la lezione si riprende la
+    // stessa sequenza invece di ricominciare da capo.
+    LaunchedEffect(sessione.rotazione) {
+        vm.aggiornaRotazione(unita.id, sessione.rotazione)
+    }
+    // Esercizi nuovi generati dall'AI: solo quando si fanno davvero gli
+    // esercizi (non mentre si legge la teoria) e mai bloccante.
+    LaunchedEffect(scheda, tentativi) {
+        if (scheda == 1) vm.generaEserciziUnita(unita.id)
+    }
+
     val esercizio = eserciziSessione.getOrNull(indice)
     val percentuale = if (eserciziSessione.isEmpty()) 0
     else corrette * 100 / eserciziSessione.size

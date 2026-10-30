@@ -32,6 +32,7 @@ import com.alessandro.tedesco.data.ProfiliPreset
 import com.alessandro.tedesco.data.local.ProfiloUtente
 import com.alessandro.tedesco.data.local.ProgressoUtente
 import com.alessandro.tedesco.data.local.ReviewEntity
+import com.alessandro.tedesco.data.local.RotazioneUnita
 import com.alessandro.tedesco.data.local.TestGrammatica
 import com.alessandro.tedesco.data.local.TipoProfilo
 import com.alessandro.tedesco.data.local.WordEntity
@@ -63,9 +64,11 @@ import com.alessandro.tedesco.data.local.ProgressoFeedEntity
 import com.alessandro.tedesco.data.local.SessioneEntity
 import com.alessandro.tedesco.data.ErroreEntity
 import com.alessandro.tedesco.data.ErroriSRS
+import com.alessandro.tedesco.data.EsercizioUnita
 import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.UnitaConStato
 import com.alessandro.tedesco.data.PercorsoLezioni
+import com.alessandro.tedesco.data.SessioneLezione
 import com.alessandro.tedesco.data.LezionePercorso
 import com.alessandro.tedesco.data.LezioneAperta
 import com.alessandro.tedesco.data.local.ProgressoLezione
@@ -155,11 +158,10 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
     val lezioneAperta: StateFlow<LezioneAperta?> = profileManager.repositoryFlow
         .map { r ->
             val lezione = lezioneAttiva(r) ?: return@map null
-            val progresso = r.profiloAttivoId
-                ?.let { r.profili[it] }
-                ?.stato?.progressiLezioni?.get(lezione.id)
-                ?: ProgressoLezione()
-            LezioneAperta(lezione, progresso)
+            val statoProfilo = r.profiloAttivoId?.let { r.profili[it] }?.stato
+            val progresso = statoProfilo?.progressiLezioni?.get(lezione.id) ?: ProgressoLezione()
+            val rotazione = statoProfilo?.rotazioniEsercizi?.get(lezione.id) ?: RotazioneUnita()
+            LezioneAperta(lezione, progresso, rotazione)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
@@ -247,6 +249,27 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
             SharingStarted.WhileSubscribed(5_000),
             GrammaticaSyllabus.percorso(emptyMap())
         )
+
+    /**
+     * Rotazione delle sessioni di esercizi, per unità.
+     * Eagerly: la schermata della lezione deve leggere lo stato salvato al primo
+     * frame, altrimenti creerebbe una sessione nuova e ripeterebbe la precedente.
+     */
+    val rotazioniEsercizi: StateFlow<Map<String, RotazioneUnita>> = profileManager.repositoryFlow
+        .map { r ->
+            r.profiloAttivoId?.let { r.profili[it]?.stato?.rotazioniEsercizi } ?: emptyMap()
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    /** Esercizi generati dall'AI per unità, convertiti nel formato delle lezioni. */
+    val eserciziUnitaAi: StateFlow<Map<String, List<EsercizioUnita>>> = profileManager.repositoryFlow
+        .map { r ->
+            val mappa = r.profiloAttivoId
+                ?.let { r.profili[it]?.stato?.eserciziUnitaAi }
+                ?: emptyMap()
+            mappa.mapValues { (_, lista) -> lista.mapNotNull { SessioneLezione.daGenerato(it) } }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val statistiche: StateFlow<Statistiche?> = combine(
         repo.observeWords(),
@@ -1454,6 +1477,105 @@ class TedescoViewModel(application: Application) : AndroidViewModel(application)
                 // resta aggiornato anche se l'app viene chiusa.
                 immediato = true
             )
+        }
+    }
+
+    // ---- Rotazione degli esercizi delle lezioni ----
+
+    /**
+     * Salva la sessione di esercizi in corso (o quella appena creata).
+     * Se la sessione è cambiata il progresso della lezione riparte da zero:
+     * l'indice salvato si riferiva alle domande precedenti.
+     */
+    fun aggiornaRotazione(unitaId: String, rotazione: RotazioneUnita) {
+        val profilo = profileManager.profiloAttivo() ?: return
+        val stato = profilo.stato
+        val precedente = stato.rotazioniEsercizi[unitaId]
+        if (precedente == rotazione) return
+        val sessioneNuova = precedente?.sessione != rotazione.sessione
+        viewModelScope.launch {
+            profileManager.aggiornaStatoAttivo(
+                stato.copy(
+                    rotazioniEsercizi = stato.rotazioniEsercizi + (unitaId to rotazione),
+                    progressiLezioni = if (sessioneNuova) {
+                        stato.progressiLezioni + (unitaId to ProgressoLezione())
+                    } else {
+                        stato.progressiLezioni
+                    }
+                )
+            )
+        }
+    }
+
+    private val _generazioneUnitaInCorso = MutableStateFlow<Set<String>>(emptySet())
+    val generazioneUnitaInCorso: StateFlow<Set<String>> = _generazioneUnitaInCorso.asStateFlow()
+
+    /** Ultima richiesta AI per unità: evita di bruciare rate limit riaprendo la lezione. */
+    private val ultimaGenerazioneUnita = mutableMapOf<String, Long>()
+
+    /**
+     * Genera esercizi NUOVI specifici di una unità (stessa regola, domande
+     * diverse) e li aggiunge al banco persistito di quella unità.
+     *
+     * Best effort: se l'AI non è raggiungibile la lezione continua con gli
+     * esercizi offline, senza errori visibili.
+     */
+    fun generaEserciziUnita(unitaId: String, quanti: Int = 8) {
+        val unita = GrammaticaSyllabus.perId(unitaId) ?: return
+        val profilo = profileManager.profiloAttivo() ?: return
+        if (unitaId in _generazioneUnitaInCorso.value) return
+        val adesso = System.currentTimeMillis()
+        if (adesso - (ultimaGenerazioneUnita[unitaId] ?: 0L) < 90_000L) return
+        ultimaGenerazioneUnita[unitaId] = adesso
+        _generazioneUnitaInCorso.value = _generazioneUnitaInCorso.value + unitaId
+        viewModelScope.launch {
+            try {
+                val esistenti = profilo.stato.eserciziUnitaAi[unitaId].orEmpty()
+                val evita = unita.esercizi.map { it.domanda } + esistenti.map { it.domanda }
+                val generati = app.generatoreEserciziInstance.genera(
+                    apiKey = tutorApiKey.value,
+                    tipo = TipoEsercizio.GRAMMATICA,
+                    livello = unita.livello,
+                    quanti = quanti,
+                    contestoMedico = profilo.config.mostraContestoMedico,
+                    evita = evita,
+                    tema = "${unita.titolo} — ${unita.obiettivo}"
+                )
+                if (generati.isEmpty()) return@launch
+                val attuale = profileManager.profiloAttivo() ?: return@launch
+                val giaPresenti = attuale.stato.eserciziUnitaAi[unitaId].orEmpty()
+                val chiavi = (unita.esercizi.map { it.domanda } + giaPresenti.map { it.domanda })
+                    .mapTo(HashSet()) { DeduplicaEsercizi.chiave(it) }
+                val nuovi = DeduplicaEsercizi.distinti(generati) { DeduplicaEsercizi.chiave(it.domanda) }
+                    .filter { DeduplicaEsercizi.chiave(it.domanda) !in chiavi }
+                    .map { e ->
+                        EsercizioGenEntity(
+                            id = e.id,
+                            tipo = TipoEsercizio.GRAMMATICA.jsonTipo,
+                            domanda = e.domanda,
+                            opzioni = e.opzioni,
+                            rispostaCorretta = e.rispostaCorretta,
+                            spiegazione = e.spiegazione,
+                            livello = LivelloCEFR.daTesto(e.livello).codiceBreve()
+                        )
+                    }
+                if (nuovi.isEmpty()) return@launch
+                val uniti = DeduplicaEsercizi.unisciTenendoUltimi(
+                    esistenti = giaPresenti,
+                    nuovi = nuovi,
+                    max = 40,
+                    chiave = { DeduplicaEsercizi.chiave(it.domanda) }
+                )
+                profileManager.aggiornaStatoAttivo(
+                    attuale.stato.copy(
+                        eserciziUnitaAi = attuale.stato.eserciziUnitaAi + (unitaId to uniti)
+                    )
+                )
+            } catch (e: Exception) {
+                // Offline o rate limit: si continua con il banco scritto a mano.
+            } finally {
+                _generazioneUnitaInCorso.value = _generazioneUnitaInCorso.value - unitaId
+            }
         }
     }
 

@@ -362,7 +362,37 @@ data class ProfiloStato(
     /** Giorno (yyyy-MM-dd) a cui si riferiscono i passi del piano completati. */
     val passiGiornoData: String = "",
     /** IDs dei passi del piano giornaliero completati in [passiGiornoData]. */
-    val passiGiornoIds: List<String> = emptyList()
+    val passiGiornoIds: List<String> = emptyList(),
+    /**
+     * Rotazione delle sessioni di esercizi, per id di unità.
+     * Serve a non riproporre nel tentativo successivo gli esercizi appena
+     * visti: senza questo stato il banco di una lezione è troppo piccolo per
+     * garantire sessioni davvero diverse. Default vuoto = profili esistenti validi.
+     */
+    val rotazioniEsercizi: Map<String, RotazioneUnita> = emptyMap(),
+    /**
+     * Esercizi generati dall'AI specifici di una unità del percorso.
+     * Restano separati dal banco scritto a mano: se l'AI non è raggiungibile
+     * la lezione continua a funzionare con i suoi esercizi.
+     */
+    val eserciziUnitaAi: Map<String, List<EsercizioGenEntity>> = emptyMap()
+)
+
+/**
+ * Stato di rotazione degli esercizi di una unità.
+ *
+ * - [visti]: esercizi già usciti nel ciclo corrente (per non riproporli);
+ * - [ultimi]: esercizi della sessione precedente (mai riproposti subito);
+ * - [sessione]: ids della sessione in corso, così chiudendo l'app si riprende
+ *   esattamente la stessa sessione invece di ricominciare da capo;
+ * - [seme]: seme con cui è stata costruita, per ricostruire le stesse opzioni.
+ */
+@Serializable
+data class RotazioneUnita(
+    val visti: List<String> = emptyList(),
+    val ultimi: List<String> = emptyList(),
+    val sessione: List<String> = emptyList(),
+    val seme: Int = 0
 )
 
 /** Progresso persistente di una lezione del percorso. */

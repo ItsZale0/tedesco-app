@@ -1076,22 +1076,47 @@ private fun SezioneLezionePercorso(
 ) {
     val unita = stato.lezione.unita
 
-    // Un "ripasso" (dopo aver concluso la lezione) usa una sessione ruotata:
-    // stesse regole, domande diverse e opzioni in ordine diverso. Il primo
-    // passaggio invece resta sequenziale, così il punto salvato è valido.
-    var ripasso by rememberSaveable(stato.id) { mutableStateOf(false) }
+    // Ogni tentativo usa una sessione DIVERSA: la prima riprende quella salvata
+    // (così chiudendo l'app si continua dalla stessa domanda), le successive
+    // escludono gli esercizi appena fatti. Così non ci si ritrova le stesse
+    // domande di 20 secondi prima.
+    var tentativi by rememberSaveable(stato.id) { mutableIntStateOf(0) }
     var seme by rememberSaveable(stato.id) { mutableStateOf(System.currentTimeMillis()) }
     var errori by rememberSaveable(stato.id) { mutableStateOf(listOf<ErroreRisposta>()) }
-    val eserciziSessione = remember(unita.id, ripasso, seme) {
-        if (ripasso) SessioneLezione.esercizi(unita, seme.toInt()) else unita.esercizi
+
+    val eserciziAi by vm.eserciziUnitaAi.collectAsStateWithLifecycle()
+    val banco = remember(unita.id, eserciziAi[unita.id]) {
+        SessioneLezione.banco(unita, eserciziAi[unita.id].orEmpty())
     }
+    val chiaveRotazione = if (tentativi == 0) stato.rotazione.sessione else null
+    val sessione = remember(unita.id, tentativi, chiaveRotazione) {
+        if (tentativi == 0) {
+            SessioneLezione.sessione(banco, stato.rotazione, seme.toInt())
+        } else {
+            SessioneLezione.nuovaSessione(banco, stato.rotazione, seme.toInt())
+        }
+    }
+    val eserciziSessione = sessione.esercizi
     val totale = eserciziSessione.size
 
+    // Sessione nuova (primo avvio dopo l'aggiornamento o "Riprova"): il punto
+    // salvato si riferiva ad altre domande, quindi si riparte da zero.
+    val sessioneNuova = stato.rotazione.sessione != sessione.rotazione.sessione
+
+    LaunchedEffect(sessione.rotazione) {
+        vm.aggiornaRotazione(unita.id, sessione.rotazione)
+        vm.generaEserciziUnita(unita.id)
+    }
+
     var indice by rememberSaveable(stato.id) {
-        mutableIntStateOf(stato.progresso.indice.coerceIn(0, totale))
+        mutableIntStateOf(
+            if (sessioneNuova) 0 else stato.progresso.indice.coerceIn(0, totale)
+        )
     }
     var corrette by rememberSaveable(stato.id) {
-        mutableIntStateOf(stato.progresso.corrette.coerceIn(0, totale))
+        mutableIntStateOf(
+            if (sessioneNuova) 0 else stato.progresso.corrette.coerceIn(0, totale)
+        )
     }
     var scelta by rememberSaveable(stato.id) { mutableIntStateOf(-1) }
     var testo by rememberSaveable(stato.id) { mutableStateOf("") }
@@ -1126,12 +1151,8 @@ private fun SezioneLezionePercorso(
         } else {
             errori = errori + ErroreRisposta(indice, rispostaData(e))
         }
-        // Durante un ripasso ruotato non si salva il punto: la sessione non è
-        // persistita, quindi riprenderebbe su domande diverse. Si salva solo
-        // la padronanza alla fine.
-        if (!ripasso) {
-            vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
-        }
+        // La sessione è persistita, quindi il punto salvato è sempre valido.
+        vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
     }
 
     fun avanti() {
@@ -1140,14 +1161,10 @@ private fun SezioneLezionePercorso(
             scelta = -1
             testo = ""
             verificato = false
-            if (!ripasso) {
-                vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
-            }
+            vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
         } else {
             indice = totale
-            if (!ripasso) {
-                vm.salvaProgressoLezione(stato.id, totale, corrette, totale, completata = true)
-            }
+            vm.salvaProgressoLezione(stato.id, totale, corrette, totale, completata = true)
             vm.salvaPadronanzaGrammatica(stato.id, corrette, totale)
             vm.completaPassoGiornaliero("grammatica")
         }
@@ -1239,7 +1256,7 @@ private fun SezioneLezionePercorso(
                 testo = ""
                 verificato = false
                 errori = emptyList()
-                ripasso = true
+                tentativi += 1
                 seme = System.currentTimeMillis()
             },
             onAvanti = { vm.avanzaLezionePercorso(stato.id) }

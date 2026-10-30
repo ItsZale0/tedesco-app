@@ -1,6 +1,7 @@
 package com.alessandro.tedesco.data
 
 import com.alessandro.tedesco.data.local.ProgressoLezione
+import com.alessandro.tedesco.data.local.RotazioneUnita
 
 /**
  * Le lezioni NON sono più una sequenza numerica scollegata dal percorso:
@@ -39,7 +40,9 @@ data class LezionePercorso(
  */
 data class LezioneAperta(
     val lezione: LezionePercorso,
-    val progresso: ProgressoLezione
+    val progresso: ProgressoLezione,
+    /** Sessione di esercizi in corso: ids e seme, così riaprendo si riprende la stessa. */
+    val rotazione: RotazioneUnita = RotazioneUnita()
 ) {
     val id: String get() = lezione.id
     val totale: Int get() = lezione.unita.esercizi.size

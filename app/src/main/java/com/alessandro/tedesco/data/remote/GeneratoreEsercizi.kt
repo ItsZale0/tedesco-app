@@ -117,12 +117,13 @@ class GeneratoreEsercizi {
         quanti: Int = 5,
         contestoMedico: Boolean = false,
         evita: List<String> = emptyList(),
-        modello: String? = null
+        modello: String? = null,
+        tema: String? = null
     ): List<EsercizioGenerato> = withContext(Dispatchers.IO) {
         // Free mode (no API key): uses Gemini endpoint automatically
         if (quanti <= 0) return@withContext emptyList()
 
-        val systemPrompt = costruisciPrompt(tipo, livello, quanti, contestoMedico, evita)
+        val systemPrompt = costruisciPrompt(tipo, livello, quanti, contestoMedico, evita, tema)
         val messaggi = listOf(
             ChatMessageCompat("system", systemPrompt),
             ChatMessageCompat("user", "Genera gli esercizi in JSON.")
@@ -159,7 +160,8 @@ class GeneratoreEsercizi {
         livello: String,
         quanti: Int,
         contestoMedico: Boolean,
-        evita: List<String>
+        evita: List<String>,
+        tema: String? = null
     ): String {
         val contesto = if (contestoMedico) {
             "\n- Contesto professionale: lo studente è un fisioterapista che lavorerà a Bolzano. " +
@@ -249,11 +251,45 @@ class GeneratoreEsercizi {
             "\n\nNON ripetere domande simili a queste già viste:\n" + evita.take(20).joinToString("\n") { "- $it" }
         } else ""
 
+        // TEMA OBBLIGATORIO: usato dalle lezioni del percorso, dove gli esercizi
+        // devono allenare UNA regola precisa e non divagare su altre.
+        val temaTesto = if (tema.isNullOrBlank()) "" else """
+
+            TEMA OBBLIGATORIO (vincolo assoluto):
+            - Tutti gli esercizi devono allenare esattamente questa regola: $tema
+            - NON cambiare argomento e NON mescolare altre regole grammaticali.
+            - Formato preferito: frase tedesca con un buco ___ (es. "Der ___ Hund spielt im Garten.")
+              e 4 forme candidate nelle opzioni; una sola corretta.
+            - Se la regola non si presta al buco, usa una domanda in italiano con 4 frasi
+              tedesche tra cui scegliere quella corretta.
+            - Ogni esercizio deve essere DIVERSO dagli altri dello stesso batch: cambia
+              soggetto, verbo, caso o numero, non solo una parola.
+        """.trimIndent()
+
+        // Con un tema (esercizi di una unità) le opzioni SONO forme tedesche:
+        // la regola "tutto in italiano" qui renderebbe gli esercizi inutilizzabili.
+        val linguaTesto = if (tema.isNullOrBlank()) {
+            """
+            - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
+            - NON usare MAI spagnolo (vietate parole come amigo, hola, gracias, senor, por favor, muy, bueno, manana), ne inglese, ne altre lingue.
+            - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
+            - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
+            - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
+            """.trimIndent()
+        } else {
+            """
+            - LINGUA: la domanda contiene una frase tedesca con il buco ___ e le opzioni sono le
+              forme tedesche candidate. La spiegazione è in italiano, breve e concreta.
+            - NON usare spagnolo, inglese o altre lingue: solo tedesco (esercizio) e italiano (spiegazione).
+            """.trimIndent()
+        }
+
         return """
             Sei un generatore di esercizi di tedesco per uno studente italiano di livello $livello.
 
             Genera ESATTAMENTE $quanti esercizi di tipo "${tipo.etichetta}" in formato JSON.
             $istruzioniTipo
+            $temaTesto
 
             Regole OBBLIGATORIE:
             - Rispondi SOLO con un JSON valido, senza testo prima o dopo, senza ```json.
@@ -261,11 +297,7 @@ class GeneratoreEsercizi {
             - Ogni esercizio ha: "tipo" ("${tipo.jsonTipo}"), "domanda", "opzioni" (array di esattamente 4 stringhe),
               "rispostaCorretta" (indice 0-3 della risposta giusta), "spiegazione" (in italiano, breve),
               "livello" ("$livello")${if (tipo == TipoEsercizio.COMPRENSIONE) ""","testoLettura" (il testo tedesco da leggere, IDENTICO in tutti gli esercizi del batch), "glossario" (array di {"tedesco","italiano"} delle parole difficili, IDENTICO in tutti gli esercizi)""" else ""}.$contesto
-            - LINGUA (REGOLA FONDAMENTALE): domande, opzioni e spiegazioni sono ESCLUSIVAMENTE in italiano.
-            - NON usare MAI spagnolo (vietate parole come amigo, hola, gracias, senor, por favor, muy, bueno, manana), ne inglese, ne altre lingue.
-            - L'unico tedesco ammesso e la frase/esempio tedesco quando il tipo lo richiede.
-            - Esempio corretto di opzioni in italiano: ["Io leggo un libro", "Tu leggi un libro", "Lui legge un libro", "Noi leggiamo un libro"]
-            - Esempio SBAGLIATO da NON usare (spagnolo): ["Ich a un amigo", "Tu a un amigo", "El a mi"]
+            $linguaTesto
             - Le 4 opzioni devono essere plausibili ma con UNA sola risposta corretta.
             - DIFFICOLTÀ: genera esercizi SFIDANTI e UTILI per il livello $livello. Evita domande banali su parole singole elementari (es. il significato di "Hallo", "ciao", "grazie"). Privilegia frasi complete, vocabolario pratico e contesto realistico.
             - ANTI-INFLATIONE (REGOLA FONDAMENTALE): ogni domanda deve TESTARE una capacita' reale,
