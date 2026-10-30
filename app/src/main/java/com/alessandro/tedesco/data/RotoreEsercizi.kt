@@ -39,13 +39,59 @@ object RotoreEsercizi {
     fun ordine(sezione: String, grandezza: Int): List<Int> {
         if (grandezza <= 0) return emptyList()
         val semina = (giornoCorrente() * 1009L + sezione.hashCode()).toInt()
-        val rnd = Random(semina)
-        val indici = (0 until grandezza).toMutableList()
-        // Fisher-Yates: mescola senza presentare duplicati né buchi.
-        for (i in indici.size - 1 downTo 1) {
-            val j = rnd.nextInt(i + 1)
-            val t = indici[i]; indici[i] = indici[j]; indici[j] = t
+        return mescola(semina, (0 until grandezza).toList())
+    }
+
+    /**
+     * Indici degli esercizi da mostrare in una sessione.
+     *
+     * A differenza di [ordine] (che cambia solo a mezzanotte), qui il seme è
+     * scelto da chi chiama: la sessione di una lezione cambia a ogni tentativo,
+     * così rifare gli esercizi non significa ritrovare le stesse domande.
+     * Lo stesso seme produce sempre la stessa sessione (niente sfarfallio tra
+     * ricomposizioni).
+     *
+     * @param sezione identificatore stabile della lezione
+     * @param grandezza quanti esercizi ha il banco
+     * @param quanti quanti esercizi mostrare (limitato a [grandezza])
+     * @param seme seme del tentativo (es. timestamp di apertura + numero di prove)
+     */
+    fun sessione(sezione: String, grandezza: Int, quanti: Int, seme: Int): List<Int> {
+        if (grandezza <= 0) return emptyList()
+        val n = quanti.coerceIn(1, grandezza)
+        val mescolati = mescola(
+            seme xor (sezione.hashCode() * 31),
+            (0 until grandezza).toList()
+        )
+        return mescolati.take(n)
+    }
+
+    /**
+     * Mescola le opzioni di una scelta multipla e restituisce anche il nuovo
+     * indice della risposta corretta. Serve perché memorizzare "la risposta è
+     * la B" non deve bastare: il testo corretto resta lo stesso, la posizione no.
+     */
+    fun mescolaOpzioni(
+        seme: Int,
+        opzioni: List<String>,
+        rispostaCorretta: Int
+    ): Pair<List<String>, Int> {
+        if (opzioni.size <= 1 || rispostaCorretta !in opzioni.indices) {
+            return opzioni to rispostaCorretta
         }
-        return indici
+        val ordine = mescola(seme, opzioni.indices.toList())
+        val nuove = ordine.map { opzioni[it] }
+        return nuove to ordine.indexOf(rispostaCorretta)
+    }
+
+    /** Fisher-Yates deterministico: nessun duplicato, nessun buco. */
+    private fun mescola(semina: Int, indici: List<Int>): List<Int> {
+        val rnd = Random(semina)
+        val out = indici.toMutableList()
+        for (i in out.size - 1 downTo 1) {
+            val j = rnd.nextInt(i + 1)
+            val t = out[i]; out[i] = out[j]; out[j] = t
+        }
+        return out
     }
 }

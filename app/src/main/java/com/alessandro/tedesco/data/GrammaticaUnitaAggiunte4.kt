@@ -66,7 +66,7 @@ internal fun unitaA2VerbenAkkDativ(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("vad-05", "Ich sage ___ dir.", listOf("es", "ihn", "ihr", "sie"), 0, "Accusativo pronome prima del dativo: es dir."),
         sceltaUnita("vad-06", "Ich gebe ___ das Buch.", listOf("dir", "dich", "du", "dein"), 0, "geben + dativo: dir.")
 ,
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("a2-verben-akd-prod", "„Do il libro a lui.“", "Ich gebe ihm das Buch.", "geben + dativo (ihm) + accusativo (das Buch)."),
     )
 )
 
@@ -117,7 +117,7 @@ internal fun unitaB1PassivVergangenheit(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("passv-05", "Ausiliare del Perfekt passivo:", listOf("haben", "sein", "werden", "wurde"), 1, "Perfekt passivo: sein (ist)."),
         sceltaUnita("passv-06", "Das Haus war gebaut ___. (Plusquamperfekt)", listOf("worden", "geworden", "worden sein", "geworden sein"), 0, "Plusquamperfekt passivo: worden.")
 ,
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-passver-prod", "„La casa fu costruita nel 1900.“", "Das Haus wurde 1900 gebaut.", "Passivo al Präteritum: wurde + Partizip II (gebaut)."),
     )
 )
 
@@ -176,6 +176,6 @@ internal fun unitaB1TemporaleNebensaetze(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("temp-05", "Nachdem er gegessen ___, ging er.", listOf("hat", "hatte", "war", "ist"), 1, "nachdem + Plusquamperfekt: hatte."),
         sceltaUnita("temp-06", "___ er hier wohnt, ist er glücklicher.", listOf("Wenn", "Als", "Seitdem", "Bevor"), 2, "Da quando: Seitdem.")
 ,
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-temp-prod", "„Mentre cucino, ascolto la radio.“", "Während ich koche, höre ich Radio.", "während = mentre; nella subordinata il verbo va in fondo."),
     )
 )

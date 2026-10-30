@@ -1,7 +1,7 @@
 {
-  "versionCode": 235,
-  "versionName": "1.48.2",
-  "changelog": "Corretto il bug delle ripetizioni: nella Produzione (e in Comprensione, Grammatica, Ascolto, Produzione scritta) l'AI poteva restituire la stessa domanda piu' volte con id diversi, cosi' 18 esercizi erano in realta' 5 ripetuti. Ora gli esercizi sono deduplicati per contenuto (maiuscole, umlaut, punteggiatura e spazi ignorati) sia nel batch appena generato sia nella memoria 'gia visto', che viene anche ripulita dalle copie gia' salvate. Per l'ascolto la frase tedesca fa parte del confronto, quindi la stessa domanda su audio diversi resta valida. Corretto anche l'ascolto A2/B1: prima tornavano sempre le stesse 5 domande A1, ora c'e' la banca completa per ogni livello. Aggiunti test di regressione sui duplicati. Rispetto dei dati: nessuna chiave di progresso cambia.",
+  "versionCode": 236,
+  "versionName": "1.48.3",
+  "changelog": "Gli esercizi delle lezioni ora cambiano davvero a ogni tentativo. Ogni sessione pesca un sottoinsieme diverso dal banco della lezione (8 esercizi), cambia l'ordine delle domande e rimescola le opzioni delle scelte multiple, cosi' la risposta giusta non resta sempre nella stessa posizione: rifare la lezione non basta piu' per arrivare all'80% senza aver capito la regola. La sessione resta stabile mentre rispondi e cambia solo con 'Riprova con esercizi nuovi'. A fine sessione c'e' il riepilogo 'Dove hai sbagliato': domanda, risposta data, risposta corretta e spiegazione, sia nel percorso grammaticale sia nella lezione giornaliera. Contenuti: sostituiti 19 esercizi segnaposto ('Scrivi una frase con questa struttura grammaticale') con esercizi reali specifici dell'argomento, aggiunti 126 esercizi nuovi a 23 unita' con banco ridotto e resi unici gli id duplicati. Ora ogni unita' ha almeno 12 esercizi e ogni sessione contiene tutti i tipi di esercizio presenti. Rispetto dei dati: nessuna chiave di progresso cambia, vocabolario, ripassi, guida, piano, grammatica e notifiche restano intatti.",
   "minVersionCode": 0,
-  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.2/Tedesco-v1.48.2.apk"
+  "apkUrl": "https://github.com/ItsZale0/tedesco-app/releases/download/v1.48.3/Tedesco-v1.48.3.apk"
 }

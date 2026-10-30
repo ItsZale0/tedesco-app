@@ -82,11 +82,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alessandro.tedesco.data.CalcoloPercorsoGiornaliero
+import com.alessandro.tedesco.data.EsercizioUnita
 import com.alessandro.tedesco.data.GrammaticaSyllabus
 import com.alessandro.tedesco.data.LezioneAperta
 import com.alessandro.tedesco.data.LezionePercorso
 import com.alessandro.tedesco.data.PercorsoLezioni
 import com.alessandro.tedesco.data.PodcastData
+import com.alessandro.tedesco.data.SessioneLezione
 import com.alessandro.tedesco.data.StatoUnita
 import com.alessandro.tedesco.data.TipoEsercizioGrammatica
 import com.alessandro.tedesco.data.UnitaConStato
@@ -1073,7 +1075,17 @@ private fun SezioneLezionePercorso(
     onVaiAPercorso: () -> Unit
 ) {
     val unita = stato.lezione.unita
-    val totale = stato.totale
+
+    // Un "ripasso" (dopo aver concluso la lezione) usa una sessione ruotata:
+    // stesse regole, domande diverse e opzioni in ordine diverso. Il primo
+    // passaggio invece resta sequenziale, così il punto salvato è valido.
+    var ripasso by rememberSaveable(stato.id) { mutableStateOf(false) }
+    var seme by rememberSaveable(stato.id) { mutableStateOf(System.currentTimeMillis()) }
+    var errori by rememberSaveable(stato.id) { mutableStateOf(listOf<ErroreRisposta>()) }
+    val eserciziSessione = remember(unita.id, ripasso, seme) {
+        if (ripasso) SessioneLezione.esercizi(unita, seme.toInt()) else unita.esercizi
+    }
+    val totale = eserciziSessione.size
 
     var indice by rememberSaveable(stato.id) {
         mutableIntStateOf(stato.progresso.indice.coerceIn(0, totale))
@@ -1086,13 +1098,20 @@ private fun SezioneLezionePercorso(
     var verificato by rememberSaveable(stato.id) { mutableStateOf(false) }
 
     val finita = indice >= totale
-    val esercizio = unita.esercizi.getOrNull(indice)
+    val esercizio = eserciziSessione.getOrNull(indice)
     val ultimaDomanda = indice == totale - 1
     val rispostaGiusta = verificato && esercizio != null && when (esercizio.tipo) {
         TipoEsercizioGrammatica.SCELTA_MULTIPLA ->
             GrammaticaSyllabus.rispostaSceltaCorretta(esercizio, scelta.takeIf { it >= 0 })
         else -> GrammaticaSyllabus.rispostaTestoCorretta(esercizio, testo)
     }
+
+    fun rispostaData(e: EsercizioUnita): String =
+        if (e.tipo == TipoEsercizioGrammatica.SCELTA_MULTIPLA) {
+            e.opzioni.getOrNull(scelta).orEmpty()
+        } else {
+            testo.trim()
+        }
 
     fun verifica() {
         val e = esercizio ?: return
@@ -1102,8 +1121,17 @@ private fun SezioneLezionePercorso(
             else -> GrammaticaSyllabus.rispostaTestoCorretta(e, testo)
         }
         verificato = true
-        if (giusto) corrette += 1
-        vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+        if (giusto) {
+            corrette += 1
+        } else {
+            errori = errori + ErroreRisposta(indice, rispostaData(e))
+        }
+        // Durante un ripasso ruotato non si salva il punto: la sessione non è
+        // persistita, quindi riprenderebbe su domande diverse. Si salva solo
+        // la padronanza alla fine.
+        if (!ripasso) {
+            vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+        }
     }
 
     fun avanti() {
@@ -1112,10 +1140,14 @@ private fun SezioneLezionePercorso(
             scelta = -1
             testo = ""
             verificato = false
-            vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+            if (!ripasso) {
+                vm.salvaProgressoLezione(stato.id, indice, corrette, totale, completata = false)
+            }
         } else {
             indice = totale
-            vm.salvaProgressoLezione(stato.id, totale, corrette, totale, completata = true)
+            if (!ripasso) {
+                vm.salvaProgressoLezione(stato.id, totale, corrette, totale, completata = true)
+            }
             vm.salvaPadronanzaGrammatica(stato.id, corrette, totale)
             vm.completaPassoGiornaliero("grammatica")
         }
@@ -1196,14 +1228,19 @@ private fun SezioneLezionePercorso(
     if (finita) {
         RisultatoLezione(
             stato = stato,
+            esercizi = eserciziSessione,
+            errori = errori,
             corrette = corrette,
+            totale = totale,
             onRiprova = {
                 indice = 0
                 corrette = 0
                 scelta = -1
                 testo = ""
                 verificato = false
-                vm.salvaProgressoLezione(stato.id, 0, 0, totale, completata = false)
+                errori = emptyList()
+                ripasso = true
+                seme = System.currentTimeMillis()
             },
             onAvanti = { vm.avanzaLezionePercorso(stato.id) }
         )
@@ -1384,12 +1421,15 @@ private fun RigaOpzione(
 @Composable
 private fun RisultatoLezione(
     stato: LezioneAperta,
+    esercizi: List<EsercizioUnita>,
+    errori: List<ErroreRisposta>,
     corrette: Int,
+    totale: Int,
     onRiprova: () -> Unit,
     onAvanti: () -> Unit
 ) {
-    val totale = stato.totale.coerceAtLeast(1)
-    val percentuale = corrette * 100 / totale
+    val totaleValido = totale.coerceAtLeast(1)
+    val percentuale = corrette * 100 / totaleValido
     val promosso = percentuale >= GrammaticaSyllabus.SOGLIA_PADRONANZA
 
     Card(
@@ -1407,7 +1447,7 @@ private fun RisultatoLezione(
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Text(
-                "$corrette risposte corrette su $totale · $percentuale%",
+                "$corrette risposte corrette su $totaleValido · $percentuale%",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
             )
@@ -1432,10 +1472,13 @@ private fun RisultatoLezione(
                 onClick = onRiprova,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Ripeti questa lezione")
+                Text("Ripeti con esercizi nuovi")
             }
         }
     }
+
+    Spacer(Modifier.height(Spaziature.md))
+    RiepilogoErrori(esercizi = esercizi, errori = errori)
 }
 
 /**

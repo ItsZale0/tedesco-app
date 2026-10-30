@@ -50,7 +50,7 @@ internal fun unitaB2PassivErsatz(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("passers-03", "Das ___ nicht zu machen.", listOf("ist", "wird", "lässt", "kann"), 0, "sein + zu: ist nicht zu machen."),
         sceltaUnita("passers-04", "Der Text ___ sich gut lesen.", listOf("lässt", "wird", "ist", "kann"), 0, "sich lassen: lässt sich lesen."),
         sceltaUnita("passers-05", "Die Tür lässt sich ___.", listOf("öffnen", "geöffnet", "öffnend", "geöffnet werden"), 0, "sich lassen + Infinitiv."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b2-passersatz-prod", "„Il problema si può risolvere facilmente.“", "Das Problem lässt sich leicht lösen.", "Passivo sostitutivo: sich lassen + infinito."),
     )
 )
 
@@ -99,7 +99,7 @@ internal fun unitaB2Zustandspassiv(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("zust-03", "Das Fenster ___ geschlossen.", listOf("wird", "ist", "wurde", "war"), 1, "Stato risultante: ist geschlossen."),
         sceltaUnita("zust-04", "Das Auto ___ repariert.", listOf("wird", "ist", "wurde", "war"), 1, "Stato risultante: ist repariert."),
         sceltaUnita("zust-05", "Die Tür wird geöffnet. → Die Tür ___ geöffnet.", listOf("wird", "ist", "wurde", "war"), 1, "Azione → stato: ist geöffnet."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b2-zustand-prod", "„Il negozio è aperto.“", "Der Laden ist geöffnet.", "Passivo stativo: sein + Partizip II (geöffnet) descrive lo stato."),
     )
 )
 
@@ -158,7 +158,7 @@ internal fun unitaB2Modalpartikeln(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("modpart-03", "Das ist ___ klar!", listOf("doch", "mal", "ja", "halt"), 2, "Ovvio: ja."),
         sceltaUnita("modpart-04", "Das ist ___ so, man kann nichts machen.", listOf("doch", "mal", "ja", "halt"), 3, "Rassegnazione: halt."),
         sceltaUnita("modpart-05", "Was machst du ___?", listOf("doch", "mal", "denn", "wohl"), 2, "Curiosità: denn."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b2-modalpart-prod", "„Vieni pure a trovarci!“", "Komm doch mal vorbei!", "doch e mal rendono il tono amichevole e insistente."),
     )
 )
 
@@ -210,6 +210,6 @@ internal fun unitaB2Referenzwoerter(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("ref-03", "Er kam zu spät. ___ war ein Problem.", listOf("Dadurch", "Diese", "Dies", "Das"), 3, "Riferimento a frase intera: Das."),
         sceltaUnita("ref-04", "Der Mann, ___ dort steht, ist mein Chef.", listOf("der", "dieser", "das", "es"), 0, "Relativpronome: der."),
         sceltaUnita("ref-05", "Er übte täglich. ___ wurde er besser.", listOf("Dadurch", "Diese", "Dies", "Das"), 0, "Riferimento a frase: Dadurch."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b2-referenz-prod", "„Lo stesso problema si ripete ogni anno.“", "Dasselbe Problem wiederholt sich jedes Jahr.", "dasselbe = la stessa cosa (identica), non solo simile."),
     )
 )

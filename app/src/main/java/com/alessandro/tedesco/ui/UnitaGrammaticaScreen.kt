@@ -40,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.alessandro.tedesco.data.EsempioGrammatica
 import com.alessandro.tedesco.data.EsercizioUnita
 import com.alessandro.tedesco.data.GrammaticaSyllabus
+import com.alessandro.tedesco.data.SessioneLezione
 import com.alessandro.tedesco.data.TabellaGrammatica
 import com.alessandro.tedesco.data.TipoEsercizioGrammatica
 import com.alessandro.tedesco.data.UnitaGrammatica
@@ -93,13 +95,21 @@ fun UnitaGrammaticaScreen(
     var verificato by rememberSaveable(unitaId) { mutableStateOf(false) }
     var finito by rememberSaveable(unitaId) { mutableStateOf(false) }
     var salvato by rememberSaveable(unitaId) { mutableStateOf(false) }
+    // Seme della sessione: nuovo a ogni apertura della schermata e a ogni
+    // "Riprova", così le domande cambiano davvero da un tentativo all'altro.
+    var seme by rememberSaveable(unitaId) { mutableStateOf(System.currentTimeMillis()) }
+    var tentativi by rememberSaveable(unitaId) { mutableStateOf(0) }
+    var errori by rememberSaveable(unitaId) { mutableStateOf(listOf<ErroreRisposta>()) }
 
-    val esercizio = unita.esercizi.getOrNull(indice)
-    val percentuale = if (unita.esercizi.isEmpty()) 0
-    else corrette * 100 / unita.esercizi.size
+    val eserciziSessione = remember(unita.id, seme, tentativi) {
+        SessioneLezione.esercizi(unita, (seme + tentativi * 7919L).toInt())
+    }
+    val esercizio = eserciziSessione.getOrNull(indice)
+    val percentuale = if (eserciziSessione.isEmpty()) 0
+    else corrette * 100 / eserciziSessione.size
     val promosso = percentuale >= GrammaticaSyllabus.SOGLIA_PADRONANZA
 
-    fun resetPratica() {
+    fun resetPratica(nuovaSessione: Boolean = false) {
         indice = 0
         corrette = 0
         scelta = -1
@@ -107,7 +117,19 @@ fun UnitaGrammaticaScreen(
         verificato = false
         finito = false
         salvato = false
+        errori = emptyList()
+        if (nuovaSessione) {
+            tentativi += 1
+            seme = System.currentTimeMillis()
+        }
     }
+
+    fun rispostaData(e: EsercizioUnita): String =
+        if (e.tipo == TipoEsercizioGrammatica.SCELTA_MULTIPLA) {
+            e.opzioni.getOrNull(scelta).orEmpty()
+        } else {
+            testo.trim()
+        }
 
     fun verificaRisposta() {
         val e = esercizio ?: return
@@ -120,11 +142,15 @@ fun UnitaGrammaticaScreen(
             GrammaticaSyllabus.rispostaTestoCorretta(e, testo)
         }
         verificato = true
-        if (corretto) corrette += 1
+        if (corretto) {
+            corrette += 1
+        } else {
+            errori = errori + ErroreRisposta(indice, rispostaData(e))
+        }
     }
 
     fun prossimaDomanda() {
-        if (indice < unita.esercizi.lastIndex) {
+        if (indice < eserciziSessione.lastIndex) {
             indice += 1
             scelta = -1
             testo = ""
@@ -139,7 +165,7 @@ fun UnitaGrammaticaScreen(
             vm.salvaPadronanzaGrammatica(
                 unitaId = unita.id,
                 corrette = corrette,
-                totali = unita.esercizi.size
+                totali = eserciziSessione.size
             )
             vm.completaPassoGiornaliero("grammatica")
             salvato = true
@@ -163,7 +189,7 @@ fun UnitaGrammaticaScreen(
             FilterChip(
                 selected = scheda == 1,
                 onClick = {
-                    if (finito) resetPratica()
+                    if (finito) resetPratica(nuovaSessione = true)
                     scheda = 1
                 },
                 label = { Text("Esercizi") }
@@ -184,7 +210,7 @@ fun UnitaGrammaticaScreen(
                 unita = unita,
                 onAscolta = { tts.speak(it) },
                 onVaiEsercizi = {
-                    if (finito) resetPratica()
+                    if (finito) resetPratica(nuovaSessione = true)
                     scheda = 1
                 }
             )
@@ -196,11 +222,13 @@ fun UnitaGrammaticaScreen(
         } else if (finito) {
             RisultatoUnita(
                 unita = unita,
+                esercizi = eserciziSessione,
+                errori = errori,
                 corrette = corrette,
                 percentuale = percentuale,
                 promosso = promosso,
                 onRiprova = {
-                    resetPratica()
+                    resetPratica(nuovaSessione = true)
                     scheda = 1
                 },
                 onTornaPercorso = onCompletata,
@@ -211,6 +239,7 @@ fun UnitaGrammaticaScreen(
                 unita = unita,
                 esercizio = esercizio,
                 indice = indice,
+                totale = eserciziSessione.size,
                 scelta = scelta,
                 testo = testo,
                 verificato = verificato,
@@ -595,6 +624,7 @@ internal fun EsercizioUnitaCard(
     unita: UnitaGrammatica,
     esercizio: EsercizioUnita,
     indice: Int,
+    totale: Int,
     scelta: Int,
     testo: String,
     verificato: Boolean,
@@ -638,7 +668,7 @@ internal fun EsercizioUnitaCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Esercizio ${indice + 1} di ${unita.esercizi.size}",
+                    "Esercizio ${indice + 1} di $totale",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)
@@ -651,7 +681,7 @@ internal fun EsercizioUnitaCard(
             }
             Spacer(Modifier.height(4.dp))
             LinearProgressIndicator(
-                progress = { (indice + if (verificato) 1 else 0).toFloat() / unita.esercizi.size },
+                progress = { (indice + if (verificato) 1 else 0).toFloat() / totale.coerceAtLeast(1) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(5.dp)
@@ -842,7 +872,7 @@ internal fun EsercizioUnitaCard(
                         .height(AltezzaBottonePrincipale())
                 ) {
                     Text(
-                        if (indice < unita.esercizi.lastIndex) "Prossima domanda"
+                        if (indice < totale - 1) "Prossima domanda"
                         else "Vedi risultato"
                     )
                 }
@@ -987,9 +1017,86 @@ private fun DettatoUnita(
     }
 }
 
+/** Una risposta sbagliata, tenuta per il riepilogo finale. */
+internal data class ErroreRisposta(
+    val posizione: Int,
+    val rispostaData: String
+) : java.io.Serializable
+
+/**
+ * Riepilogo degli errori: per ogni sbaglio mostra la domanda, la risposta data,
+ * quella corretta e la spiegazione. È il punto in cui lo studente capisce
+ * l'errore invece di limitarsi a rifare la serie fino all'80%.
+ */
+@Composable
+internal fun RiepilogoErrori(
+    esercizi: List<EsercizioUnita>,
+    errori: List<ErroreRisposta>
+) {
+    if (errori.isEmpty()) return
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+    ) {
+        Column(Modifier.padding(Spaziature.md)) {
+            Text(
+                "Dove hai sbagliato",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "Rileggi questi punti prima di riprovare: sono quelli in cui la regola non è ancora chiara.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            errori.forEach { errore ->
+                val esercizio = esercizi.getOrNull(errore.posizione) ?: return@forEach
+                val corretta = if (esercizio.tipo == TipoEsercizioGrammatica.SCELTA_MULTIPLA) {
+                    esercizio.opzioni.getOrNull(esercizio.rispostaCorretta).orEmpty()
+                } else {
+                    esercizio.rispostaTesto
+                }
+                Spacer(Modifier.height(Spaziature.sm))
+                HorizontalDivider(color = MaterialTheme.colorScheme.error.copy(alpha = 0.25f))
+                Spacer(Modifier.height(Spaziature.sm))
+                Text(
+                    "${errore.posizione + 1}. ${esercizio.domanda}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "La tua risposta: ${errore.rispostaData.ifBlank { "nessuna" }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    "Risposta corretta: $corretta",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (esercizio.spiegazione.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        esercizio.spiegazione,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun RisultatoUnita(
     unita: UnitaGrammatica,
+    esercizi: List<EsercizioUnita>,
+    errori: List<ErroreRisposta>,
     corrette: Int,
     percentuale: Int,
     promosso: Boolean,
@@ -1021,7 +1128,7 @@ private fun RisultatoUnita(
             )
             Spacer(Modifier.height(Spaziature.sm))
             Text(
-                "$corrette / ${unita.esercizi.size}",
+                "$corrette / ${esercizi.size}",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -1057,13 +1164,19 @@ private fun RisultatoUnita(
                     .fillMaxWidth()
                     .height(AltezzaBottonePrincipale())
             ) {
-                Text("Riprova gli esercizi")
+                Text("Riprova con esercizi nuovi")
             }
             TextButton(onClick = onRivediTeoria) {
                 Text("Rivedi la teoria")
             }
         }
     }
+
+    Spacer(Modifier.height(Spaziature.md))
+    RiepilogoErrori(
+        esercizi = esercizi,
+        errori = errori
+    )
 
     Spacer(Modifier.height(Spaziature.md))
     Card(

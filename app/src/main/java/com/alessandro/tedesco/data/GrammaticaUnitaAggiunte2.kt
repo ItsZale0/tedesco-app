@@ -51,7 +51,7 @@ internal fun unitaB1Plusquamperfekt(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("pq-03", "Er ___ das Buch schon gelesen, als du anriefst.", listOf("hat", "hatte", "war", "ist"), 1, "Plusquamperfekt: hatte gelesen."),
         sceltaUnita("pq-04", "Sie ___ schon abgereist, als wir ankamen.", listOf("hat", "hatte", "war", "ist"), 2, "Verbo di movimento: war abgereist."),
         sceltaUnita("pq-05", "Ich ___ die Nachricht schon gehört, als er mir davon erzählte.", listOf("habe", "hatte", "bin", "war"), 1, "Plusquamperfekt: hatte gehört."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-plusq-prod", "„Quando arrivai, lui aveva già mangiato.“", "Als ich ankam, hatte er schon gegessen.", "Plusquamperfekt: hatte + Partizip II (gegessen)."),
     )
 )
 
@@ -112,7 +112,7 @@ internal fun unitaB1NDeklination(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("ndek-03", "Das Buch des ___ ist neu.", listOf("Student", "Studenten", "Studentes", "Studenter"), 1, "Genitivo: Studenten."),
         sceltaUnita("ndek-04", "Der ___ kommt.", listOf("Student", "Studenten", "Studente", "Studentes"), 0, "Nominativo singolare: senza -n."),
         sceltaUnita("ndek-05", "Ich kenne den ___.", listOf("Herr", "Herrn", "Herres", "Herrs"), 1, "Herr → Herrn (accusativo)."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-ndekl-prod", "„Il nome del paziente è Müller.“", "Der Name des Patienten ist Müller.", "Patient è un sostantivo della n-Deklination: des Patienten."),
     )
 )
 
@@ -175,7 +175,7 @@ internal fun unitaB1GenitivPraepositionen(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("genp-03", "___ des Films schlief er ein.", listOf("Wegen", "Trotz", "Während", "Statt"), 2, "durante il film: während."),
         sceltaUnita("genp-04", "___ zu arbeiten, spielte er.", listOf("Wegen", "Trotz", "Während", "Anstatt"), 3, "invece di lavorare: anstatt."),
         sceltaUnita("genp-05", "Außerhalb ___ Stadt ist es ruhig.", listOf("der", "die", "dem", "den"), 0, "außerhalb + genitivo: der Stadt."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-genpraep-prod", "„Durante la lezione prendo appunti.“", "Während des Unterrichts mache ich Notizen.", "während regge il genitivo: des Unterrichts."),
     )
 )
 
@@ -236,7 +236,7 @@ internal fun unitaB1AdjektiveAlsNomen(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("adjnom-03", "Die ___ werden behandelt.", listOf("Kranke", "Kranken", "Kranker", "Krankes"), 1, "Plurale nominativo: die Kranken."),
         sceltaUnita("adjnom-04", "Das ___ an der Reise ist das Wetter.", listOf("Schöne", "Schönen", "Schöner", "Schönes"), 0, "Nominativo neutro: das Schöne."),
         sceltaUnita("adjnom-05", "Der ___ arbeitet im Büro.", listOf("Angestellte", "Angestellten", "Angestellter", "Angestelltes"), 0, "Nominativo maschile: der Angestellte."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-adjnomen-prod", "„La cosa più importante è la salute.“", "Das Wichtigste ist die Gesundheit.", "das Wichtigste: aggettivo sostantivato neutro, con la maiuscola."),
     )
 )
 
@@ -297,7 +297,7 @@ internal fun unitaB1Praepositionaladverbien(): UnitaGrammatica = unitaGrammatica
         sceltaUnita("pradv-03", "___ wartest du? — Auf den Bus.", listOf("Woran", "Worauf", "Worüber", "Wofür"), 1, "warten auf → worauf."),
         sceltaUnita("pradv-04", "___ spricht sie? — Über das Buch.", listOf("Woran", "Worauf", "Worüber", "Wofür"), 2, "sprechen über → worüber."),
         sceltaUnita("pradv-05", "Ich warte ___ (auf den Bus).", listOf("darauf", "daran", "damit", "dafür"), 0, "warten auf → darauf."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("b1-praepadv-prod", "„Ci penso ogni giorno.“", "Ich denke jeden Tag daran.", "denken an + cosa → pronome avverbiale daran."),
     )
 )
 
@@ -344,11 +344,11 @@ internal fun unitaB1Komparativsaetze(): UnitaGrammatica = unitaGrammatica(
     ),
     merksatz = "je ... desto: verbo alla fine in entrambe le frasi; als ob → Konjunktiv II.",
     esercizi = listOf(
-        sceltaUnita("komp-01", "Je mehr ich ___, desto besser verstehe ich.", listOf("lerne", "gelernt habe", "lernt", "gelernt hatte"), 0, "je ... desto: verbo alla fine: lerne."),
-        sceltaUnita("komp-02", "Er tut, als ob er nichts ___.", listOf("weiß", "wüsste", "gewusst hat", "gewusst hätte"), 1, "als ob → Konjunktiv II: wüsste."),
-        sceltaUnita("komp-03", "Er ist größer, ___ ich dachte.", listOf("als", "wie", "desto", "umso"), 0, "Confronto: größer als."),
-        sceltaUnita("komp-04", "Sie ist so klug ___ ihre Schwester.", listOf("als", "wie", "desto", "umso"), 1, "Uguaglianza: so ... wie."),
-        sceltaUnita("komp-05", "Je nachdem, ___ viel Zeit wir haben.", listOf("wie", "als", "ob", "wenn"), 0, "je nachdem + wie."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        sceltaUnita("b1komp-01", "Je mehr ich ___, desto besser verstehe ich.", listOf("lerne", "gelernt habe", "lernt", "gelernt hatte"), 0, "je ... desto: verbo alla fine: lerne."),
+        sceltaUnita("b1komp-02", "Er tut, als ob er nichts ___.", listOf("weiß", "wüsste", "gewusst hat", "gewusst hätte"), 1, "als ob → Konjunktiv II: wüsste."),
+        sceltaUnita("b1komp-03", "Er ist größer, ___ ich dachte.", listOf("als", "wie", "desto", "umso"), 0, "Confronto: größer als."),
+        sceltaUnita("b1komp-04", "Sie ist so klug ___ ihre Schwester.", listOf("als", "wie", "desto", "umso"), 1, "Uguaglianza: so ... wie."),
+        sceltaUnita("b1komp-05", "Je nachdem, ___ viel Zeit wir haben.", listOf("wie", "als", "ob", "wenn"), 0, "je nachdem + wie."),
+        produciUnita("b1-komp-prod", "„Più leggo, meglio capisco.“", "Je mehr ich lese, desto besser verstehe ich.", "Confronto proporzionale: je + comparativo ... desto + comparativo."),
     )
 )

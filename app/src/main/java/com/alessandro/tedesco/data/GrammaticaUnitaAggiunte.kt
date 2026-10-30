@@ -69,13 +69,13 @@ internal fun unitaA2Adjektivdeklination(): UnitaGrammatica = unitaGrammatica(
     ),
     merksatz = "Articolo forte = aggettivo debole (-e/-en). Articolo debole = aggettivo forte (-er/-es/-en). Nessun articolo = aggettivo forte.",
     esercizi = listOf(
-        sceltaUnita("adj-01", "Der ___ Hund spielt im Garten.", listOf("kleine", "kleiner", "kleinen", "kleines"), 0, "Dopo der (nominativo) l'aggettivo è debole: kleine."),
-        sceltaUnita("adj-02", "Ich sehe einen ___ Hund.", listOf("kleine", "kleiner", "kleinen", "kleines"), 2, "Accusativo maschile: einen kleinen."),
-        sceltaUnita("adj-03", "Das ist ein ___ Kind.", listOf("kleine", "kleiner", "kleinen", "kleines"), 3, "Nominativo neutro dopo ein: kleines."),
-        sceltaUnita("adj-04", "Mit dem ___ Hund spazieren gehen.", listOf("kleine", "kleiner", "kleinen", "kleines"), 2, "Dativo: kleinen."),
-        sceltaUnita("adj-05", "___ Kaffee und ___ Milch, bitte.", listOf("Frischer / frische", "Frische / frischer", "Frischen / frischen", "Frisches / frisches"), 0, "Senza articolo: maschile nominativo -er, femminile -e."),
-        sceltaUnita("adj-06", "Ich mag ___ Hunde.", listOf("kleine", "kleiner", "kleinen", "kleines"), 0, "Plurale nominativo senza articolo: kleine."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        sceltaUnita("a2adj-01", "Der ___ Hund spielt im Garten.", listOf("kleine", "kleiner", "kleinen", "kleines"), 0, "Dopo der (nominativo) l'aggettivo è debole: kleine."),
+        sceltaUnita("a2adj-02", "Ich sehe einen ___ Hund.", listOf("kleine", "kleiner", "kleinen", "kleines"), 2, "Accusativo maschile: einen kleinen."),
+        sceltaUnita("a2adj-03", "Das ist ein ___ Kind.", listOf("kleine", "kleiner", "kleinen", "kleines"), 3, "Nominativo neutro dopo ein: kleines."),
+        sceltaUnita("a2adj-04", "Mit dem ___ Hund spazieren gehen.", listOf("kleine", "kleiner", "kleinen", "kleines"), 2, "Dativo: kleinen."),
+        sceltaUnita("a2adj-05", "___ Kaffee und ___ Milch, bitte.", listOf("Frischer / frische", "Frische / frischer", "Frischen / frischen", "Frisches / frisches"), 0, "Senza articolo: maschile nominativo -er, femminile -e."),
+        sceltaUnita("a2adj-06", "Ich mag ___ Hunde.", listOf("kleine", "kleiner", "kleinen", "kleines"), 0, "Plurale nominativo senza articolo: kleine."),
+        produciUnita("a2-adj-prod", "„Il medico ha una visita importante.“", "Der Arzt hat einen wichtigen Termin.", "Termin è maschile: all'accusativo con articolo indeterminativo → einen wichtigen Termin."),
     )
 )
 
@@ -138,7 +138,7 @@ internal fun unitaA2Konjunktiv2Basis(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("konj2-03", "Wenn ich Zeit ___, würde ich kommen.", listOf("habe", "hatte", "hätte", "würde haben"), 2, "Ipotesi irrealizzabile: hätte."),
         sceltaUnita("konj2-04", "Du ___ mehr schlafen.", listOf("sollst", "solltest", "musst", "müsstest"), 1, "Consiglio cortese: solltest."),
         sceltaUnita("konj2-05", "Ich ___ gern nach Italien fahren.", listOf("würde", "wäre", "hätte", "könnte"), 0, "Desiderio con verbo normale: würde fahren."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("a2-konj2-prod", "„Se avessi tempo, verrei.“", "Wenn ich Zeit hätte, würde ich kommen.", "Ipotesi irreale: hätte (avere) + würde + infinito."),
     )
 )
 
@@ -195,7 +195,7 @@ internal fun unitaA2VerbenPraepositionen(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("vp-04", "Wir freuen uns ___ das Wochenende.", listOf("auf", "an", "für", "über"), 0, "sich freuen auf (+Akk)."),
         sceltaUnita("vp-05", "Er nimmt ___ dem Kurs teil.", listOf("an", "auf", "für", "über"), 0, "teilnehmen an (+Dat): an dem."),
         sceltaUnita("vp-06", "Das Buch gehört ___ der Reihe.", listOf("an", "auf", "zu", "für"), 2, "gehören zu (+Dat)."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("a2-vpr-prep-prod", "„Aspetto l'autobus.“", "Ich warte auf den Bus.", "warten auf regge l'accusativo: auf den Bus."),
     )
 )
 
@@ -258,12 +258,12 @@ internal fun unitaA2Indefinitpronomen(): UnitaGrammatica = unitaGrammatica(
     ),
     merksatz = "man = si impersonale; jemand/niemand + qualcuno/nessuno; etwas/nichts = qualcosa/niente (invariabili).",
     esercizi = listOf(
-        sceltaUnita("ind-01", "___ kann hier nicht parken.", listOf("Man", "Jemand", "Etwas", "Alle"), 0, "Soggetto impersonale: Man."),
-        sceltaUnita("ind-02", "Ich habe ___ verstanden.", listOf("nichts", "niemand", "kein", "keine"), 0, "Oggetto invariabile: nichts."),
-        sceltaUnita("ind-03", "___ hat angerufen.", listOf("Man", "Jemand", "Etwas", "Alle"), 1, "Ha telefonato qualcuno: Jemand."),
-        sceltaUnita("ind-04", "Ich habe ___ gesehen.", listOf("jemand", "jemanden", "jemandem", "jemandes"), 1, "Oggetto accusativo: jemanden."),
-        sceltaUnita("ind-05", "___ sind gekommen.", listOf("Alle", "Alles", "Jemand", "Etwas"), 0, "Tutti sono venuti: Alle."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        sceltaUnita("a2ind-01", "___ kann hier nicht parken.", listOf("Man", "Jemand", "Etwas", "Alle"), 0, "Soggetto impersonale: Man."),
+        sceltaUnita("a2ind-02", "Ich habe ___ verstanden.", listOf("nichts", "niemand", "kein", "keine"), 0, "Oggetto invariabile: nichts."),
+        sceltaUnita("a2ind-03", "___ hat angerufen.", listOf("Man", "Jemand", "Etwas", "Alle"), 1, "Ha telefonato qualcuno: Jemand."),
+        sceltaUnita("a2ind-04", "Ich habe ___ gesehen.", listOf("jemand", "jemanden", "jemandem", "jemandes"), 1, "Oggetto accusativo: jemanden."),
+        sceltaUnita("a2ind-05", "___ sind gekommen.", listOf("Alle", "Alles", "Jemand", "Etwas"), 0, "Tutti sono venuti: Alle."),
+        produciUnita("a2-indef-prod", "„Qualcuno ha chiamato?“", "Hat jemand angerufen?", "jemand = qualcuno; è invariabile e non prende l'articolo."),
     )
 )
 
@@ -312,7 +312,7 @@ internal fun unitaA2IndirekteFragen(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("indf-03", "Ich möchte wissen, ___ das kostet.", listOf("ob", "wie viel", "dass", "weil"), 1, "W-Wort: wie viel."),
         sceltaUnita("indf-04", "Weißt du, ___ er Zeit hat?", listOf("ob", "wenn", "dass", "weil"), 0, "Domanda sì/no indiretta: ob."),
         sceltaUnita("indf-05", "Ich frage mich, ___ er das gesagt hat.", listOf("ob", "warum", "dass", "weil"), 1, "Domanda con W-Wort: warum."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("a2-indir-frag-prod", "„Mi chiedi dove abito.“", "Du fragst mich, wo ich wohne.", "Domanda indiretta: il verbo coniugato va in fondo (wo ich wohne)."),
     )
 )
 
@@ -368,6 +368,6 @@ internal fun unitaA1Fragewoerter(): UnitaGrammatica = unitaGrammatica(
         sceltaUnita("frag-03", "___ kommst du?", listOf("Wer", "Was", "Wo", "Wann"), 3, "Quando vieni: Wann."),
         sceltaUnita("frag-04", "___ alt bist du?", listOf("Wer", "Was", "Wo", "Wie"), 3, "Quanti anni: Wie alt."),
         sceltaUnita("frag-05", "___ Buch liest du?", listOf("Wer", "Was", "Welches", "Wie"), 2, "Quale libro: Welches."),
-        produciUnita("prod", "Scrivi una frase con questa struttura grammaticale.", "Ich habe das gemacht.", "Produzione libera.", "Scrivi la frase completa in tedesco."),
+        produciUnita("a1-frage-prod", "„Dove abiti?“", "Wo wohnst du?", "wo = dove; nella domanda il verbo è in seconda posizione."),
     )
 )

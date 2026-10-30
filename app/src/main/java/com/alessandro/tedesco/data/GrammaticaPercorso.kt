@@ -201,7 +201,7 @@ object GrammaticaSyllabus {
      * per non toccare le chiavi di padronanza già salvate.
      */
     val unita: List<UnitaGrammatica> = unitaBase.map { u ->
-        val extra = EserciziExtra[u.id].orEmpty()
+        val extra = EserciziExtra[u.id].orEmpty() + EserciziExtra2[u.id].orEmpty()
         if (extra.isEmpty()) u
         else u.copy(esercizi = u.esercizi + extra)
     }
